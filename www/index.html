@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>مرتّب المستمسكات الاحترافي — Pro Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root {
+  --bg-main: #f0f7f4;
+  --bg-sec: #d8ece3;
+  --ink: #0a291e;
+  --muted: #4b7060;
+  --pri: #0f5132;
+  --pri-light: #198754;
+  --accent: #d9a93a;
+  --danger: #dc3545;
+  --surface: rgba(255, 255, 255, 0.88);
+  --border: rgba(20, 83, 45, 0.15);
+  --shadow: 0 10px 30px rgba(10, 45, 30, 0.12);
+  --radius: 16px;
+}
+
+[data-theme="dark"] {
+  --bg-main: #06150f;
+  --bg-sec: #0d281d;
+  --ink: #e6f4ee;
+  --muted: #8ab3a1;
+  --pri: #198754;
+  --pri-light: #28a76c;
+  --surface: rgba(15, 42, 30, 0.90);
+  --border: rgba(255, 255, 255, 0.14);
+  --shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Cairo', Tahoma, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(145deg, var(--bg-main), var(--bg-sec));
+  overflow: hidden;
+  user-select: none;
+}
+
+button, select, input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin: 8px 12px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  z-index: 10;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--pri);
+  margin-left: auto;
+}
+
+[data-theme="dark"] .brand {
+  color: #5cd69c;
+}
+
+.badge-pro {
+  background: linear-gradient(135deg, #f6dd86, #d9a93a);
+  color: #3a2b05;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.btn-tool {
+  height: 38px;
+  padding: 0 11px;
+  border-radius: 12px;
+  background: rgba(25, 135, 84, 0.08);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+.btn-tool.pri {
+  background: linear-gradient(135deg, var(--pri), var(--pri-light));
+  color: #fff;
+  border-color: transparent;
+}
+
+.btn-tool.gold {
+  background: linear-gradient(135deg, #f6dd86, #d9a93a);
+  color: #3a2b05;
+  border-color: transparent;
+}
+
+.btn-tool svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.workspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  margin-top: 8px;
+}
+
+.canvas-area {
+  flex: 1;
+  overflow: auto;
+  padding: 18px 14px 270px;
+  background-image: radial-gradient(var(--border) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-wrap {
+  width: min(100%, 560px);
+  margin-bottom: 24px;
+}
+
+.page-sheet {
+  position: relative;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.page-sheet.grid-on {
+  background-image: 
+    linear-gradient(to right, rgba(0, 120, 60, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 120, 60, 0.08) 1px, transparent 1px);
+  background-size: 5% 5%;
+}
+
+.page-label {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.slot {
+  position: absolute;
+  background-color: #f8faf9;
+  cursor: grab;
+  overflow: hidden;
+  transition: box-shadow 0.15s, outline 0.1s;
+  touch-action: none;
+}
+
+.slot:active {
+  cursor: grabbing;
+}
+
+.slot.empty {
+  border: 2px dashed #68a889;
+  background: #f2f9f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #156c43;
+  font-weight: 700;
+  font-size: clamp(11px, 2.8vw, 14px);
+  text-align: center;
+  padding: 8px;
+}
+
+.slot.selected {
+  outline: 3px solid #198754;
+  outline-offset: 2px;
+  z-index: 4;
+}
+
+.slot canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #729685;
+  text-align: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.empty-state svg {
+  width: 52px;
+  height: 52px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+  margin-bottom: 12px;
+  opacity: 0.65;
+}
+
+.wm-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: space-around;
+  justify-content: space-around;
+  opacity: 0.18;
+}
+
+.wm-text {
+  transform: rotate(-28deg);
+  font-weight: 800;
+  color: #000;
+  font-size: clamp(12px, 3vw, 18px);
+  white-space: nowrap;
+  padding: 20px;
+}
+
+.inspector-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 15;
+  pointer-events: none;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.inspector-dock > * {
+  pointer-events: auto;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  max-height: 48vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.panel[hidden] {
+  display: none !important;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 7px;
+}
+
+.panel-title {
+  font-weight: 800;
+  font-size: 14.5px;
+  color: var(--pri);
+}
+
+[data-theme="dark"] .panel-title {
+  color: #6edba6;
+}
+
+.grid-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.grid-row > * {
+  flex: 1 1 auto;
+}
+
+.ctrl-btn {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(25, 135, 84, 0.08);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.ctrl-btn.active {
+  background: var(--pri);
+  color: #fff;
+  border-color: transparent;
+}
+
+.ctrl-btn.danger {
+  color: var(--danger);
+  background: rgba(220, 53, 69, 0.08);
+}
+
+select, input[type="text"], input[type="number"] {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 700;
+  color: #0a291e;
+}
+
+[data-theme="dark"] select,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="number"] {
+  background: rgba(0, 0, 0, 0.35);
+  color: #e6f4ee;
+}
+
+select option, select optgroup {
+  color: #0a291e;
+  background: #fff;
+}
+
+.field-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.field-group span {
+  min-width: 70px;
+}
+
+.field-group input[type="range"] {
+  flex: 1;
+  accent-color: var(--pri);
+}
+
+.export-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 8px 10px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow-x: auto;
+}
+
+.export-chip {
+  flex: none;
+  padding: 9px 13px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 12.5px;
+  background: linear-gradient(135deg, var(--pri), var(--pri-light));
+  color: #fff;
+  white-space: nowrap;
+}
+
+.export-chip.sec {
+  background: rgba(25, 135, 84, 0.1);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.export-chip.gold {
+  background: linear-gradient(135deg, #f6dd86, #d9a93a);
+  color: #3a2b05;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(4, 18, 12, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  backdrop-filter: blur(5px);
+}
+
+.modal[hidden] {
+  display: none !important;
+}
+
+.modal-card {
+  width: min(100%, 460px);
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-card h3 {
+  margin: 0 0 10px;
+  color: var(--pri);
+  font-size: 17px;
+}
+
+[data-theme="dark"] .modal-card h3 {
+  color: #6edba6;
+}
+
+.crop-wrap {
+  width: min(100%, 520px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.crop-stage {
+  position: relative;
+  direction: ltr;
+  display: inline-block;
+  touch-action: none;
+  user-select: none;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.crop-stage img {
+  display: block;
+  max-width: 100%;
+  max-height: 62vh;
+  pointer-events: none;
+}
+
+#cropBox {
+  position: absolute;
+  border: 2.5px solid #4ade80;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.58);
+  touch-action: none;
+  cursor: move;
+}
+
+#cropBox i {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background: #4ade80;
+  border-radius: 50%;
+  border: 3px solid #fff;
+}
+
+#cropBox i[data-h="tl"] { left: -14px; top: -14px; }
+#cropBox i[data-h="tr"] { right: -14px; top: -14px; }
+#cropBox i[data-h="bl"] { left: -14px; bottom: -14px; }
+#cropBox i[data-h="br"] { right: -14px; bottom: -14px; }
+
+.dropdown-menu {
+  position: absolute;
+  top: 58px;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: var(--shadow);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 185px;
+}
+
+.dropdown-menu[hidden] {
+  display: none !important;
+}
+
+.dropdown-menu button {
+  padding: 10px 14px;
+  text-align: right;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.dropdown-menu button:hover,
+.dropdown-menu button.on {
+  background: var(--pri);
+  color: #fff;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  transform: translateX(-50%);
+  z-index: 99;
+  background: #0a291e;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+  max-width: 90%;
+  text-align: center;
+}
+
+.toast[hidden] {
+  display: none !important;
+}
+
+@media print {
+  body, html {
+    background: #fff !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .topbar, .inspector-dock, .page-label, .toast, .modal, .dropdown-menu {
+    display: none !important;
+  }
+  .app-container, .workspace, .canvas-area {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+  .page-wrap {
+    width: 100% !important;
+    margin: 0 !important;
+    page-break-after: always;
+  }
+  .page-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+  }
+  .slot.selected {
+    outline: none !important;
+  }
+  .slot.empty {
+    display: none !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app-container">
+  <header class="topbar">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="16" rx="2"/>
+        <circle cx="9" cy="10" r="2"/>
+        <path d="M15 8h2M15 12h2M7 16h10"/>
+      </svg>
+      <span>مرتّب المستمسكات</span>
+      <span class="badge-pro">PRO</span>
+    </div>
+
+    <button class="btn-tool gold" id="btnAddDoc">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      <span>إضافة مستمسك</span>
+    </button>
+
+    <button class="btn-tool" id="btnPageSize">A4 عمودي</button>
+
+    <button class="btn-tool" id="btnWatermark">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>حماية</span>
+    </button>
+
+    <button class="btn-tool" id="btnAutoLayout" title="إعادة رصف المستمسكات تلقائياً">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>ترتيب</span>
+    </button>
+
+    <button class="btn-tool" id="btnGrid">شبكة</button>
+
+    <button class="btn-tool" id="btnTheme" aria-label="تبديل المظهر">
+      <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>
+    </button>
+  </header>
+
+  <div class="dropdown-menu" id="menuAdd" hidden style="right: 120px;">
+    <button id="addTwoSides">بطاقة / هوية (وجه وظهر)</button>
+    <button id="addOneSide">وثيقة / مستند (وجه واحد)</button>
+  </div>
+
+  <div class="dropdown-menu" id="menuPage" hidden style="right: 220px;"></div>
+
+  <div class="workspace">
+    <div class="canvas-area" id="pagesContainer"></div>
+  </div>
+
+  <div class="inspector-dock">
+    <div class="panel" id="docInspector" hidden>
+      <div class="panel-header">
+        <span class="panel-title" id="inspTitle">خصائص المستمسك</span>
+        <div style="display:flex; gap:5px;">
+          <button class="ctrl-btn" id="btnDupDoc">⧉ تكرار</button>
+          <button class="ctrl-btn danger" id="btnDelDoc">حذف</button>
+          <button class="ctrl-btn" id="btnCloseInsp">✕</button>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <select id="selDocType" aria-label="نوع المستند"></select>
+      </div>
+
+      <div class="grid-row" id="customDimsRow" hidden>
+        <div class="field-group">
+          <span>العرض (مم):</span>
+          <input type="number" id="inpCustomW" value="85" min="20" max="400">
+        </div>
+        <div class="field-group">
+          <span>الارتفاع (مم):</span>
+          <input type="number" id="inpCustomH" value="55" min="20" max="400">
+        </div>
+      </div>
+
+      <div class="grid-row" id="sideTabs">
+        <button class="ctrl-btn active" id="tabSide0">الوجه الأول</button>
+        <button class="ctrl-btn" id="tabSide1">الظهر (الوجه الثاني)</button>
+      </div>
+
+      <div class="grid-row">
+        <button class="ctrl-btn" id="btnPickImg">📁 استبدال</button>
+        <button class="ctrl-btn" id="btnCropManual">✂ قص يدوي</button>
+        <button class="ctrl-btn" id="btnCropAuto">⌖ قص تلقائي</button>
+        <button class="ctrl-btn" id="btnRotImg">↻ تدوير 90°</button>
+      </div>
+
+      <div class="grid-row">
+        <button class="ctrl-btn filter-btn active" data-flt="normal">أصلي</button>
+        <button class="ctrl-btn filter-btn" data-flt="scan">✨ مسح ضوئي</button>
+        <button class="ctrl-btn filter-btn" data-flt="gray">رمادي</button>
+        <button class="ctrl-btn filter-btn" data-flt="bw">أبيض وأسود</button>
+      </div>
+
+      <div class="grid-row">
+        <div class="field-group">
+          <span>السطوع:</span>
+          <input type="range" id="rngBright" min="-60" max="60" value="0">
+        </div>
+        <div class="field-group">
+          <span>التباين:</span>
+          <input type="range" id="rngContrast" min="-60" max="80" value="0">
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <button class="ctrl-btn" id="btnSwapOrder">⟳ عكس القالب</button>
+        <button class="ctrl-btn" id="btnSwapSides">⇄ تبديل الوجهين</button>
+        <button class="ctrl-btn" id="btnLayoutMode">الوضع: متجاور</button>
+      </div>
+
+      <div class="grid-row">
+        <div class="field-group">
+          <span>حواف دائرية:</span>
+          <input type="range" id="rngRadius" min="0" max="10" step="0.5" value="3">
+        </div>
+        <div class="field-group">
+          <span>الظل:</span>
+          <select id="selShadow" style="width:auto; flex:1;">
+            <option value="gray">ظل خفيف</option>
+            <option value="black">ظل داكن</option>
+            <option value="none">بدون ظل</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="export-bar" id="exportBar">
+      <input type="text" id="inpFileName" value="مستمسكات" placeholder="اسم الملف..." style="width: 115px; flex:none;">
+      <button class="export-chip gold" id="btnPrintDirect">🖨 طباعة / مشاركة</button>
+      <button class="export-chip" data-exp="pdf600">PDF دقة 600</button>
+      <button class="export-chip" data-exp="pdf300">PDF دقة 300</button>
+      <button class="export-chip sec" data-exp="png">صورة PNG</button>
+      <button class="export-chip sec" data-exp="jpg">صورة JPG</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة العلامة المائية -->
+<div class="modal" id="modalWatermark" hidden>
+  <div class="modal-card">
+    <h3>🛡 العلامة المائية الأمنية (حماية المستمسكات)</h3>
+    <p style="font-size:13px; color:var(--muted); margin-top:0;">
+      تُطبع هذه العبارة بشكل مائل وشفاف فوق الورقة لمنع استخدام المستمسكات في غير الغرض المخصص لها.
+    </p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <input type="text" id="inpWmText" placeholder="مثال: نسخة مخصصة للتعيين فقط - لا يعتد بها">
+      <div class="field-group">
+        <span>الشفافية:</span>
+        <input type="range" id="rngWmAlpha" min="5" max="45" value="18">
+      </div>
+      <div class="grid-row" style="margin-top:8px;">
+        <button class="export-chip" id="btnSaveWm">تطبيق الحماية</button>
+        <button class="export-chip sec" id="btnClearWm">إزالة العلامة</button>
+        <button class="export-chip sec" id="btnCloseWm">إغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة القص -->
+<div class="modal" id="modalCrop" hidden>
+  <div class="crop-wrap">
+    <div class="crop-stage">
+      <img id="cropImg" alt="صورة القص">
+      <div id="cropBox">
+        <i data-h="tl"></i>
+        <i data-h="tr"></i>
+        <i data-h="bl"></i>
+        <i data-h="br"></i>
+      </div>
+    </div>
+    <div class="grid-row" style="width:100%">
+      <button class="export-chip" id="btnCropApply" style="flex:1">✓ اعتماد القص</button>
+      <button class="export-chip sec" id="btnCropCancel" style="flex:1; background:#fff; color:#0a291e;">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+<div class="toast" id="toastMsg" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+const DOC_TYPES = [
+  ['البطاقة الوطنية الموحدة', 85.6, 54, 'الهويات العراقية'],
+  ['بطاقة الناخب (البيومترية)', 85.6, 54, 'الهويات العراقية'],
+  ['هوية الأحوال المدنية', 85, 105, 'الهويات العراقية'],
+  ['شهادة الجنسية العراقية', 165, 200, 'الهويات العراقية'],
+  ['بطاقة السكن', 90, 60, 'الوثائق الرسمية'],
+  ['البطاقة التموينية', 95, 65, 'الوثائق الرسمية'],
+  ['إجازة السوق', 85.6, 54, 'الوثائق الرسمية'],
+  ['جواز السفر العراقي', 88, 125, 'الوثائق الرسمية'],
+  ['صورة شخصية (معاملات)', 35, 45, 'صور ومستندات'],
+  ['وثيقة / تأييد تخرج (A4)', 194, 280, 'صور ومستندات'],
+  ['قياس مخصص (إدخال يدوي)...', 85, 55, 'مخصص']
+];
+
+const PAGE_FORMATS = {
+  'A4-P': { label: 'A4 عمودي', w: 210, h: 297 },
+  'A4-L': { label: 'A4 أفقي', w: 297, h: 210 },
+  'A5-P': { label: 'A5 عمودي', w: 148, h: 210 },
+  'A3-P': { label: 'A3 عمودي', w: 297, h: 420 },
+  'LTR-P': { label: 'Letter عمودي', w: 215.9, h: 279.4 }
+};
+
+const SHADOW_CSS = {
+  none: 'none',
+  gray: '0 calc(var(--u)*0.5) calc(var(--u)*1.8) rgba(0,0,0,0.28)',
+  black: '0 calc(var(--u)*0.6) calc(var(--u)*2.0) rgba(0,0,0,0.58)'
+};
+
+const State = {
+  pageKey: 'A4-P',
+  grid: false,
+  watermark: { text: '', alpha: 18 },
+  entries: [],
+  selId: null,
+  activeSide: 0
+};
+
+let uidCounter = 0;
+let toastTimer = null;
+
+function showToast(msg, duration = 2600) {
+  const t = $('toastMsg');
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  if (duration > 0) {
+    toastTimer = setTimeout(() => t.hidden = true, duration);
+  }
+}
+
+const getSelectedEntry = () => State.entries.find(e => e.id === State.selId);
+
+/* المظهر والشبكة */
+const rootEl = document.documentElement;
+rootEl.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+$('btnTheme').onclick = () => {
+  rootEl.dataset.theme = rootEl.dataset.theme === 'dark' ? 'light' : 'dark';
+};
+
+$('btnGrid').onclick = () => {
+  State.grid = !State.grid;
+  $('btnGrid').classList.toggle('pri', State.grid);
+  renderWorkspace();
+};
+
+function toggleMenu(id) {
+  ['menuAdd', 'menuPage'].forEach(m => {
+    $(m).hidden = (m !== id) || !$(m).hidden;
+  });
+}
+
+$('btnAddDoc').onclick = e => { e.stopPropagation(); toggleMenu('menuAdd'); };
+$('btnPageSize').onclick = e => { e.stopPropagation(); toggleMenu('menuPage'); };
+document.addEventListener('click', () => toggleMenu(''));
+
+$('menuPage').innerHTML = Object.entries(PAGE_FORMATS).map(([k, v]) =>
+  `<button data-pk="${k}" class="${k === State.pageKey ? 'on' : ''}">${v.label} (${v.w}×${v.h})</button>`
+).join('');
+
+$('menuPage').onclick = e => {
+  const pk = e.target.dataset.pk;
+  if (!pk) return;
+  State.pageKey = pk;
+  $('btnPageSize').textContent = PAGE_FORMATS[pk].label;
+  [...$('menuPage').children].forEach(b => b.classList.toggle('on', b.dataset.pk === pk));
+  autoArrangeEntries();
+  renderWorkspace();
+};
+
+const groups = [...new Set(DOC_TYPES.map(d => d[3]))];
+$('selDocType').innerHTML = groups.map(g =>
+  `<optgroup label="${g}">
+    ${DOC_TYPES.map((d, idx) => d[3] === g ? `<option value="${idx}">${d[0]} (${d[1]}×${d[2]} مم)</option>` : '').join('')}
+  </optgroup>`
+).join('');
+
+/* تحميل ومعالجة الصور */
+function loadImageElement(src) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = src;
+  });
+}
+
+async function createSideObject(fileOrUrl) {
+  const url = typeof fileOrUrl === 'string' ? fileOrUrl : URL.createObjectURL(fileOrUrl);
+  let rawImg = await loadImageElement(url);
+
+  const maxDim = 3400;
+  if (Math.max(rawImg.naturalWidth, rawImg.naturalHeight) > maxDim) {
+    const scale = maxDim / Math.max(rawImg.naturalWidth, rawImg.naturalHeight);
+    const c = document.createElement('canvas');
+    c.width = Math.round(rawImg.naturalWidth * scale);
+    c.height = Math.round(rawImg.naturalHeight * scale);
+    c.getContext('2d').drawImage(rawImg, 0, 0, c.width, c.height);
+    const blob = await new Promise(o => c.toBlob(o, 'image/jpeg', 0.95));
+    rawImg = await loadImageElement(URL.createObjectURL(blob));
+  }
+
+  return {
+    origEl: rawImg,
+    workEl: rawImg,
+    rot90: 0,
+    filter: 'normal',
+    bright: 0,
+    contrast: 0
+  };
+}
+
+function renderFilteredCanvas(sideObj, targetW, targetH) {
+  const srcEl = sideObj.workEl;
+  const rot = sideObj.rot90 % 4;
+  const isSwap = rot === 1 || rot === 3;
+
+  const iw = isSwap ? srcEl.naturalHeight : srcEl.naturalWidth;
+  const ih = isSwap ? srcEl.naturalWidth : srcEl.naturalHeight;
+
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(targetW));
+  c.height = Math.max(1, Math.round(targetH));
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+
+  const scale = Math.max(c.width / iw, c.height / ih);
+  const drawW = iw * scale;
+  const drawH = ih * scale;
+
+  ctx.save();
+  ctx.translate(c.width / 2, c.height / 2);
+  ctx.rotate((rot * 90 * Math.PI) / 180);
+
+  if (isSwap) {
+    ctx.drawImage(srcEl, -drawH / 2, -drawW / 2, drawH, drawW);
+  } else {
+    ctx.drawImage(srcEl, -drawW / 2, -drawH / 2, drawW, drawH);
+  }
+  ctx.restore();
+
+  const flt = sideObj.filter;
+  const br = sideObj.bright;
+  const ct = sideObj.contrast + (flt === 'scan' ? 38 : 0);
+  const brAdj = br + (flt === 'scan' ? 12 : 0);
+
+  if (flt !== 'normal' || brAdj !== 0 || ct !== 0) {
+    const imgData = ctx.getImageData(0, 0, c.width, c.height);
+    const d = imgData.data;
+    const factor = (259 * (ct + 255)) / (255 * (259 - ct));
+
+    for (let i = 0; i < d.length; i += 4) {
+      let r = d[i], g = d[i + 1], b = d[i + 2];
+
+      r = factor * (r + brAdj - 128) + 128;
+      g = factor * (g + brAdj - 128) + 128;
+      b = factor * (b + brAdj - 128) + 128;
+
+      if (flt === 'gray' || flt === 'bw') {
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        if (flt === 'bw') {
+          const v = lum > 138 ? 255 : 0;
+          r = g = b = v;
+        } else {
+          r = g = b = lum;
+        }
+      } else if (flt === 'scan') {
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        if (lum > 205) {
+          r = Math.min(255, r * 1.12);
+          g = Math.min(255, g * 1.12);
+          b = Math.min(255, b * 1.12);
+        }
+      }
+
+      d[i]     = clamp(r, 0, 255);
+      d[i + 1] = clamp(g, 0, 255);
+      d[i + 2] = clamp(b, 0, 255);
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  return c;
+}
+
+const fileInput = $('fileInput');
+let pendingPick = null;
+
+function triggerFilePick(entry, sideIdx) {
+  pendingPick = { entry, sideIdx };
+  fileInput.value = '';
+  fileInput.click();
+}
+
+fileInput.onchange = async () => {
+  const file = fileInput.files[0];
+  if (!file || !pendingPick) return;
+
+  const { entry, sideIdx } = pendingPick;
+  showToast('جارٍ قراءة ومعالجة المستمسك...', 0);
+
+  try {
+    entry.sides[sideIdx] = await createSideObject(file);
+    $('toastMsg').hidden = true;
+    renderWorkspace();
+
+    if (entry.two && sideIdx === 0 && !entry.sides[1]) {
+      setTimeout(() => {
+        State.activeSide = 1;
+        updateInspector();
+        triggerFilePick(entry, 1);
+      }, 350);
+    }
+  } catch (err) {
+    showToast('تعذّر قراءة ملف الصورة');
+  }
+};
+
+function addNewEntry(twoSides) {
+  const entry = {
+    id: ++uidCounter,
+    two: twoSides,
+    typeIdx: 0,
+    customW: 85,
+    customH: 55,
+    rotTemplate: false,
+    mode: 'side',
+    radius: 3,
+    shadow: 'gray',
+    sides: [null, null],
+    customPos: null
+  };
+
+  State.entries.push(entry);
+  State.selId = entry.id;
+  State.activeSide = 0;
+  autoArrangeEntries();
+  renderWorkspace();
+  triggerFilePick(entry, 0);
+}
+
+$('addTwoSides').onclick = () => addNewEntry(true);
+$('addOneSide').onclick = () => addNewEntry(false);
+
+function getDocDimensions(entry) {
+  let w, h;
+  if (entry.typeIdx === DOC_TYPES.length - 1) {
+    w = entry.customW || 85;
+    h = entry.customH || 55;
+  } else {
+    [, w, h] = DOC_TYPES[entry.typeIdx];
+  }
+  return entry.rotTemplate ? [h, w] : [w, h];
+}
+
+function computeLayout() {
+  const { w: PW, h: PH } = PAGE_FORMATS[State.pageKey];
+  const margin = 8, gap = 5;
+  const pages = [[]];
+  let curY = margin;
+
+  for (const e of State.entries) {
+    const [dw, dh] = getDocDimensions(e);
+    const count = e.two ? 2 : 1;
+
+    let blockW = e.mode === 'stack' ? dw : dw * count + gap * (count - 1);
+    let blockH = e.mode === 'stack' ? dh * count + gap * (count - 1) : dh;
+
+    const scale = Math.min(1, (PW - 2 * margin) / blockW, (PH - 2 * margin) / blockH);
+    blockW *= scale;
+    blockH *= scale;
+
+    const cardW = dw * scale;
+    const cardH = dh * scale;
+    const cardGap = gap * scale;
+
+    if (curY + blockH > PH - margin && curY > margin) {
+      pages.push([]);
+      curY = margin;
+    }
+
+    const curPage = pages[pages.length - 1];
+    const startX = (PW - blockW) / 2;
+
+    for (let i = 0; i < count; i++) {
+      let defaultX = e.mode === 'stack' ? startX : startX + (count - 1 - i) * (cardW + cardGap);
+      let defaultY = e.mode === 'stack' ? curY + i * (cardH + cardGap) : curY;
+
+      const pos = (e.customPos && e.customPos[i]) ? e.customPos[i] : { x: defaultX, y: defaultY };
+
+      curPage.push({
+        entry: e,
+        sideIdx: i,
+        x: clamp(pos.x, 0, PW - cardW),
+        y: clamp(pos.y, 0, PH - cardH),
+        w: cardW,
+        h: cardH
+      });
+    }
+
+    curY += blockH + gap;
+  }
+
+  return pages;
+}
+
+function autoArrangeEntries() {
+  State.entries.forEach(e => { e.customPos = null; });
+}
+
+$('btnAutoLayout').onclick = () => {
+  autoArrangeEntries();
+  renderWorkspace();
+  showToast('تمت إعادة ترتيب المستمسكات تلقائياً');
+};
+
+function renderWorkspace() {
+  const { w: PW, h: PH, label } = PAGE_FORMATS[State.pageKey];
+  const container = $('pagesContainer');
+  container.innerHTML = '';
+
+  const pages = computeLayout();
+
+  pages.forEach((pageItems, pageIdx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'page-wrap';
+
+    const sheet = document.createElement('div');
+    sheet.className = 'page-sheet' + (State.grid ? ' grid-on' : '');
+    sheet.style.aspectRatio = `${PW} / ${PH}`;
+
+    pageItems.forEach(item => {
+      const { entry, sideIdx, x, y, w, h } = item;
+      const sideData = entry.sides[sideIdx];
+
+      const slot = document.createElement('div');
+      slot.className = 'slot' + (sideData ? '' : ' empty') + (State.selId === entry.id ? ' selected' : '');
+      slot.style.left = (x / PW * 100) + '%';
+      slot.style.top = (y / PH * 100) + '%';
+      slot.style.width = (w / PW * 100) + '%';
+      slot.style.height = (h / PH * 100) + '%';
+
+      if (sideData) {
+        slot.style.borderRadius = `calc(var(--u) * ${entry.radius})`;
+        slot.style.boxShadow = SHADOW_CSS[entry.shadow];
+        const previewCanvas = renderFilteredCanvas(sideData, w * 4.5, h * 4.5);
+        slot.appendChild(previewCanvas);
+      } else {
+        slot.style.borderRadius = `calc(var(--u) * ${entry.radius})`;
+        slot.innerHTML = `<span>＋ اضغط لإضافة ${entry.two ? (sideIdx === 0 ? 'الوجه' : 'الظهر') : 'الصورة'}</span>`;
+      }
+
+      let dragStart = null;
+      slot.addEventListener('pointerdown', ev => {
+        ev.stopPropagation();
+        State.selId = entry.id;
+        State.activeSide = sideIdx;
+        updateInspector();
+
+        const rect = sheet.getBoundingClientRect();
+        dragStart = {
+          startX: ev.clientX,
+          startY: ev.clientY,
+          origX: x,
+          origY: y,
+          sheetW: rect.width,
+          sheetH: rect.height,
+          moved: false
+        };
+        slot.setPointerCapture(ev.pointerId);
+      });
+
+      slot.addEventListener('pointermove', ev => {
+        if (!dragStart) return;
+        const dxPx = ev.clientX - dragStart.startX;
+        const dyPx = ev.clientY - dragStart.startY;
+        if (Math.abs(dxPx) > 4 || Math.abs(dyPx) > 4) dragStart.moved = true;
+
+        if (dragStart.moved) {
+          const dxMm = (dxPx / dragStart.sheetW) * PW;
+          const dyMm = (dyPx / dragStart.sheetH) * PH;
+          const newX = clamp(dragStart.origX + dxMm, 0, PW - w);
+          const newY = clamp(dragStart.origY + dyMm, 0, PH - h);
+
+          slot.style.left = (newX / PW * 100) + '%';
+          slot.style.top = (newY / PH * 100) + '%';
+
+          if (!entry.customPos) entry.customPos = [{ x, y }, { x, y }];
+          entry.customPos[sideIdx] = { x: newX, y: newY };
+        }
+      });
+
+      slot.addEventListener('pointerup', () => {
+        if (dragStart && !dragStart.moved && !sideData) {
+          triggerFilePick(entry, sideIdx);
+        }
+        dragStart = null;
+        renderWorkspace();
+      });
+
+      sheet.appendChild(slot);
+    });
+
+    if (State.entries.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.innerHTML = `
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 9v6M9 12h6"/></svg>
+        <b>ورقة العمل جاهزة</b>
+        <span>اضغط على زر "إضافة مستمسك" بالأعلى للبدء، ويمكنك سحب أي مستمسك لتحريكه بحرية</span>
+      `;
+      sheet.appendChild(empty);
+    }
+
+    if (State.watermark.text.trim()) {
+      const wm = document.createElement('div');
+      wm.className = 'wm-overlay';
+      wm.style.opacity = (State.watermark.alpha / 100).toString();
+      for (let k = 0; k < 12; k++) {
+        const sp = document.createElement('span');
+        sp.className = 'wm-text';
+        sp.textContent = State.watermark.text;
+        wm.appendChild(sp);
+      }
+      sheet.appendChild(wm);
+    }
+
+    wrap.appendChild(sheet);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'page-label';
+    lbl.innerHTML = `<span>ورقة ${pageIdx + 1} — ${label}</span> <span>(اسحب أي مستمسك لتحريكه)</span>`;
+    wrap.appendChild(lbl);
+
+    container.appendChild(wrap);
+    sheet.style.setProperty('--u', (sheet.clientWidth / PW) + 'px');
+  });
+
+  updateInspector();
+}
+
+function updateInspector() {
+  const e = getSelectedEntry();
+  const panel = $('docInspector');
+
+  if (!e) {
+    panel.hidden = true;
+    return;
+  }
+
+  panel.hidden = false;
+  $('inspTitle').textContent = DOC_TYPES[e.typeIdx][0];
+  $('selDocType').value = e.typeIdx;
+
+  const isCustom = e.typeIdx === DOC_TYPES.length - 1;
+  $('customDimsRow').hidden = !isCustom;
+  if (isCustom) {
+    $('inpCustomW').value = e.customW;
+    $('inpCustomH').value = e.customH;
+  }
+
+  $('sideTabs').style.display = e.two ? 'flex' : 'none';
+  $('tabSide0').classList.toggle('active', State.activeSide === 0);
+  $('tabSide1').classList.toggle('active', State.activeSide === 1);
+
+  $('btnSwapSides').style.display = e.two ? '' : 'none';
+  $('btnLayoutMode').style.display = e.two ? '' : 'none';
+  $('btnLayoutMode').textContent = 'الوضع: ' + (e.mode === 'side' ? 'جنب بعض' : 'فوق بعض');
+
+  $('rngRadius').value = e.radius;
+  $('selShadow').value = e.shadow;
+
+  const sideObj = e.sides[e.two ? State.activeSide : 0];
+  const curFilter = sideObj ? sideObj.filter : 'normal';
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.flt === curFilter);
+  });
+
+  $('rngBright').value = sideObj ? sideObj.bright : 0;
+  $('rngContrast').value = sideObj ? sideObj.contrast : 0;
+}
+
+$('pagesContainer').onclick = e => {
+  if (e.target.id === 'pagesContainer' || e.target.classList.contains('page-sheet')) {
+    State.selId = null;
+    renderWorkspace();
+  }
+};
+
+$('btnCloseInsp').onclick = () => { State.selId = null; renderWorkspace(); };
+
+$('selDocType').onchange = ev => {
+  const e = getSelectedEntry();
+  e.typeIdx = +ev.target.value;
+  e.customPos = null;
+  renderWorkspace();
+};
+
+$('inpCustomW').oninput = ev => {
+  const e = getSelectedEntry();
+  e.customW = clamp(+ev.target.value || 85, 20, 400);
+  e.customPos = null;
+  renderWorkspace();
+};
+
+$('inpCustomH').oninput = ev => {
+  const e = getSelectedEntry();
+  e.customH = clamp(+ev.target.value || 55, 20, 400);
+  e.customPos = null;
+  renderWorkspace();
+};
+
+$('tabSide0').onclick = () => { State.activeSide = 0; updateInspector(); };
+$('tabSide1').onclick = () => { State.activeSide = 1; updateInspector(); };
+
+$('btnPickImg').onclick = () => triggerFilePick(getSelectedEntry(), State.activeSide);
+
+$('btnRotImg').onclick = () => {
+  const e = getSelectedEntry();
+  const sideObj = e.sides[e.two ? State.activeSide : 0];
+  if (!sideObj) return showToast('أضف صورة أولاً');
+  sideObj.rot90 = (sideObj.rot90 + 1) % 4;
+  renderWorkspace();
+};
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.onclick = () => {
+    const e = getSelectedEntry();
+    const sideObj = e.sides[e.two ? State.activeSide : 0];
+    if (!sideObj) return showToast('أضف صورة أولاً لتطبيق الفلتر');
+    sideObj.filter = btn.dataset.flt;
+    renderWorkspace();
+  };
+});
+
+$('rngBright').oninput = ev => {
+  const e = getSelectedEntry();
+  const sideObj = e.sides[e.two ? State.activeSide : 0];
+  if (!sideObj) return;
+  sideObj.bright = +ev.target.value;
+  renderWorkspace();
+};
+
+$('rngContrast').oninput = ev => {
+  const e = getSelectedEntry();
+  const sideObj = e.sides[e.two ? State.activeSide : 0];
+  if (!sideObj) return;
+  sideObj.contrast = +ev.target.value;
+  renderWorkspace();
+};
+
+$('btnSwapOrder').onclick = () => {
+  const e = getSelectedEntry();
+  e.rotTemplate = !e.rotTemplate;
+  e.customPos = null;
+  renderWorkspace();
+};
+
+$('btnSwapSides').onclick = () => {
+  const e = getSelectedEntry();
+  e.sides.reverse();
+  renderWorkspace();
+};
+
+$('btnLayoutMode').onclick = () => {
+  const e = getSelectedEntry();
+  e.mode = e.mode === 'side' ? 'stack' : 'side';
+  e.customPos = null;
+  renderWorkspace();
+};
+
+$('btnDupDoc').onclick = () => {
+  const e = getSelectedEntry();
+  if (!e) return;
+  const clone = {
+    ...e,
+    id: ++uidCounter,
+    sides: [...e.sides],
+    customPos: null
+  };
+  State.entries.push(clone);
+  State.selId = clone.id;
+  renderWorkspace();
+  showToast('تم تكرار المستمسك بنجاح');
+};
+
+$('btnDelDoc').onclick = () => {
+  State.entries = State.entries.filter(e => e.id !== State.selId);
+  State.selId = null;
+  renderWorkspace();
+  showToast('تم حذف المستمسك');
+};
+
+$('rngRadius').oninput = ev => {
+  getSelectedEntry().radius = +ev.target.value;
+  renderWorkspace();
+};
+
+$('selShadow').onchange = ev => {
+  getSelectedEntry().shadow = ev.target.value;
+  renderWorkspace();
+};
+
+/* العلامة المائية */
+$('btnWatermark').onclick = () => {
+  $('inpWmText').value = State.watermark.text;
+  $('rngWmAlpha').value = State.watermark.alpha;
+  $('modalWatermark').hidden = false;
+};
+
+$('btnSaveWm').onclick = () => {
+  State.watermark.text = $('inpWmText').value.trim();
+  State.watermark.alpha = +$('rngWmAlpha').value;
+  $('modalWatermark').hidden = true;
+  renderWorkspace();
+  showToast('تم تطبيق إعدادات الحماية');
+};
+
+$('btnClearWm').onclick = () => {
+  State.watermark.text = '';
+  $('inpWmText').value = '';
+  $('modalWatermark').hidden = true;
+  renderWorkspace();
+  showToast('تمت إزالة العلامة المائية');
+};
+
+$('btnCloseWm').onclick = () => $('modalWatermark').hidden = true;
+
+/* القص اليدوي والتلقائي */
+let CropState = null;
+
+function autoDetectEdges(img) {
+  const scale = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(8, Math.round(img.naturalWidth * scale));
+  const h = Math.max(8, Math.round(img.naturalHeight * scale));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, w, h);
+  const d = ctx.getImageData(0, 0, w, h).data;
+
+  let r = 0, g = 0, b = 0, n = 0;
+  const sample = (x, y) => {
+    const i = (y * w + x) * 4;
+    r += d[i]; g += d[i + 1]; b += d[i + 2]; n++;
+  };
+  for (let x = 0; x < w; x++) { sample(x, 0); sample(x, h - 1); }
+  for (let y = 0; y < h; y++) { sample(0, y); sample(w - 1, y); }
+  r /= n; g /= n; b /= n;
+
+  const rows = new Uint16Array(h), cols = new Uint16Array(w);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (Math.abs(d[i] - r) + Math.abs(d[i + 1] - g) + Math.abs(d[i + 2] - b) > 85) {
+        rows[y]++; cols[x]++;
+      }
+    }
+  }
+
+  const findBounds = (arr, len) => {
+    let s = 0, e = arr.length - 1;
+    while (s < e && arr[s] < len * 0.04) s++;
+    while (e > s && arr[e] < len * 0.04) e--;
+    return [s, e + 1];
+  };
+
+  const [y0, y1] = findBounds(rows, w);
+  const [x0, x1] = findBounds(cols, h);
+  if (x1 - x0 < w * 0.2 || y1 - y0 < h * 0.2) return { x: 0.06, y: 0.06, w: 0.88, h: 0.88 };
+
+  const pad = 0.012;
+  const rx = Math.max(0, x0 / w - pad);
+  const ry = Math.max(0, y0 / h - pad);
+  const rX = Math.min(1, x1 / w + pad);
+  const rY = Math.min(1, y1 / h + pad);
+  return { x: rx, y: ry, w: rX - rx, h: rY - ry };
+}
+
+function updateCropBoxUI() {
+  const { x, y, w, h } = CropState.rect;
+  const st = $('cropBox').style;
+  st.left = (x * 100) + '%';
+  st.top = (y * 100) + '%';
+  st.width = (w * 100) + '%';
+  st.height = (h * 100) + '%';
+}
+
+function openCropper(isAuto) {
+  const e = getSelectedEntry();
+  const sideIdx = e.two ? State.activeSide : 0;
+  const sideObj = e.sides[sideIdx];
+  if (!sideObj) return showToast('أضف صورة أولاً لقصها');
+
+  CropState = {
+    sideObj,
+    rect: { x: 0.06, y: 0.06, w: 0.88, h: 0.88 }
+  };
+
+  const cImg = $('cropImg');
+  cImg.onload = () => {
+    if (isAuto) CropState.rect = autoDetectEdges(cImg);
+    updateCropBoxUI();
+  };
+  cImg.src = sideObj.origEl.src;
+  $('modalCrop').hidden = false;
+  if (cImg.complete && cImg.naturalWidth) cImg.onload();
+}
+
+$('btnCropManual').onclick = () => openCropper(false);
+$('btnCropAuto').onclick = () => openCropper(true);
+$('btnCropCancel').onclick = () => $('modalCrop').hidden = true;
+
+let cropDrag = null;
+const cropBoxEl = $('cropBox');
+
+cropBoxEl.addEventListener('pointerdown', ev => {
+  ev.preventDefault();
+  cropDrag = {
+    handle: ev.target.dataset.h || 'move',
+    startX: ev.clientX,
+    startY: ev.clientY,
+    startRect: { ...CropState.rect }
+  };
+  cropBoxEl.setPointerCapture(ev.pointerId);
+});
+
+cropBoxEl.addEventListener('pointermove', ev => {
+  if (!cropDrag) return;
+  const bounds = $('cropImg').getBoundingClientRect();
+  const dx = (ev.clientX - cropDrag.startX) / bounds.width;
+  const dy = (ev.clientY - cropDrag.startY) / bounds.height;
+
+  let { x, y, w, h } = cropDrag.startRect;
+  const hType = cropDrag.handle;
+
+  if (hType === 'move') {
+    x = clamp(x + dx, 0, 1 - w);
+    y = clamp(y + dy, 0, 1 - h);
+  } else {
+    let X = x + w, Y = y + h;
+    if (hType.includes('l')) x = clamp(x + dx, 0, X - 0.06);
+    if (hType.includes('r')) X = clamp(X + dx, x + 0.06, 1);
+    if (hType.includes('t')) y = clamp(y + dy, 0, Y - 0.06);
+    if (hType.includes('b')) Y = clamp(Y + dy, y + 0.06, 1);
+    w = X - x; h = Y - y;
+  }
+  CropState.rect = { x, y, w, h };
+  updateCropBoxUI();
+});
+
+cropBoxEl.addEventListener('pointerup', () => cropDrag = null);
+
+$('btnCropApply').onclick = async () => {
+  const { sideObj, rect } = CropState;
+  const raw = sideObj.origEl;
+  const c = document.createElement('canvas');
+  c.width = Math.round(rect.w * raw.naturalWidth);
+  c.height = Math.round(rect.h * raw.naturalHeight);
+  c.getContext('2d').drawImage(
+    raw,
+    rect.x * raw.naturalWidth, rect.y * raw.naturalHeight,
+    c.width, c.height,
+    0, 0, c.width, c.height
+  );
+  const blob = await new Promise(o => c.toBlob(o, 'image/jpeg', 0.96));
+  sideObj.workEl = await loadImageElement(URL.createObjectURL(blob));
+  $('modalCrop').hidden = true;
+  renderWorkspace();
+};
+
+/* التصدير والحفظ المتوافق مع تطبيق APK والمتصفح */
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function downloadBlob(filename, blob) {
+  // 1. إذا كان البرنامج يعمل داخل تطبيق أندرويد APK عبر Capacitor
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    try {
+      const base64Data = await blobToBase64(blob);
+      const { Filesystem, Share } = window.Capacitor.Plugins;
+
+      const savedFile = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: 'CACHE'
+      });
+
+      await Share.share({
+        title: filename,
+        url: savedFile.uri,
+        dialogTitle: 'حفظ أو مشاركة أو طباعة المستمسكات'
+      });
+      return;
+    } catch (err) {
+      console.error('Native save error:', err);
+    }
+  }
+
+  // 2. إذا كان المتصفح يدعم Web Share API للملفات
+  try {
+    const file = new File([blob], filename, { type: blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: filename });
+      return;
+    }
+  } catch (_) {}
+
+  // 3. التنزيل المباشر في المتصفحات التقليدية
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+$('btnPrintDirect').onclick = () => {
+  if (!State.entries.some(e => e.sides[0] || e.sides[1])) {
+    return showToast('أضف صورة مستمسك أولاً للطباعة');
+  }
+  // في بيئة APK، نفتح ملف PDF عبر قائمة المشاركة لإرساله إلى طابعة الهاتف
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    handleExport('pdf300');
+  } else {
+    window.print();
+  }
+};
+
+function drawRoundedRect(ctx, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function renderHighResItem(item, pxPerMm) {
+  const padMm = 2.4;
+  const { entry, sideIdx, w, h } = item;
+  const sideObj = entry.sides[sideIdx];
+
+  const c = document.createElement('canvas');
+  c.width = Math.round((w + 2 * padMm) * pxPerMm);
+  c.height = Math.round((h + 2 * padMm) * pxPerMm);
+  const ctx = c.getContext('2d');
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  const x = padMm * pxPerMm;
+  const y = padMm * pxPerMm;
+  const cw = w * pxPerMm;
+  const ch = h * pxPerMm;
+  const r = entry.radius * pxPerMm;
+
+  if (entry.shadow !== 'none') {
+    ctx.save();
+    ctx.shadowColor = entry.shadow === 'black' ? 'rgba(0,0,0,0.58)' : 'rgba(0,0,0,0.28)';
+    ctx.shadowBlur = 1.6 * pxPerMm;
+    ctx.shadowOffsetY = 0.5 * pxPerMm;
+    ctx.fillStyle = '#ffffff';
+    drawRoundedRect(ctx, x, y, cw, ch, r);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.save();
+  drawRoundedRect(ctx, x, y, cw, ch, r);
+  ctx.clip();
+
+  const filteredCanvas = renderFilteredCanvas(sideObj, cw, ch);
+  ctx.drawImage(filteredCanvas, x, y, cw, ch);
+  ctx.restore();
+
+  return { canvas: c, padMm };
+}
+
+function drawWatermarkOnCanvas(ctx, widthPx, heightPx) {
+  const txt = State.watermark.text.trim();
+  if (!txt) return;
+
+  ctx.save();
+  ctx.globalAlpha = State.watermark.alpha / 100;
+  ctx.fillStyle = '#000000';
+  const fontSize = Math.round(widthPx * 0.028);
+  ctx.font = `800 ${fontSize}px Cairo, sans-serif`;
+  ctx.textAlign = 'center';
+
+  const stepX = widthPx / 2.2;
+  const stepY = heightPx / 4.2;
+
+  for (let y = stepY * 0.5; y < heightPx; y += stepY) {
+    for (let x = stepX * 0.5; x < widthPx; x += stepX) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate((-28 * Math.PI) / 180);
+      ctx.fillText(txt, 0, 0);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+let isExporting = false;
+
+async function handleExport(mode) {
+  if (isExporting) return;
+  if (!State.entries.some(e => e.sides[0] || e.sides[1])) {
+    return showToast('أضف صورة مستمسك أولاً قبل التصدير');
+  }
+
+  isExporting = true;
+  showToast('جارٍ تجهيز الملف بجودة عالية...', 0);
+  await new Promise(r => setTimeout(r, 40));
+
+  try {
+    const baseName = ($('inpFileName').value.trim() || 'مستمسكات').replace(/[\\/:*?"<>|]/g, '_');
+    const pages = computeLayout();
+    const { w: PW, h: PH } = PAGE_FORMATS[State.pageKey];
+    const orient = PW > PH ? 'l' : 'p';
+
+    const dpi = mode === 'pdf600' ? 600 : 300;
+    const pxPerMm = dpi / 25.4;
+
+    if (mode.startsWith('pdf')) {
+      const pdf = new window.jspdf.jsPDF({
+        unit: 'mm',
+        format: [PW, PH],
+        orientation: orient,
+        compress: true
+      });
+
+      for (let p = 0; p < pages.length; p++) {
+        if (p > 0) pdf.addPage([PW, PH], orient);
+
+        const pageCanvas = document.createElement('canvas');
+        const safePx = Math.min(pxPerMm, Math.sqrt(38e6 / (PW * PH)));
+        pageCanvas.width = Math.round(PW * safePx);
+        pageCanvas.height = Math.round(PH * safePx);
+        const pCtx = pageCanvas.getContext('2d');
+        pCtx.fillStyle = '#ffffff';
+        pCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+        for (const item of pages[p]) {
+          if (!item.entry.sides[item.sideIdx]) continue;
+          const { canvas: itemC, padMm } = renderHighResItem(item, safePx);
+          pCtx.drawImage(
+            itemC,
+            Math.round((item.x - padMm) * safePx),
+            Math.round((item.y - padMm) * safePx)
+          );
+          itemC.width = itemC.height = 0;
+        }
+
+        drawWatermarkOnCanvas(pCtx, pageCanvas.width, pageCanvas.height);
+
+        pdf.addImage(
+          pageCanvas.toDataURL('image/jpeg', 0.95),
+          'JPEG', 0, 0, PW, PH, undefined, 'FAST'
+        );
+        pageCanvas.width = pageCanvas.height = 0;
+      }
+
+      await downloadBlob(`${baseName}.pdf`, pdf.output('blob'));
+    } else {
+      const isJpg = mode === 'jpg';
+      const safePx = Math.min(pxPerMm, Math.sqrt(38e6 / (PW * PH)));
+
+      for (let p = 0; p < pages.length; p++) {
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = Math.round(PW * safePx);
+        pageCanvas.height = Math.round(PH * safePx);
+        const pCtx = pageCanvas.getContext('2d');
+        pCtx.fillStyle = '#ffffff';
+        pCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+        for (const item of pages[p]) {
+          if (!item.entry.sides[item.sideIdx]) continue;
+          const { canvas: itemC, padMm } = renderHighResItem(item, safePx);
+          pCtx.drawImage(
+            itemC,
+            Math.round((item.x - padMm) * safePx),
+            Math.round((item.y - padMm) * safePx)
+          );
+          itemC.width = itemC.height = 0;
+        }
+
+        drawWatermarkOnCanvas(pCtx, pageCanvas.width, pageCanvas.height);
+
+        const blob = await new Promise(o =>
+          pageCanvas.toBlob(o, isJpg ? 'image/jpeg' : 'image/png', 0.94)
+        );
+        const suffix = pages.length > 1 ? `-${p + 1}` : '';
+        await downloadBlob(`${baseName}${suffix}.${isJpg ? 'jpg' : 'png'}`, blob);
+        pageCanvas.width = pageCanvas.height = 0;
+      }
+    }
+
+    showToast('تم تجهيز الملف بنجاح ✓');
+  } catch (err) {
+    console.error(err);
+    showToast('حدث خطأ أثناء التصدير، جرّب دقة أقل');
+  }
+
+  isExporting = false;
+}
+
+$('exportBar').onclick = ev => {
+  const mode = ev.target.dataset.exp;
+  if (mode) handleExport(mode);
+};
+
+/* دعم زر الرجوع في هواتف أندرويد لإغلاق النوافذ المفتوحة أولاً */
+document.addEventListener('backbutton', e => {
+  if (!$('modalCrop').hidden) {
+    e.preventDefault();
+    $('modalCrop').hidden = true;
+  } else if (!$('modalWatermark').hidden) {
+    e.preventDefault();
+    $('modalWatermark').hidden = true;
+  } else if (State.selId !== null)
