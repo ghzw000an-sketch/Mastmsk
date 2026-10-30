@@ -1,4 +1,4 @@
-name: Build Android APK Stable
+name: Build Android APK Stable v2
 
 on:
   push:
@@ -24,15 +24,20 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK Tools
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android Licenses & Tools
+      - name: Install Android SDK Components
         run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
+          unzip -q cmdtools.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools$HOME/android-sdk/cmdline-tools/latest
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+          
           yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" || true
+          sdkmanager --update || true
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Generate Web App Assets
+      - name: Generate Web App & Assets
         run: |
           mkdir -p www
           curl -L https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js -o www/jspdf.umd.min.js
@@ -72,4 +77,12 @@ jobs:
           .slot canvas{width:100%;height:100%;display:block;pointer-events:none}
           .hint{position:absolute;inset:0;display:grid;place-items:center;color:#729685;text-align:center;padding:20px;font-size:13px;pointer-events:none}
           .wm{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;display:flex;flex-wrap:wrap;align-content:space-around;justify-content:space-around}
-          .wm span{
+          .wm span{transform:rotate(-28deg);font-weight:800;color:#000;font-size:15px;white-space:nowrap;padding:16px}
+          .dock{position:fixed;left:0;right:0;bottom:0;padding:0 10px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:15;max-width:650px;margin:0 auto;pointer-events:none}
+          .dock>*{pointer-events:auto}
+          .pnl{background:var(--surf);border:1px solid var(--bd);border-radius:18px;padding:12px;box-shadow:var(--sh);max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+          .pnl[hidden],.modal[hidden],.menu[hidden],.toast[hidden]{display:none!important}
+          .row{display:flex;gap:6px;flex-wrap:wrap}
+          .row>*{flex:1 1 auto}
+          .cb{padding:7px 9px;border-radius:9px;background:rgba(25,135,84,.08);border:1px solid var(--bd);font-size:11.5px;font-weight:700}
+          .cb.on{background:var(--pri);
