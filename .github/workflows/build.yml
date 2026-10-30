@@ -1,0 +1,426 @@
+name: Build APK Simple
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Generate Web App & Assets
+        run: |
+          mkdir -p www
+          curl -L https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js -o www/jspdf.umd.min.js
+
+          cat << 'EOF' > www/index.html
+          <!DOCTYPE html>
+          <html lang="ar" dir="rtl">
+          <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+          <title>مرتّب المستمسكات الاحترافي</title>
+          <script src="jspdf.umd.min.js"></script>
+          <style>
+          :root{--bg1:#f0f7f4;--bg2:#d8ece3;--ink:#0a291e;--mut:#4b7060;--pri:#0f5132;--pri2:#198754;--surf:rgba(255,255,255,.9);--bd:rgba(20,83,45,.15);--sh:0 10px 30px rgba(10,45,30,.12)}
+          [data-theme="dark"]{--bg1:#06150f;--bg2:#0d281d;--ink:#e6f4ee;--mut:#8ab3a1;--pri:#198754;--pri2:#28a76c;--surf:rgba(15,42,30,.92);--bd:rgba(255,255,255,.14);--sh:0 10px 35px rgba(0,0,0,.5)}
+          *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+          html,body{height:100%;margin:0;font-family:Tahoma,Arial,sans-serif;color:var(--ink);background:linear-gradient(145deg,var(--bg1),var(--bg2));overflow:hidden;user-select:none}
+          button,select,input{font:inherit;color:inherit}
+          button{cursor:pointer;border:0;background:none;transition:.15s}
+          button:active{transform:scale(.96)}
+          .app{display:flex;flex-direction:column;height:100vh;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+          .top{display:flex;align-items:center;gap:6px;padding:10px 12px;margin:8px 10px 0;background:var(--surf);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);z-index:10;flex-wrap:wrap}
+          .brand{font-weight:800;font-size:15px;color:var(--pri);margin-left:auto;display:flex;align-items:center;gap:6px}
+          [data-theme="dark"] .brand{color:#5cd69c}
+          .pro{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05;font-size:10px;padding:2px 6px;border-radius:6px}
+          .bt{height:36px;padding:0 10px;border-radius:10px;background:rgba(25,135,84,.1);border:1px solid var(--bd);font-weight:700;font-size:12px}
+          .bt.gold{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05;border:0}
+          .bt.pri{background:var(--pri);color:#fff}
+          .work{flex:1;overflow:auto;padding:16px 12px 260px;display:flex;flex-direction:column;align-items:center}
+          .pwrap{width:min(100%,540px);margin-bottom:20px}
+          .pg{position:relative;width:100%;background:#fff;border-radius:4px;box-shadow:0 8px 25px rgba(0,0,0,.22);overflow:hidden;touch-action:pan-y}
+          .pg.grid{background-image:linear-gradient(to right,rgba(0,120,60,.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,120,60,.08) 1px,transparent 1px);background-size:5% 5%}
+          .plbl{text-align:center;font-size:11px;font-weight:700;color:var(--mut);margin-top:6px}
+          .slot{position:absolute;background:#f8faf9;cursor:grab;overflow:hidden;touch-action:none}
+          .slot.empty{border:2px dashed #68a889;background:#f2f9f6;display:grid;place-items:center;color:#156c43;font-weight:700;font-size:12px;text-align:center;padding:6px}
+          .slot.sel{outline:3px solid #198754;outline-offset:2px;z-index:4}
+          .slot canvas{width:100%;height:100%;display:block;pointer-events:none}
+          .hint{position:absolute;inset:0;display:grid;place-items:center;color:#729685;text-align:center;padding:20px;font-size:13px;pointer-events:none}
+          .wm{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;display:flex;flex-wrap:wrap;align-content:space-around;justify-content:space-around}
+          .wm span{transform:rotate(-28deg);font-weight:800;color:#000;font-size:15px;white-space:nowrap;padding:16px}
+          .dock{position:fixed;left:0;right:0;bottom:0;padding:0 10px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:15;max-width:650px;margin:0 auto;pointer-events:none}
+          .dock>*{pointer-events:auto}
+          .pnl{background:var(--surf);border:1px solid var(--bd);border-radius:18px;padding:12px;box-shadow:var(--sh);max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+          .pnl[hidden],.modal[hidden],.menu[hidden],.toast[hidden]{display:none!important}
+          .row{display:flex;gap:6px;flex-wrap:wrap}
+          .row>*{flex:1 1 auto}
+          .cb{padding:7px 9px;border-radius:9px;background:rgba(25,135,84,.08);border:1px solid var(--bd);font-size:11.5px;font-weight:700}
+          .cb.on{background:var(--pri);color:#fff}
+          .cb.del{color:#dc3545;background:rgba(220,53,69,.08)}
+          select,input[type=text],input[type=number]{width:100%;padding:7px 10px;border-radius:9px;border:1px solid var(--bd);background:#fff;color:#0a291e;font-size:12.5px;font-weight:700}
+          .fg{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700}
+          .fg input[type=range]{flex:1;accent-color:var(--pri)}
+          .ebar{background:var(--surf);border:1px solid var(--bd);border-radius:16px;padding:8px;box-shadow:var(--sh);display:flex;align-items:center;gap:6px;overflow-x:auto}
+          .echip{flex:none;padding:8px 12px;border-radius:10px;font-weight:700;font-size:12px;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;white-space:nowrap}
+          .echip.sec{background:rgba(25,135,84,.1);color:var(--ink);border:1px solid var(--bd)}
+          .echip.gold{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05}
+          .menu{position:absolute;top:56px;background:var(--bg1);border:1px solid var(--bd);border-radius:14px;padding:6px;box-shadow:var(--sh);z-index:30;display:flex;flex-direction:column;min-width:170px}
+          .menu button{padding:9px 12px;text-align:right;border-radius:8px;font-weight:700;font-size:12.5px}
+          .modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:14px}
+          .mcard{width:min(100%,420px);background:var(--bg1);border-radius:18px;padding:18px}
+          .cstage{position:relative;direction:ltr;display:inline-block;touch-action:none;background:#000;border-radius:8px;overflow:hidden}
+          .cstage img{display:block;max-width:100%;max-height:60vh;pointer-events:none}
+          #cbox{position:absolute;border:2px solid #4ade80;box-shadow:0 0 0 9999px rgba(0,0,0,.55);touch-action:none}
+          #cbox i{position:absolute;width:26px;height:26px;background:#4ade80;border-radius:50%;border:3px solid #fff}
+          #cbox i[data-h=tl]{left:-13px;top:-13px}#cbox i[data-h=tr]{right:-13px;top:-13px}#cbox i[data-h=bl]{left:-13px;bottom:-13px}#cbox i[data-h=br]{right:-13px;bottom:-13px}
+          .toast{position:fixed;left:50%;top:20px;transform:translateX(-50%);z-index:99;background:#0a291e;color:#fff;padding:9px 18px;border-radius:12px;font-size:12.5px;font-weight:700}
+          </style>
+          </head>
+          <body>
+          <div class="app">
+            <header class="top">
+              <div class="brand"><span>مرتّب المستمسكات</span><span class="pro">PRO</span></div>
+              <button class="bt gold" id="bAdd">＋ إضافة مستمسك</button>
+              <button class="bt" id="bPg">A4 عمودي</button>
+              <button class="bt" id="bWm">🛡 حماية</button>
+              <button class="bt" id="bArr">ترتيب</button>
+              <button class="bt" id="bGrd">شبكة</button>
+              <button class="bt" id="bThm">☾</button>
+            </header>
+            <div class="menu" id="mAdd" hidden style="right:110px">
+              <button id="aTwo">بطاقة / هوية (وجه وظهر)</button>
+              <button id="aOne">وثيقة / مستند (وجه واحد)</button>
+            </div>
+            <div class="menu" id="mPg" hidden style="right:200px"></div>
+            <div class="work" id="pages"></div>
+            <div class="dock">
+              <div class="pnl" id="insp" hidden>
+                <div class="row" style="justify-content:space-between;align-items:center">
+                  <b id="iTitle" style="font-size:13px">خصائص المستمسك</b>
+                  <div style="display:flex;gap:4px">
+                    <button class="cb" id="bDup">⧉ تكرار</button>
+                    <button class="cb del" id="bDel">حذف</button>
+                    <button class="cb" id="bCls">✕</button>
+                  </div>
+                </div>
+                <select id="sType"></select>
+                <div class="row" id="sTabs">
+                  <button class="cb on" id="tS0">الوجه الأول</button>
+                  <button class="cb" id="tS1">الظهر (الثاني)</button>
+                </div>
+                <div class="row">
+                  <button class="cb" id="bPick">📁 استبدال</button>
+                  <button class="cb" id="bCrp">✂ قص</button>
+                  <button class="cb" id="bAuto">⌖ تلقائي</button>
+                  <button class="cb" id="bRot">↻ 90°</button>
+                </div>
+                <div class="row">
+                  <button class="cb flt on" data-f="normal">أصلي</button>
+                  <button class="cb flt" data-f="scan">✨ مسح ضوئي</button>
+                  <button class="cb flt" data-f="gray">رمادي</button>
+                  <button class="cb flt" data-f="bw">أبيض وأسود</button>
+                </div>
+                <div class="row">
+                  <div class="fg"><span>السطوع:</span><input type="range" id="rBr" min="-60" max="60" value="0"></div>
+                  <div class="fg"><span>التباين:</span><input type="range" id="rCt" min="-60" max="80" value="0"></div>
+                </div>
+                <div class="row">
+                  <button class="cb" id="bSwpO">⟳ عكس القالب</button>
+                  <button class="cb" id="bSwpS">⇄ تبديل الوجهين</button>
+                  <button class="cb" id="bMode">الوضع: متجاور</button>
+                </div>
+                <div class="row">
+                  <div class="fg"><span>الحواف:</span><input type="range" id="rRad" min="0" max="10" step=".5" value="3"></div>
+                </div>
+              </div>
+              <div class="ebar" id="ebar">
+                <input type="text" id="fName" value="مستمسكات" style="width:100px;flex:none">
+                <button class="echip gold" data-x="pdf600">حفظ ومشاركة PDF (600 DPI)</button>
+                <button class="echip" data-x="pdf300">PDF (300 DPI)</button>
+                <button class="echip sec" data-x="png">صورة PNG</button>
+                <button class="echip sec" data-x="jpg">صورة JPG</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal" id="mWm" hidden>
+            <div class="mcard">
+              <h3 style="margin:0 0 10px">🛡 العلامة المائية الأمنية</h3>
+              <input type="text" id="iWm" placeholder="مثال: نسخة مخصصة للتعيين فقط">
+              <div class="fg" style="margin:10px 0"><span>الشفافية:</span><input type="range" id="rWm" min="5" max="45" value="18"></div>
+              <div class="row">
+                <button class="echip" id="wOk">تطبيق</button>
+                <button class="echip sec" id="wClr">إزالة</button>
+                <button class="echip sec" id="wNo">إغلاق</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal" id="mCrp" hidden>
+            <div style="display:flex;flex-direction:column;gap:10px;align-items:center;width:min(100%,500px)">
+              <div class="cstage"><img id="cImg"><div id="cbox"><i data-h="tl"></i><i data-h="tr"></i><i data-h="bl"></i><i data-h="br"></i></div></div>
+              <div class="row" style="width:100%">
+                <button class="echip" id="cOk" style="flex:1">✓ اعتماد القص</button>
+                <button class="echip sec" id="cNo" style="flex:1;background:#fff;color:#000">إلغاء</button>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="fi" accept="image/*" hidden>
+          <div class="toast" id="toast" hidden></div>
+          <script>
+          const $=id=>document.getElementById(id),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+          const DOCS=[['البطاقة الوطنية الموحدة',85.6,54],['بطاقة الناخب',85.6,54],['هوية الأحوال المدنية',85,105],['شهادة الجنسية العراقية',165,200],['بطاقة السكن',90,60],['البطاقة التموينية',95,65],['إجازة السوق',85.6,54],['جواز السفر العراقي',88,125],['صورة شخصية',35,45],['وثيقة A4',194,280]];
+          const PGS={'A4-P':{l:'A4 عمودي',w:210,h:297},'A4-L':{l:'A4 أفقي',w:297,h:210},'A5-P':{l:'A5 عمودي',w:148,h:210}};
+          const S={pg:'A4-P',grid:false,wm:{t:'',a:18},list:[],sel:null,side:0};
+          let uid=0,tt=null;
+          function toast(m,d=2500){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);if(d)tt=setTimeout(()=>t.hidden=true,d)}
+          const cur=()=>S.list.find(e=>e.id===S.sel);
+          $('bThm').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'};
+          $('bGrd').onclick=()=>{S.grid=!S.grid;$('bGrd').classList.toggle('pri',S.grid);render()};
+          function menu(id){['mAdd','mPg'].forEach(m=>$(m).hidden=(m!==id)||!$(m).hidden)}
+          $('bAdd').onclick=e=>{e.stopPropagation();menu('mAdd')};
+          $('bPg').onclick=e=>{e.stopPropagation();menu('mPg')};
+          document.addEventListener('click',()=>menu(''));
+          $('mPg').innerHTML=Object.entries(PGS).map(([k,v])=>`<button data-k="${k}">${v.l}</button>`).join('');
+          $('mPg').onclick=e=>{const k=e.target.dataset.k;if(!k)return;S.pg=k;$('bPg').textContent=PGS[k].l;S.list.forEach(x=>x.pos=null);render()};
+          $('sType').innerHTML=DOCS.map((d,i)=>`<option value="${i}">${d[0]} (${d[1]}×${d[2]} مم)</option>`).join('');
+          const mkImg=s=>new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=s});
+          async function mkSide(f){
+            let el=await mkImg(URL.createObjectURL(f));
+            if(Math.max(el.naturalWidth,el.naturalHeight)>3200){
+              const sc=3200/Math.max(el.naturalWidth,el.naturalHeight),c=document.createElement('canvas');
+              c.width=Math.round(el.naturalWidth*sc);c.height=Math.round(el.naturalHeight*sc);
+              c.getContext('2d').drawImage(el,0,0,c.width,c.height);
+              const b=await new Promise(o=>c.toBlob(o,'image/jpeg',.94));
+              el=await mkImg(URL.createObjectURL(b));
+            }
+            return{orig:el,work:el,rot:0,flt:'normal',br:0,ct:0};
+          }
+          function drawFlt(sd,tw,th){
+            const el=sd.work,rot=sd.rot%4,sw=rot===1||rot===3,iw=sw?el.naturalHeight:el.naturalWidth,ih=sw?el.naturalWidth:el.naturalHeight;
+            const c=document.createElement('canvas');c.width=Math.max(1,Math.round(tw));c.height=Math.max(1,Math.round(th));
+            const g=c.getContext('2d',{willReadFrequently:true}),sc=Math.max(c.width/iw,c.height/ih),dw=iw*sc,dh=ih*sc;
+            g.save();g.translate(c.width/2,c.height/2);g.rotate(rot*90*Math.PI/180);
+            if(sw)g.drawImage(el,-dh/2,-dw/2,dh,dw);else g.drawImage(el,-dw/2,-dh/2,dw,dh);
+            g.restore();
+            const f=sd.flt,br=sd.br+(f==='scan'?12:0),ct=sd.ct+(f==='scan'?38:0);
+            if(f!=='normal'||br!==0||ct!==0){
+              const id=g.getImageData(0,0,c.width,c.height),d=id.data,k=(259*(ct+255))/(255*(259-ct));
+              for(let i=0;i<d.length;i+=4){
+                let r=k*(d[i]+br-128)+128,gg=k*(d[i+1]+br-128)+128,b=k*(d[i+2]+br-128)+128;
+                if(f==='gray'||f==='bw'){const l=.299*r+.587*gg+.114*b;r=gg=b=f==='bw'?(l>138?255:0):l}
+                else if(f==='scan'){const l=.299*r+.587*gg+.114*b;if(l>205){r*=1.12;gg*=1.12;b*=1.12}}
+                d[i]=clamp(r,0,255);d[i+1]=clamp(gg,0,255);d[i+2]=clamp(b,0,255);
+              }
+              g.putImageData(id,0,0);
+            }
+            return c;
+          }
+          let pend=null;
+          function pick(e,i){pend={e,i};$('fi').value='';$('fi').click()}
+          $('fi').onchange=async()=>{
+            const f=$('fi').files[0];if(!f||!pend)return;
+            toast('جارٍ المعالجة...',0);
+            try{
+              pend.e.sides[pend.i]=await mkSide(f);$('toast').hidden=true;render();
+              if(pend.e.two&&pend.i===0&&!pend.e.sides[1])setTimeout(()=>{S.side=1;updInsp();pick(pend.e,1)},350);
+            }catch(_){toast('تعذر فتح الصورة')}
+          };
+          function add(two){
+            const e={id:++uid,two,type:0,rotT:false,mode:'side',rad:3,sides:[null,null],pos:null};
+            S.list.push(e);S.sel=e.id;S.side=0;render();pick(e,0);
+          }
+          $('aTwo').onclick=()=>add(true);$('aOne').onclick=()=>add(false);
+          function layout(){
+            const{w:W,h:H}=PGS[S.pg],M=8,G=5,pgs=[[]];let y=M;
+            for(const e of S.list){
+              const[,w0,h0]=DOCS[e.type],[dw,dh]=e.rotT?[h0,w0]:[w0,h0],n=e.two?2:1;
+              let bw=e.mode==='stack'?dw:dw*n+G*(n-1),bh=e.mode==='stack'?dh*n+G*(n-1):dh;
+              const sc=Math.min(1,(W-2*M)/bw,(H-2*M)/bh);bw*=sc;bh*=sc;
+              const cw=dw*sc,ch=dh*sc,g=G*sc;
+              if(y+bh>H-M&&y>M){pgs.push([]);y=M}
+              const P=pgs[pgs.length-1],x0=(W-bw)/2;
+              for(let i=0;i<n;i++){
+                const dx=e.mode==='stack'?x0:x0+(n-1-i)*(cw+g),dy=e.mode==='stack'?y+i*(ch+g):y;
+                const p=(e.pos&&e.pos[i])?e.pos[i]:{x:dx,y:dy};
+                P.push({e,i,x:clamp(p.x,0,W-cw),y:clamp(p.y,0,H-ch),w:cw,h:ch});
+              }
+              y+=bh+G;
+            }
+            return pgs;
+          }
+          $('bArr').onclick=()=>{S.list.forEach(e=>e.pos=null);render();toast('تم الترتيب تلقائياً')};
+          function render(){
+            const{w:W,h:H,l}=PGS[S.pg],box=$('pages');box.innerHTML='';
+            layout().forEach((P,idx)=>{
+              const w=document.createElement('div');w.className='pwrap';
+              const pg=document.createElement('div');pg.className='pg'+(S.grid?' grid':'');pg.style.aspectRatio=W+'/'+H;
+              P.forEach(it=>{
+                const{e,i,x,y,w:cw,h:ch}=it,sd=e.sides[i],s=document.createElement('div');
+                s.className='slot'+(sd?'':' empty')+(S.sel===e.id?' sel':'');
+                s.style.cssText=`left:${x/W*100}%;top:${y/H*100}%;width:${cw/W*100}%;height:${ch/H*100}%;border-radius:${e.rad*1.5}px`;
+                if(sd){s.style.boxShadow='0 3px 10px rgba(0,0,0,.25)';s.appendChild(drawFlt(sd,cw*4,ch*4))}
+                else s.textContent='＋ '+(e.two?(i?'الظهر':'الوجه'):'صورة');
+                let dr=null;
+                s.onpointerdown=ev=>{
+                  ev.stopPropagation();S.sel=e.id;S.side=i;updInsp();
+                  const r=pg.getBoundingClientRect();dr={sx:ev.clientX,sy:ev.clientY,ox:x,oy:y,pw:r.width,ph:r.height,mv:false};
+                  s.setPointerCapture(ev.pointerId);
+                };
+                s.onpointermove=ev=>{
+                  if(!dr)return;const dx=ev.clientX-dr.sx,dy=ev.clientY-dr.sy;
+                  if(Math.abs(dx)>4||Math.abs(dy)>4)dr.mv=true;
+                  if(dr.mv){
+                    const nx=clamp(dr.ox+(dx/dr.pw)*W,0,W-cw),ny=clamp(dr.oy+(dy/dr.ph)*H,0,H-ch);
+                    s.style.left=(nx/W*100)+'%';s.style.top=(ny/H*100)+'%';
+                    if(!e.pos)e.pos=[{x,y},{x,y}];e.pos[i]={x:nx,y:ny};
+                  }
+                };
+                s.onpointerup=()=>{if(dr&&!dr.mv&&!sd)pick(e,i);dr=null;render()};
+                pg.appendChild(s);
+              });
+              if(!S.list.length)pg.innerHTML='<div class="hint">اضغط على "＋ إضافة مستمسك" بالأعلى للبدء</div>';
+              if(S.wm.t){
+                const wm=document.createElement('div');wm.className='wm';wm.style.opacity=S.wm.a/100;
+                for(let k=0;k<10;k++){const sp=document.createElement('span');sp.textContent=S.wm.t;wm.appendChild(sp)}
+                pg.appendChild(wm);
+              }
+              w.appendChild(pg);
+              const lb=document.createElement('div');lb.className='plbl';lb.textContent=`ورقة ${idx+1} — ${l}`;w.appendChild(lb);
+              box.appendChild(w);
+            });
+            updInsp();
+          }
+          function updInsp(){
+            const e=cur(),p=$('insp');if(!e){p.hidden=true;return}
+            p.hidden=false;$('iTitle').textContent=DOCS[e.type][0];$('sType').value=e.type;
+            $('sTabs').style.display=e.two?'flex':'none';
+            $('tS0').classList.toggle('on',S.side===0);$('tS1').classList.toggle('on',S.side===1);
+            $('bMode').textContent='الوضع: '+(e.mode==='side'?'متجاور':'فوق بعض');
+            const sd=e.sides[e.two?S.side:0];
+            document.querySelectorAll('.flt').forEach(b=>b.classList.toggle('on',b.dataset.f===(sd?sd.flt:'normal')));
+            $('rBr').value=sd?sd.br:0;$('rCt').value=sd?sd.ct:0;$('rRad').value=e.rad;
+          }
+          $('bCls').onclick=()=>{S.sel=null;render()};
+          $('sType').onchange=ev=>{cur().type=+ev.target.value;cur().pos=null;render()};
+          $('tS0').onclick=()=>{S.side=0;updInsp()};$('tS1').onclick=()=>{S.side=1;updInsp()};
+          $('bPick').onclick=()=>pick(cur(),S.side);
+          $('bRot').onclick=()=>{const sd=cur().sides[cur().two?S.side:0];if(sd){sd.rot++;render()}};
+          document.querySelectorAll('.flt').forEach(b=>b.onclick=()=>{const sd=cur().sides[cur().two?S.side:0];if(sd){sd.flt=b.dataset.f;render()}});
+          $('rBr').oninput=ev=>{const sd=cur().sides[cur().two?S.side:0];if(sd){sd.br=+ev.target.value;render()}};
+          $('rCt').oninput=ev=>{const sd=cur().sides[cur().two?S.side:0];if(sd){sd.ct=+ev.target.value;render()}};
+          $('bSwpO').onclick=()=>{cur().rotT=!cur().rotT;cur().pos=null;render()};
+          $('bSwpS').onclick=()=>{cur().sides.reverse();render()};
+          $('bMode').onclick=()=>{cur().mode=cur().mode==='side'?'stack':'side';cur().pos=null;render()};
+          $('bDup').onclick=()=>{const e=cur();S.list.push({...e,id:++uid,sides:[...e.sides],pos:null});render()};
+          $('bDel').onclick=()=>{S.list=S.list.filter(x=>x.id!==S.sel);S.sel=null;render()};
+          $('rRad').oninput=ev=>{cur().rad=+ev.target.value;render()};
+          $('bWm').onclick=()=>{ $('iWm').value=S.wm.t;$('rWm').value=S.wm.a;$('mWm').hidden=false };
+          $('wOk').onclick=()=>{S.wm.t=$('iWm').value.trim();S.wm.a=+$('rWm').value;$('mWm').hidden=true;render()};
+          $('wClr').onclick=()=>{S.wm.t='';$('mWm').hidden=true;render()};
+          $('wNo').onclick=()=>$('mWm').hidden=true;
+          let C=null,cd=null;
+          function openCrp(){
+            const e=cur(),sd=e.sides[e.two?S.side:0];if(!sd)return toast('أضف صورة أولاً');
+            C={sd,r:{x:.06,y:.06,w:.88,h:.88}};
+            $('cImg').onload=()=>updCrp();$('cImg').src=sd.orig.src;$('mCrp').hidden=false;
+          }
+          function updCrp(){const{x,y,w,h}=C.r,s=$('cbox').style;s.left=x*100+'%';s.top=y*100+'%';s.width=w*100+'%';s.height=h*100+'%'}
+          $('bCrp').onclick=openCrp;$('bAuto').onclick=openCrp;$('cNo').onclick=()=>$('mCrp').hidden=true;
+          $('cbox').onpointerdown=ev=>{ev.preventDefault();cd={h:ev.target.dataset.h||'m',x:ev.clientX,y:ev.clientY,r:{...C.r}};$('cbox').setPointerCapture(ev.pointerId)};
+          $('cbox').onpointermove=ev=>{
+            if(!cd)return;const b=$('cImg').getBoundingClientRect(),dx=(ev.clientX-cd.x)/b.width,dy=(ev.clientY-cd.y)/b.height;
+            let{x,y,w,h}=cd.r;if(cd.h==='m'){x=clamp(x+dx,0,1-w);y=clamp(y+dy,0,1-h)}
+            else{let X=x+w,Y=y+h;if(cd.h.includes('l'))x=clamp(x+dx,0,X-.08);if(cd.h.includes('r'))X=clamp(X+dx,x+.08,1);if(cd.h.includes('t'))y=clamp(y+dy,0,Y-.08);if(cd.h.includes('b'))Y=clamp(Y+dy,y+.08,1);w=X-x;h=Y-y}
+            C.r={x,y,w,h};updCrp();
+          };
+          $('cbox').onpointerup=()=>cd=null;
+          $('cOk').onclick=async()=>{
+            const{sd,r}=C,el=sd.orig,c=document.createElement('canvas');
+            c.width=Math.round(r.w*el.naturalWidth);c.height=Math.round(r.h*el.naturalHeight);
+            c.getContext('2d').drawImage(el,r.x*el.naturalWidth,r.y*el.naturalHeight,r.w*el.naturalWidth,r.h*el.naturalHeight,0,0,c.width,c.height);
+            const b=await new Promise(o=>c.toBlob(o,'image/jpeg',.95));
+            sd.work=await mkImg(URL.createObjectURL(b));$('mCrp').hidden=true;render();
+          };
+          const toB64=b=>new Promise((r,j)=>{const f=new FileReader();f.onloadend=()=>r(f.result.split(',')[1]);f.onerror=j;f.readAsDataURL(b)});
+          async function saveOut(name,blob){
+            if(window.Capacitor&&window.Capacitor.isNativePlatform()){
+              try{
+                const b64=await toB64(blob),{Filesystem,Share}=window.Capacitor.Plugins;
+                const res=await Filesystem.writeFile({path:name,data:b64,directory:'CACHE'});
+                await Share.share({title:name,url:res.uri,dialogTitle:'حفظ أو مشاركة المستمسكات'});
+                return;
+              }catch(e){console.error(e)}
+            }
+            const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+          }
+          $('ebar').onclick=async ev=>{
+            const m=ev.target.dataset.x;if(!m)return;
+            if(!S.list.some(e=>e.sides[0]||e.sides[1]))return toast('أضف صورة مستمسك أولاً');
+            toast('جارٍ تجهيز الملف...',0);await new Promise(r=>setTimeout(r,50));
+            try{
+              const name=($('fName').value.trim()||'مستمسكات'),pgs=layout(),{w:W,h:H}=PGS[S.pg],px=(m==='pdf600'?600:300)/25.4;
+              const safePx=Math.min(px,Math.sqrt(28e6/(W*H)));
+              const pdf=m.startsWith('pdf')?new window.jspdf.jsPDF({unit:'mm',format:[W,H],orientation:W>H?'l':'p',compress:true}):null;
+              for(let p=0;p<pgs.length;p++){
+                if(pdf&&p>0)pdf.addPage([W,H],W>H?'l':'p');
+                const c=document.createElement('canvas');c.width=Math.round(W*safePx);c.height=Math.round(H*safePx);
+                const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
+                for(const it of pgs[p]){
+                  const sd=it.e.sides[it.i];if(!sd)continue;
+                  const fc=drawFlt(sd,it.w*safePx,it.h*safePx);
+                  g.drawImage(fc,Math.round(it.x*safePx),Math.round(it.y*safePx));
+                }
+                if(pdf)pdf.addImage(c.toDataURL('image/jpeg',.94),'JPEG',0,0,W,H,undefined,'FAST');
+                else{
+                  const b=await new Promise(o=>c.toBlob(o,m==='jpg'?'image/jpeg':'image/png',.94));
+                  await saveOut(`${name}-${p+1}.${m}`,b);
+                }
+              }
+              if(pdf)await saveOut(`${name}.pdf`,pdf.output('blob'));
+              toast('تم التجهيز بنجاح ✓');
+            }catch(e){toast('حدث خطأ، جرب دقة أقل')}
+          };
+          render();
+          </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Initialize Capacitor & Add Android
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/filesystem @capacitor/share
+          npx cap init "مرتب المستمسكات" "com.iq.mustamsakat.pro" --web-dir www
+          npx cap add android
+          npx cap sync android
+
+      - name: Build Debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload Ready APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mustamsakat-Pro-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
