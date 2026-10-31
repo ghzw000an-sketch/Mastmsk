@@ -54,6 +54,253 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      - name: Add native tools (print, folder picker) and app icon
+        run: |
+          PKG_DIR=android/app/src/main/java/com/mustamsakat/app
+          mkdir -p "$PKG_DIR"
+
+          cat > "$PKG_DIR/MainActivity.java" << 'EOF'
+          package com.mustamsakat.app;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(NativeToolsPlugin.class);
+                  super.onCreate(savedInstanceState);
+              }
+          }
+          EOF
+
+          cat > "$PKG_DIR/NativeToolsPlugin.java" << 'EOF'
+          package com.mustamsakat.app;
+
+          import android.app.Activity;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.os.CancellationSignal;
+          import android.os.ParcelFileDescriptor;
+          import android.print.PageRange;
+          import android.print.PrintAttributes;
+          import android.print.PrintDocumentAdapter;
+          import android.print.PrintDocumentInfo;
+          import android.print.PrintManager;
+          import android.provider.DocumentsContract;
+
+          import androidx.activity.result.ActivityResult;
+
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.ActivityCallback;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+
+          import java.io.FileOutputStream;
+          import java.io.InputStream;
+          import java.io.OutputStream;
+
+          @CapacitorPlugin(name = "NativeTools")
+          public class NativeToolsPlugin extends Plugin {
+
+              @PluginMethod
+              public void printPdf(final PluginCall call) {
+                  final String uriStr = call.getString("uri");
+                  final String name = call.getString("name", "document");
+                  if (uriStr == null) {
+                      call.reject("missing uri");
+                      return;
+                  }
+                  final Context ctx = getContext();
+                  getActivity().runOnUiThread(new Runnable() {
+                      @Override
+                      public void run() {
+                          try {
+                              PrintManager pm = (PrintManager) getActivity().getSystemService(Context.PRINT_SERVICE);
+                              pm.print(name, new PdfAdapter(ctx, Uri.parse(uriStr), name), null);
+                              call.resolve();
+                          } catch (Exception e) {
+                              call.reject(String.valueOf(e.getMessage()));
+                          }
+                      }
+                  });
+              }
+
+              @PluginMethod
+              public void pickFolder(PluginCall call) {
+                  Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                  i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                          | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                          | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                          | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+                  startActivityForResult(call, i, "folderResult");
+              }
+
+              @ActivityCallback
+              private void folderResult(PluginCall call, ActivityResult result) {
+                  if (call == null) {
+                      return;
+                  }
+                  Intent data = result.getData();
+                  if (result.getResultCode() != Activity.RESULT_OK || data == null || data.getData() == null) {
+                      call.reject("cancelled");
+                      return;
+                  }
+                  Uri tree = data.getData();
+                  try {
+                      getContext().getContentResolver().takePersistableUriPermission(
+                              tree,
+                              Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                  } catch (Exception ignored) {
+                  }
+                  JSObject ret = new JSObject();
+                  ret.put("uri", tree.toString());
+                  ret.put("name", String.valueOf(tree.getLastPathSegment()));
+                  call.resolve(ret);
+              }
+
+              @PluginMethod
+              public void saveToFolder(PluginCall call) {
+                  String tree = call.getString("tree");
+                  String src = call.getString("src");
+                  String name = call.getString("name");
+                  String mime = call.getString("mime", "application/octet-stream");
+                  if (tree == null || src == null || name == null) {
+                      call.reject("missing args");
+                      return;
+                  }
+                  InputStream in = null;
+                  OutputStream out = null;
+                  try {
+                      Uri treeUri = Uri.parse(tree);
+                      Uri parent = DocumentsContract.buildDocumentUriUsingTree(
+                              treeUri, DocumentsContract.getTreeDocumentId(treeUri));
+                      Uri doc = DocumentsContract.createDocument(
+                              getContext().getContentResolver(), parent, mime, name);
+                      if (doc == null) {
+                          call.reject("create failed");
+                          return;
+                      }
+                      in = getContext().getContentResolver().openInputStream(Uri.parse(src));
+                      out = getContext().getContentResolver().openOutputStream(doc);
+                      byte[] buf = new byte[16384];
+                      int n;
+                      while ((n = in.read(buf)) > 0) {
+                          out.write(buf, 0, n);
+                      }
+                      out.flush();
+                      JSObject ret = new JSObject();
+                      ret.put("uri", doc.toString());
+                      call.resolve(ret);
+                  } catch (Exception e) {
+                      call.reject(String.valueOf(e));
+                  } finally {
+                      try {
+                          if (in != null) in.close();
+                      } catch (Exception ignored) {
+                      }
+                      try {
+                          if (out != null) out.close();
+                      } catch (Exception ignored) {
+                      }
+                  }
+              }
+
+              private static class PdfAdapter extends PrintDocumentAdapter {
+                  private final Context ctx;
+                  private final Uri uri;
+                  private final String name;
+
+                  PdfAdapter(Context c, Uri u, String n) {
+                      ctx = c;
+                      uri = u;
+                      name = n;
+                  }
+
+                  @Override
+                  public void onLayout(PrintAttributes oldAttrs, PrintAttributes newAttrs,
+                                       CancellationSignal signal, LayoutResultCallback callback, Bundle extras) {
+                      if (signal.isCanceled()) {
+                          callback.onLayoutCancelled();
+                          return;
+                      }
+                      PrintDocumentInfo info = new PrintDocumentInfo.Builder(name)
+                              .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
+                              .setPageCount(PrintDocumentInfo.PAGE_COUNT_UNKNOWN)
+                              .build();
+                      callback.onLayoutFinished(info, true);
+                  }
+
+                  @Override
+                  public void onWrite(PageRange[] pages, ParcelFileDescriptor destination,
+                                      CancellationSignal signal, WriteResultCallback callback) {
+                      InputStream in = null;
+                      OutputStream out = null;
+                      try {
+                          in = ctx.getContentResolver().openInputStream(uri);
+                          out = new FileOutputStream(destination.getFileDescriptor());
+                          byte[] buf = new byte[16384];
+                          int n;
+                          while ((n = in.read(buf)) > 0) {
+                              out.write(buf, 0, n);
+                          }
+                          callback.onWriteFinished(new PageRange[]{PageRange.ALL_PAGES});
+                      } catch (Exception e) {
+                          callback.onWriteFailed(String.valueOf(e));
+                      } finally {
+                          try {
+                              if (in != null) in.close();
+                          } catch (Exception ignored) {
+                          }
+                          try {
+                              if (out != null) out.close();
+                          } catch (Exception ignored) {
+                          }
+                      }
+                  }
+              }
+          }
+          EOF
+
+          RES=android/app/src/main/res
+          mkdir -p "$RES/drawable" "$RES/values" "$RES/mipmap-anydpi-v26"
+
+          cat > "$RES/values/mst_colors.xml" << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="mst_bg">#14532D</color>
+          </resources>
+          EOF
+
+          cat > "$RES/drawable/mst_fg.xml" << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path android:fillColor="#FFFFFF" android:pathData="M30,40L78,40L78,68L30,68Z" />
+              <path android:fillColor="#D9A93A" android:pathData="M35,45L47,45L47,57L35,57Z" />
+              <path android:fillColor="#1F7A4D" android:pathData="M52,46L72,46L72,49L52,49Z" />
+              <path android:fillColor="#1F7A4D" android:pathData="M52,52L72,52L72,55L52,55Z" />
+              <path android:fillColor="#1F7A4D" android:pathData="M35,61L72,61L72,64L35,64Z" />
+          </vector>
+          EOF
+
+          for N in ic_launcher ic_launcher_round; do
+          cat > "$RES/mipmap-anydpi-v26/$N.xml" << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/mst_bg" />
+              <foreground android:drawable="@drawable/mst_fg" />
+          </adaptive-icon>
+          EOF
+          done
+
       - name: Set Arabic app name
         run: |
           sed -i 's#<string name="app_name">.*</string>#<string name="app_name">مرتّب المستمسكات</string>#' android/app/src/main/res/values/strings.xml
