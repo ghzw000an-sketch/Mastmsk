@@ -9,249 +9,137 @@
 
 <style>
 :root{
---bg1:#f5fbf8;--bg2:#c9e6d6;--ink:#0b2a1f;
---mut:#3d6553;--g:#14532d;--g2:#1f7a4d;
---glass:rgba(255,255,255,.55);--bd:rgba(255,255,255,.8);
---sh:0 8px 30px rgba(10,70,45,.18);
---blob:rgba(31,122,77,.35)
+--bg1:#f5fbf8;--bg2:#c9e6d6;--ink:#0b2a1f;--mut:#3d6553;
+--acc:#1f7a4d;--acc2:#14532d;--acc-l:#1f7a4d;--acc-rgb:31,122,77;
+--panel:#f7fbf9;--chip:rgba(0,0,0,.05);--bd:rgba(0,0,0,.14);--fs:1;
+--sh:0 8px 30px rgba(10,70,45,.18)
 }
-[data-t=dark]{
---bg1:#04120c;--bg2:#0b2a1d;--ink:#e8f5ee;
---mut:#9cc7b2;--glass:rgba(255,255,255,.08);
---bd:rgba(255,255,255,.16);
---sh:0 8px 30px rgba(0,0,0,.45);
---blob:rgba(46,160,100,.28)
-}
+[data-t=dark]{--sh:0 8px 30px rgba(0,0,0,.5)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
 body{
-font-family:Cairo,Tahoma,sans-serif;color:var(--ink);
-overflow:hidden;
+font-family:Cairo,Tahoma,sans-serif;font-size:calc(15px*var(--fs));color:var(--ink);
+overflow:hidden;-webkit-user-select:none;user-select:none;
 background:
-radial-gradient(520px 420px at 90% -5%,rgba(224,184,76,.34),transparent 70%),
-radial-gradient(640px 560px at -10% 105%,rgba(31,122,77,.42),transparent 70%),
+radial-gradient(520px 420px at 90% -5%,rgba(224,184,76,.32),transparent 70%),
+radial-gradient(640px 560px at -10% 105%,rgba(var(--acc-rgb),.38),transparent 70%),
 linear-gradient(160deg,var(--bg1),var(--bg2))
 }
 button,select,input{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
-button:focus-visible,select:focus-visible{outline:2px solid var(--g2);outline-offset:2px}
-.blob{
-position:fixed;border-radius:50%;pointer-events:none;
-background:radial-gradient(circle,var(--blob),transparent 68%);
-animation:drift 16s ease-in-out infinite alternate
-}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input,select{-webkit-user-select:text;user-select:text}
+.blob{position:fixed;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(var(--acc-rgb),.35),transparent 68%);animation:drift 16s ease-in-out infinite alternate}
 .b1{width:260px;height:260px;top:-60px;right:-80px}
 .b2{width:300px;height:300px;bottom:-100px;left:-90px;animation-delay:-7s}
-.b3{
-width:200px;height:200px;top:42%;left:-60px;
-background:radial-gradient(circle,rgba(224,184,76,.4),transparent 68%);
-animation-delay:-3s
-}
+.b3{width:200px;height:200px;top:42%;left:-60px;background:radial-gradient(circle,rgba(224,184,76,.4),transparent 68%);animation-delay:-3s}
 body.inEd .blob{animation:none}
-.view{
-position:fixed;inset:0;display:none;flex-direction:column;
-padding-top:env(safe-area-inset-top,0px);
-padding-bottom:env(safe-area-inset-bottom,0px)
-}
+.view{position:fixed;inset:0;display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .view.on{display:flex}
-.glass{
-background:var(--glass);border:1px solid var(--bd);
-box-shadow:var(--sh);
-backdrop-filter:blur(10px) saturate(140%);
--webkit-backdrop-filter:blur(10px) saturate(140%)
-}
-.hm{
-margin:auto;width:min(92%,420px);display:flex;
-flex-direction:column;gap:14px;text-align:center;position:relative
-}
-h1{
-margin:6px 0 0;font-size:30px;font-weight:800;
-background:linear-gradient(90deg,#14532d,#2fa56b 55%,#c99a2e);
--webkit-background-clip:text;background-clip:text;color:transparent
-}
-[data-t=dark] h1{
-background:linear-gradient(90deg,#7fe0ae,#f0dc8a);
--webkit-background-clip:text;background-clip:text;color:transparent
-}
-.sub{margin:0 0 10px;color:var(--mut);font-size:15px;line-height:1.7}
-.card{
-border-radius:24px;padding:20px 18px;display:flex;
-align-items:center;gap:14px;text-align:right;font-weight:600;
-font-size:18px;transition:transform .15s;position:relative;overflow:hidden
-}
+
+/* الرئيسية */
+.hm{margin:auto;width:min(92%,420px);display:flex;flex-direction:column;gap:14px;text-align:center;position:relative}
+h1{margin:6px 0 0;font-size:2em;font-weight:800;background:linear-gradient(90deg,var(--acc-l),#c99a2e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:0 0 10px;color:var(--mut);line-height:1.7}
+.card{border-radius:24px;padding:20px 18px;display:flex;align-items:center;gap:14px;text-align:right;font-weight:600;font-size:1.2em;transition:transform .15s;position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--bd);box-shadow:var(--sh)}
 .card:active{transform:scale(.97)}
-.card small{display:block;font-weight:400;color:var(--mut);font-size:13px;margin-top:2px}
-.card.pri{
-background:linear-gradient(135deg,var(--g),var(--g2));
-color:#fff;border-color:transparent;
-box-shadow:0 12px 30px rgba(20,83,45,.45)
-}
-.card.pri small{color:#d6f3e3}
-.card.pri::after{
-content:"";position:absolute;top:0;bottom:0;width:60px;left:-90px;
-background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);
-transform:skewX(-20deg);animation:sheen 4.2s ease-in-out infinite
-}
-.ic{
-width:46px;height:46px;border-radius:15px;display:grid;
-place-items:center;background:rgba(255,255,255,.22);
-flex:none;font-size:22px
-}
-.card:not(.pri) .ic{
-background:linear-gradient(135deg,#f6dd86,#d9a93a)!important;color:#4a3604
-}
+.card small{display:block;font-weight:400;color:var(--mut);font-size:.72em;margin-top:2px}
+.card.pri{background:linear-gradient(135deg,var(--acc2),var(--acc));color:#fff;border-color:transparent;box-shadow:0 12px 30px rgba(var(--acc-rgb),.45)}
+.card.pri small{color:rgba(255,255,255,.85)}
+.card.pri::after{content:"";position:absolute;top:0;bottom:0;width:60px;left:-90px;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);animation:sheen 4.2s ease-in-out infinite}
+.ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:rgba(255,255,255,.22);flex:none;font-size:22px}
+.card:not(.pri) .ic{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#4a3604}
 .hero{position:relative;height:178px;width:250px;margin:0 auto}
-.hc{
-position:absolute;left:50%;top:50%;width:152px;height:98px;
-margin:-49px 0 0 -76px;border-radius:17px;
-border:1px solid rgba(255,255,255,.7);
-box-shadow:0 14px 34px rgba(10,70,45,.3);padding:13px;
-display:flex;gap:11px;
-transform:translate(var(--x),var(--y)) rotate(var(--r));
-animation:cin .9s cubic-bezier(.2,.9,.3,1.25) both,fl 5s ease-in-out .9s infinite
-}
+.hc{position:absolute;left:50%;top:50%;width:152px;height:98px;margin:-49px 0 0 -76px;border-radius:17px;border:1px solid rgba(255,255,255,.7);box-shadow:0 14px 34px rgba(10,70,45,.3);padding:13px;display:flex;gap:11px;transform:translate(var(--x),var(--y)) rotate(var(--r));animation:cin .9s cubic-bezier(.2,.9,.3,1.25) both,fl 5s ease-in-out .9s infinite}
 .hc .ph{width:32px;height:42px;border-radius:9px;background:currentColor;opacity:.28;flex:none}
 .hc .ln{flex:1;padding-top:4px}
 .hc .ln b{display:block;height:7px;border-radius:4px;background:currentColor;opacity:.3;margin-bottom:9px}
 .hc .ln b:last-child{width:60%}
-.hc.a{--x:-40px;--y:16px;--r:-15deg;color:#fff;background:linear-gradient(135deg,#14532d,#2fa56b)}
+.hc.a{--x:-40px;--y:16px;--r:-15deg;color:#fff;background:linear-gradient(135deg,var(--acc2),var(--acc))}
 .hc.b{--x:38px;--y:-8px;--r:11deg;color:#14532d;background:linear-gradient(135deg,#fff,#dff2e8);animation-delay:.12s,-1.6s}
 .hc.c{--x:0px;--y:8px;--r:-3deg;z-index:2;color:#4a3604;background:linear-gradient(135deg,#f6dd86,#d9a93a);animation-delay:.24s,-3s}
 
-.bar{
-display:flex;align-items:center;gap:8px;margin:10px 12px 0;
-padding:8px 10px;border-radius:20px;position:relative;z-index:5;
-background:linear-gradient(120deg,rgba(20,83,45,.92),rgba(31,122,77,.8));
-color:#fff;border-color:rgba(255,255,255,.25)
-}
-.bar .sp{flex:1;font-weight:800;color:#fff;font-size:16px}
-.ib{
-min-width:44px;height:44px;border-radius:14px;
-display:grid;place-items:center;
-background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);
-font-weight:800;font-size:14px;padding:0 10px;color:#fff
-}
-.ib.pri{
-background:linear-gradient(135deg,#f6dd86,#d9a93a);
-color:#3a2b05;box-shadow:0 0 0 3px rgba(246,221,134,.3)
-}
-.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pop{
-position:absolute;top:60px;min-width:190px;border-radius:18px;
-padding:6px;z-index:9;display:flex;flex-direction:column;
-background:var(--bg1);border:1px solid var(--bd);box-shadow:var(--sh);
-color:var(--ink);animation:dd .18s ease-out
-}
-[data-t=dark] .pop{background:#0d2a1e}
+/* الشريط العلوي */
+.bar{display:flex;align-items:center;gap:6px;margin:10px 10px 0;padding:7px 8px;border-radius:20px;position:relative;z-index:5;background:linear-gradient(120deg,var(--acc2),var(--acc));color:#fff;box-shadow:var(--sh)}
+.bar .sp{flex:1;min-width:0;font-weight:800;font-size:1.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{min-width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);font-weight:800;font-size:.9em;padding:0 8px;color:#fff;flex:none}
+.ib.pri{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05;box-shadow:0 0 0 3px rgba(246,221,134,.3)}
+.ib svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pop{position:fixed;min-width:190px;border-radius:18px;padding:6px;z-index:40;display:flex;flex-direction:column;background:var(--panel);color:var(--ink);border:1px solid var(--bd);box-shadow:var(--sh);animation:dd .18s ease-out}
 .pop[hidden]{display:none}
 .pop button{padding:12px 14px;text-align:right;border-radius:12px;font-weight:600}
-.pop button:active,.pop button.on{background:var(--g2);color:#fff}
-.scroll{
-flex:1;overflow:auto;padding:14px 14px 240px;
--webkit-overflow-scrolling:touch;
-background-image:radial-gradient(rgba(20,83,45,.16) 1px,transparent 1.3px);
-background-size:18px 18px
-}
-.pg{
-position:relative;width:min(100%,560px);margin:0 auto 6px;
-background:#fff;border-radius:3px;box-shadow:0 6px 24px rgba(0,0,0,.28)
-}
-.pgl{width:min(100%,560px);margin:0 auto 16px;text-align:center;font-size:12px;color:var(--mut)}
-.slot{
-position:absolute;background-size:cover;
-background-position:center;background-color:#f1f1f1;cursor:pointer
-}
-.slot.empty{
-border:2px dashed #7bb899;background:#f4faf7;
-display:grid;place-items:center;color:#1f7a4d;
-font-weight:700;font-size:clamp(10px,3vw,15px);
-border-radius:calc(var(--u)*2)
-}
-.slot.sel{outline:2.5px solid #1f9d63;outline-offset:2px}
-.hint{
-position:absolute;inset:0;display:grid;place-items:center;
-text-align:center;color:#6b8f7d;padding:30px;
-font-size:15px;line-height:1.8;pointer-events:none
-}
-.dock{
-position:fixed;left:0;right:0;bottom:0;
-padding:0 10px calc(10px + env(safe-area-inset-bottom,0px));
-display:flex;flex-direction:column;gap:8px;z-index:6;pointer-events:none
-}
+.pop button:active,.pop button.on{background:var(--acc);color:#fff}
+
+/* الورقة */
+.scroll{flex:1;overflow:auto;padding:14px 14px 260px;-webkit-overflow-scrolling:touch;background-image:radial-gradient(rgba(var(--acc-rgb),.18) 1px,transparent 1.3px);background-size:18px 18px}
+.pg{position:relative;width:min(100%,560px);margin:0 auto 6px;background:#fff;border-radius:3px;box-shadow:0 6px 24px rgba(0,0,0,.28)}
+.pgl{width:min(100%,560px);margin:0 auto 16px;text-align:center;font-size:.8em;color:var(--mut)}
+.slot{position:absolute;background-size:cover;background-position:center;background-color:#f1f1f1;cursor:pointer}
+.slot.empty{border:2px dashed #7bb899;background:#f4faf7;display:grid;place-items:center;color:#1f7a4d;font-weight:700;font-size:clamp(10px,3vw,15px);border-radius:calc(var(--u)*2);text-align:center;padding:4px}
+.slot.sel{outline:2.5px solid var(--acc);outline-offset:2px;z-index:3}
+.slot.mv{cursor:grab;touch-action:none}
+.hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#6b8f7d;padding:30px;line-height:1.8;pointer-events:none;font-size:1em}
+
+/* اللوحة السفلية */
+.dock{position:fixed;left:0;right:0;bottom:0;padding:0 10px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:6;pointer-events:none}
 .dock>*{pointer-events:auto}
-.sheet{
-border-radius:22px;padding:12px;display:flex;
-flex-direction:column;gap:9px;max-height:46vh;overflow:auto;
-animation:up .26s ease-out
-}
+.sheet{border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:9px;max-height:44vh;overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--bd);box-shadow:var(--sh);animation:up .26s ease-out}
 .sheet[hidden]{display:none}
-.sh-h{display:flex;align-items:center;justify-content:space-between;font-weight:800}
+.sh-h{display:flex;align-items:center;justify-content:space-between;font-weight:800;gap:8px}
 .row{display:flex;gap:7px;flex-wrap:wrap}
 .row>*{flex:1 1 auto}
-.sb{
-padding:9px 11px;border-radius:12px;background:var(--glass);
-border:1px solid var(--bd);font-size:13px;font-weight:600;white-space:nowrap
-}
-.sb.on{background:var(--g2);color:#fff;border-color:transparent}
-.sb.red{color:#c0392b}
-select{
-width:100%;padding:10px;border-radius:12px;
-border:1px solid var(--bd);background:var(--glass);
-font-size:14px;font-weight:600
-}
+.sb{padding:9px 11px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);font-size:.87em;font-weight:600;white-space:nowrap;color:var(--ink)}
+.sb.on{background:var(--acc);color:#fff;border-color:transparent}
+.sb.red{color:#d64533}
+select,input[type=text],input[type=number]{width:100%;padding:10px;border-radius:12px;border:1px solid var(--bd);background:var(--chip);color:var(--ink);font-size:.95em;font-weight:600}
 select option,select optgroup{color:#0b2a1f;background:#fff}
-.lb{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600}
-.lb input[type=range]{flex:1;accent-color:#1f7a4d}
-.lb select{width:auto;flex:1}
-.exp{border-radius:20px;padding:8px;display:flex;gap:7px;overflow-x:auto}
-.chip{
-flex:none;padding:11px 14px;border-radius:14px;
-font-weight:700;font-size:13px;
-background:linear-gradient(135deg,var(--g),var(--g2));
-color:#fff;white-space:nowrap;
-box-shadow:0 4px 14px rgba(20,83,45,.35);transition:transform .15s
-}
+.lb{display:flex;align-items:center;gap:10px;font-size:.87em;font-weight:600}
+.lb input[type=range]{flex:1;accent-color:var(--acc)}
+.lb input[type=number],.lb select{width:auto;flex:1}
+.lb b{min-width:38px;text-align:center}
+.act{border-radius:20px;padding:8px;display:flex;gap:7px;overflow-x:auto;background:var(--panel);border:1px solid var(--bd);box-shadow:var(--sh)}
+.chip{flex:none;padding:11px 14px;border-radius:14px;font-weight:700;font-size:.87em;background:linear-gradient(135deg,var(--acc2),var(--acc));color:#fff;white-space:nowrap;box-shadow:0 4px 14px rgba(var(--acc-rgb),.3);transition:transform .15s}
 .chip:active{transform:scale(.94)}
-.chip.o{background:var(--glass);color:var(--ink);border:1px solid var(--bd);box-shadow:none}
-.exp .chip:first-child{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05}
-.modal{
-position:fixed;inset:0;z-index:20;background:rgba(0,20,10,.55);
-display:grid;place-items:center;padding:16px
-}
+.chip.gold{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05}
+.chip.o{background:var(--chip);color:var(--ink);border:1px solid var(--bd);box-shadow:none}
+.chip.o.on{background:var(--acc);color:#fff;border-color:transparent}
+.chip.red{color:#d64533}
+
+/* النوافذ */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,20,10,.6);display:grid;place-items:center;padding:14px}
 .modal[hidden]{display:none}
-.mb{
-width:min(100%,420px);border-radius:26px;padding:22px;
-background:var(--bg1);border:1px solid var(--bd);
-box-shadow:var(--sh);line-height:1.9
-}
-[data-t=dark] .mb{background:#0d2a1e}
-.mb h2{margin:0 0 8px;color:var(--g)}
-[data-t=dark] .mb h2{color:#7fe0ae}
-.mb a{color:var(--g2);font-weight:700;word-break:break-all}
-[data-t=dark] .mb a{color:#7fe0ae}
+.mb{width:min(100%,440px);max-height:90vh;overflow:auto;border-radius:26px;padding:20px;background:var(--panel);color:var(--ink);border:1px solid var(--bd);box-shadow:var(--sh);line-height:1.8}
+.mb h2{margin:0;color:var(--acc-l)}
+.mb h3{margin:16px 0 6px;color:var(--acc-l);font-size:1.05em;border-bottom:1px solid var(--bd);padding-bottom:4px}
+.mh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lbl{font-size:.87em;font-weight:600;margin:10px 0 6px;color:var(--mut)}
+.seg{display:flex;border-radius:14px;overflow:hidden;border:1px solid var(--bd)}
+.seg button{flex:1;padding:10px;font-weight:600;background:var(--chip)}
+.seg button.on{background:var(--acc);color:#fff}
+.sw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dot{width:36px;height:36px;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px var(--bd)}
+.dot.on{border-color:var(--ink)}
+input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);border-radius:10px;background:none}
+.cr2{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.9em;font-weight:600}
+.cr2 span{flex:1}
+.fmt{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.fmt button{padding:12px;border-radius:14px;text-align:right;background:var(--chip);border:1px solid var(--bd);font-weight:600}
+.fmt button.on{background:var(--acc);color:#fff;border-color:transparent}
+.pv{position:fixed;inset:0;z-index:50;background:var(--bg2);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.pv[hidden]{display:none}
+.pv .scroll{padding-bottom:24px}
+.pvb{display:flex;gap:8px;padding:10px;align-items:center;background:var(--panel);border-bottom:1px solid var(--bd)}
+.pvb b{flex:1;font-weight:800}
 .cw{width:min(100%,520px);display:flex;flex-direction:column;gap:12px;align-items:center}
 .cbox{position:relative;direction:ltr;display:inline-block;touch-action:none;user-select:none}
 .cbox img{display:block;max-width:100%;max-height:64vh;pointer-events:none}
-#cr{
-position:absolute;border:2px solid #4ade80;
-box-shadow:0 0 0 999px rgba(0,0,0,.55);
-touch-action:none;cursor:move
-}
-#cr i{
-position:absolute;width:30px;height:30px;
-background:#4ade80;border-radius:50%;border:3px solid #fff
-}
+#cr{position:absolute;border:2px solid #4ade80;box-shadow:0 0 0 999px rgba(0,0,0,.55);touch-action:none;cursor:move}
+#cr i{position:absolute;width:30px;height:30px;background:#4ade80;border-radius:50%;border:3px solid #fff}
 #cr i[data-k=tl]{left:-15px;top:-15px}
 #cr i[data-k=tr]{right:-15px;top:-15px}
 #cr i[data-k=bl]{left:-15px;bottom:-15px}
 #cr i[data-k=br]{right:-15px;bottom:-15px}
-.toast{
-position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);
-transform:translateX(-50%);z-index:30;background:#0b2a1f;
-color:#fff;padding:11px 18px;border-radius:16px;
-font-size:14px;font-weight:600;max-width:90%;
-text-align:center;box-shadow:var(--sh)
-}
+.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:90;background:#0b2a1f;color:#fff;padding:11px 18px;border-radius:16px;font-size:.93em;font-weight:600;max-width:90%;text-align:center;box-shadow:var(--sh)}
 .toast[hidden]{display:none}
 @keyframes dd{from{opacity:0;transform:translateY(-8px) scale(.96)}}
 @keyframes up{from{opacity:0;transform:translateY(26px)}}
@@ -275,53 +163,50 @@ text-align:center;box-shadow:var(--sh)
 <div class="hc b"><i class="ph"></i><span class="ln"><b></b><b></b><b></b></span></div>
 <div class="hc c"><i class="ph"></i><span class="ln"><b></b><b></b><b></b></span></div>
 </div>
-
 <h1>مرتّب المستمسكات</h1>
 <p class="sub">صوّر هويتك ومستمسكاتك ورتّبها على ورقة جاهزة للطباعة</p>
 
-<button class="card glass pri" id="goNew">
+<button class="card pri" id="goNew">
 <span class="ic">＋</span>
 <span>إنشاء مستند<small>ورقة بيضاء جاهزة للترتيب</small></span>
 </button>
 
-<button class="card glass" id="goAbout">
-<span class="ic">ℹ</span>
-<span>من نحن<small>عن التطبيق والتواصل</small></span>
+<button class="card" id="goSet">
+<span class="ic">⚙</span>
+<span>الإعدادات<small>الألوان، الورقة، مكان الحفظ</small></span>
 </button>
 </main>
 </section>
 
 <section id="ed" class="view">
-<header class="bar glass">
-<button class="ib" id="back" aria-label="رجوع">
-<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-</button>
-<span class="sp">ورقة المستمسكات</span>
+<header class="bar" id="hdr">
+<button class="ib" id="back" aria-label="رجوع"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+<span class="sp">المستمسكات</span>
 <button class="ib" id="bSize" aria-label="حجم الورقة">A4</button>
-<button class="ib" id="bTheme" aria-label="الوضع الداكن">
-<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>
-</button>
-<button class="ib pri" id="bAdd" aria-label="إضافة مستند">
-<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-</button>
-
-<div class="pop glass" id="pSize" hidden style="right:56px"></div>
-<div class="pop glass" id="pAdd" hidden style="left:10px">
-<button id="aTwo">مستند وجه وظهر</button>
-<button id="aOne">مستند بوجه واحد</button>
-</div>
+<button class="ib" id="bTheme" aria-label="الوضع الليلي"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg></button>
+<button class="ib" id="bSet" aria-label="الإعدادات"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
+<button class="ib pri" id="bAdd" aria-label="إضافة مستند"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 </header>
+
+<div class="pop" id="pSize" hidden></div>
+<div class="pop" id="pAdd" hidden>
+<button id="aTwo">🪪 مستند وجه وظهر</button>
+<button id="aOne">📄 مستند بوجه واحد</button>
+<button id="aPhoto">👤 صورة شخصية</button>
+</div>
 
 <div class="scroll" id="pages"></div>
 
-<div class="dock">
-<div class="sheet glass" id="sheet" hidden>
-<div class="sh-h">
-<span id="shT">المستند</span>
-<button class="sb" id="shX">إغلاق</button>
-</div>
+<div class="dock" id="dock">
+<div class="sheet" id="sheet" hidden>
+<div class="sh-h"><span id="shT">المستند</span><button class="sb" id="shX">إغلاق ✕</button></div>
 
 <select id="szS" aria-label="نوع المستند"></select>
+
+<div class="row" id="cuRow" hidden>
+<label class="lb">العرض (مم)<input type="number" id="cuW" min="10" max="420"></label>
+<label class="lb">الارتفاع (مم)<input type="number" id="cuH" min="10" max="420"></label>
+</div>
 
 <div class="row" id="sides">
 <button class="sb" id="sd0">الوجه</button>
@@ -329,66 +214,133 @@ text-align:center;box-shadow:var(--sh)
 </div>
 
 <div class="row">
-<button class="sb" id="bCrop">✂ قص الصورة</button>
-<button class="sb" id="bAuto">⌖ تعرّف تلقائي على الحواف</button>
-<button class="sb" id="bRep">استبدال الصورة</button>
+<button class="sb" id="bCrop">✂ قص</button>
+<button class="sb" id="bAuto">⌖ حواف تلقائي</button>
+<button class="sb" id="bRep">🖼 استبدال</button>
+<button class="sb" id="bRotI">↻ تدوير الصورة</button>
 </div>
 
 <div class="row">
-<button class="sb" id="bRot">⟳ تدوير الحجم</button>
-<button class="sb" id="bSwap">⇄ تبديل الوجه والظهر</button>
-<button class="sb" id="bMode">ترتيب: جنب</button>
-<button class="sb red" id="bDel">حذف</button>
+<button class="sb" id="bRot">⟲ تدوير القالب</button>
+<button class="sb" id="bSwap">⇄ تبديل الوجهين</button>
+<button class="sb" id="bMode">الترتيب: جنب</button>
+<button class="sb" id="bFit">العرض: كامل</button>
 </div>
 
-<label class="lb">
-انحناء الحواف
-<input type="range" id="rg" min="0" max="10" step=".5">
+<label class="lb">الحجم<input type="range" id="rSc" min="30" max="150" step="5"><b id="vSc"></b></label>
+<label class="lb" id="copRow">عدد النسخ<input type="range" id="rCop" min="1" max="30" step="1"><b id="vCop"></b></label>
+<label class="lb">انحناء الحواف<input type="range" id="rg" min="0" max="10" step=".5"></label>
+<label class="lb">الظل
+<select id="shS"><option value="gray">رمادي</option><option value="black">أسود</option><option value="none">بدون</option></select>
 </label>
 
-<label class="lb">
-الظل
-<select id="shS">
-<option value="gray">رمادي</option>
-<option value="black">أسود</option>
-<option value="none">بدون</option>
-</select>
-</label>
+<div class="row">
+<button class="sb" id="bResetPos">↺ موضع تلقائي</button>
+<button class="sb red" id="bDel2">🗑 حذف المستند</button>
+</div>
 </div>
 
-<div class="exp glass" id="exp">
-<button class="chip" data-x="pdf1200">PDF دقة عالية 1200 DPI</button>
-<button class="chip" data-x="pdf600">PDF 600 DPI</button>
-<button class="chip" data-x="pdf300">PDF 300 DPI</button>
-<button class="chip o" data-x="pngH">PNG جودة عالية</button>
-<button class="chip o" data-x="pngN">PNG حجم عادي</button>
-<button class="chip o" data-x="jpg">JPG</button>
+<div class="act" id="act">
+<button class="chip gold" id="aPrev">👁 معاينة</button>
+<button class="chip" id="aPrint">🖨 طباعة</button>
+<button class="chip o" id="aShare">↗ مشاركة</button>
+<button class="chip o" id="aSave">⬇ حفظ</button>
+<button class="chip o" id="aMove">✥ تحريك</button>
+<button class="chip o" id="aAuto" hidden>↺ ترتيب تلقائي</button>
+<button class="chip o red" id="aDel">🗑 حذف</button>
 </div>
 </div>
 </section>
 
-<div class="modal" id="about" hidden>
+<!-- المعاينة -->
+<div class="pv" id="preview" hidden>
+<div class="pvb">
+<b>معاينة قبل الطباعة</b>
+<button class="chip" id="pvPrint">🖨 طباعة</button>
+<button class="chip o" id="pvX">إغلاق</button>
+</div>
+<div class="scroll" id="pvPages"></div>
+</div>
+
+<!-- التصدير -->
+<div class="modal" id="exportM" hidden>
 <div class="mb">
-<h2>من نحن</h2>
-<p>تم تطوير وعمل هذا التطبيق بواسطة <b>ياسر جابر</b> وباستخدام أدوات الذكاء الاصطناعي.</p>
-<p>للتواصل عبر الإيميل:<br>
-<a href="mailto:yassirgabeerh@gmail.com">yassirgabeerh@gmail.com</a></p>
-<p>أو الانستغرام:<br>
-<a href="https://instagram.com/4assir" target="_blank" rel="noopener">4assir@</a></p>
-<button class="chip" style="width:100%" id="aboutX">إغلاق</button>
+<div class="mh"><h2>حفظ / مشاركة</h2></div>
+<div class="fmt" id="fmtList"></div>
+<div class="row">
+<button class="chip" id="exSave" style="flex:1">⬇ حفظ</button>
+<button class="chip gold" id="exShare" style="flex:1">↗ مشاركة</button>
+<button class="chip o" id="exX" style="flex:1">إلغاء</button>
+</div>
 </div>
 </div>
 
+<!-- تأكيد -->
+<div class="modal" id="confirmM" hidden>
+<div class="mb">
+<p id="cfMsg" style="margin-top:0;font-weight:600"></p>
+<div class="row">
+<button class="chip red" id="cfOk" style="flex:1;background:#d64533;color:#fff">تأكيد</button>
+<button class="chip o" id="cfNo" style="flex:1">إلغاء</button>
+</div>
+</div>
+</div>
+
+<!-- الإعدادات -->
+<div class="modal" id="settings" hidden>
+<div class="mb">
+<div class="mh"><h2>⚙ الإعدادات</h2><button class="sb" id="setX">إغلاق ✕</button></div>
+
+<h3>المظهر والألوان</h3>
+<div class="seg" id="segTheme">
+<button data-v="auto">تلقائي</button>
+<button data-v="light">فاتح</button>
+<button data-v="dark">ليلي</button>
+</div>
+
+<div class="lbl">لون التطبيق</div>
+<div class="sw"><span class="sw" id="swAcc"></span><input type="color" id="cAcc" aria-label="لون مخصص"></div>
+
+<div class="lbl">خلفية التطبيق</div>
+<div class="sw"><span class="sw" id="swBg"></span><input type="color" id="cBg" aria-label="خلفية مخصصة"></div>
+
+<div class="cr2"><span>لون النوافذ</span><input type="color" id="cPanel"><button class="sb" id="rPanel">افتراضي</button></div>
+<div class="cr2"><span>لون الكتابة</span><input type="color" id="cInk"><button class="sb" id="rInk">افتراضي</button></div>
+
+<label class="lb" style="margin-top:10px">حجم الخط<input type="range" id="rFont" min="85" max="125" step="5"><b id="vFont"></b></label>
+
+<h3>الورقة</h3>
+<div class="lbl">حجم الورقة الافتراضي</div>
+<select id="sPage"></select>
+<div class="row" style="margin-top:8px">
+<label class="lb">الهامش (مم)<input type="number" id="nMargin" min="0" max="25" step="1"></label>
+<label class="lb">المسافة بين المستندات (مم)<input type="number" id="nGap" min="0" max="20" step="1"></label>
+</div>
+<label class="lb" style="margin-top:8px"><input type="checkbox" id="kMirror">عكس موضع الظهر أفقياً (للطباعة على الوجهين)</label>
+
+<h3>الحفظ والتصدير</h3>
+<div class="lbl">عند الضغط على «حفظ»</div>
+<select id="sSave">
+<option value="documents">حفظ مباشر في مجلد Documents</option>
+<option value="share">فتح نافذة المشاركة لاختيار المكان</option>
+</select>
+<div class="lbl">اسم مجلد الحفظ</div>
+<input type="text" id="tFolder" dir="ltr">
+<div class="lbl">بداية اسم الملف</div>
+<input type="text" id="tPrefix" dir="ltr">
+<div class="lbl">الصيغة الافتراضية للمشاركة والطباعة</div>
+<select id="sFmt"></select>
+
+<button class="chip red o" id="setReset" style="width:100%;margin-top:16px">إعادة ضبط كل الإعدادات</button>
+</div>
+</div>
+
+<!-- القص -->
 <div class="modal" id="crop" hidden>
 <div class="cw">
 <div class="cbox">
 <img id="cimg" alt="">
-<div id="cr">
-<i data-k="tl"></i>
-<i data-k="tr"></i>
-<i data-k="bl"></i>
-<i data-k="br"></i>
-</div>
+<div id="cr"><i data-k="tl"></i><i data-k="tr"></i><i data-k="bl"></i><i data-k="br"></i></div>
 </div>
 <div class="row" style="width:100%">
 <button class="chip" id="cOk" style="flex:1">تطبيق القص</button>
@@ -402,51 +354,128 @@ text-align:center;box-shadow:var(--sh)
 
 <script>
 const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const isNative=()=>!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+const tick=()=>new Promise(r=>setTimeout(r,30));
 
+/* ================= البيانات ================= */
 const DOCS=[
-['البطاقة الوطنية الموحدة',85,55,'الهويات'],
+['البطاقة الوطنية الموحدة',85.6,54,'الهويات'],
 ['هوية الأحوال المدنية',85,105,'الهويات'],
 ['شهادة الجنسية العراقية',165,200,'الهويات'],
-['بطاقة الناخب',85,55,'الهويات'],
+['بطاقة الناخب',85.6,54,'الهويات'],
 ['بطاقة السكن',90,60,'وثائق رسمية'],
-['البطاقة التموينية',90,60,'وثائق رسمية'],
+['البطاقة التموينية',95,65,'وثائق رسمية'],
+['إجازة السوق',85.6,54,'وثائق رسمية'],
 ['جواز السفر العراقي',88,125,'وثائق رسمية'],
 ['شهادة الولادة',210,297,'وثائق A4'],
 ['عقد الزواج',210,297,'وثائق A4'],
-['شهادة الوفاة',210,297,'وثائق A4']
+['شهادة الوفاة',210,297,'وثائق A4'],
+['شهادة دراسية / وثيقة',210,297,'وثائق A4'],
+['صورة شخصية 3.5×4.5',35,45,'صور شخصية'],
+['صورة شخصية 4×6',40,60,'صور شخصية'],
+['صورة شخصية 3×4',30,40,'صور شخصية'],
+['صورة شخصية 2.5×3.5',25,35,'صور شخصية'],
+['مقاس مخصص',85,55,'مخصص']
 ];
-
+const GROUPS=['الهويات','وثائق رسمية','وثائق A4','صور شخصية','مخصص'];
+const CUS=DOCS.length-1;
+const PHOTO=12;
 const PG={A3:[297,420],A4:[210,297],A5:[148,210],A6:[105,148],Letter:[215.9,279.4]};
-
 const SH={
 none:'none',
 gray:'0 calc(var(--u)*.5) calc(var(--u)*1.6) rgba(0,0,0,.3)',
 black:'0 calc(var(--u)*.5) calc(var(--u)*1.6) rgba(0,0,0,.62)'
 };
+const FMT={
+pdf300:['pdf',300,'PDF — دقة 300 (سريع)'],
+pdf600:['pdf',600,'PDF — دقة 600'],
+pdf1200:['pdf',1200,'PDF — دقة 1200 (بطيء وكبير الحجم)'],
+pngH:['png',300,'PNG — جودة عالية'],
+pngN:['png',150,'PNG — حجم عادي'],
+jpg:['jpg',300,'JPG']
+};
+const MODE_LBL={side:'جنب بعض',stack:'فوق بعض',split:'ورقتين (وجه / ظهر)'};
+const PAD=2.4;
 
-const PAD=2.4,S={page:'A4',entries:[],sel:null,side:0};
+/* ================= الإعدادات ================= */
+const DEF={theme:'auto',accent:'#1f7a4d',bg:'green',bgCustom:'',panel:'',ink:'',font:100,
+page:'A4',margin:8,gap:5,mirror:false,saveMode:'documents',folder:'Mustamsakat',prefix:'mustamsakat',fmt:'pdf300'};
+const ACCS=['#1f7a4d','#2563eb','#7c3aed','#0d9488','#e11d48','#ea580c'];
+const BGS={
+green:{l:['#f5fbf8','#c9e6d6'],d:['#04120c','#0b2a1d']},
+blue:{l:['#f4f8ff','#cfe0fb'],d:['#050d1c','#0c1f3d']},
+purple:{l:['#f8f5ff','#ddd0f7'],d:['#0d0818','#21113f']},
+sand:{l:['#fbf8f1','#eadfc3'],d:['#14100a','#2a2113']},
+gray:{l:['#f5f5f5','#d9d9d9'],d:['#0a0a0a','#1c1c1c']}
+};
+
+let CFG=Object.assign({},DEF);
+try{Object.assign(CFG,JSON.parse(localStorage.getItem('mst_cfg')||'{}'))}catch(_){}
+const saveCfg=()=>{try{localStorage.setItem('mst_cfg',JSON.stringify(CFG))}catch(_){}};
+
+const hex2rgb=h=>{h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return[(n>>16)&255,(n>>8)&255,n&255]};
+const rgb2hex=(r,g,b)=>'#'+[r,g,b].map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join('');
+const mix=(a,b,t)=>{const A=hex2rgb(a),B=hex2rgb(b);return rgb2hex(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t)};
+
+const root=document.documentElement;
+const TH={};
+
+function applyTheme(){
+const dark=CFG.theme==='dark'||(CFG.theme==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);
+root.dataset.t=dark?'dark':'light';
+const set=(k,v)=>root.style.setProperty(k,v);
+let b1,b2;
+if(CFG.bg==='custom'&&CFG.bgCustom){
+b2=dark?mix(CFG.bgCustom,'#000',.55):mix(CFG.bgCustom,'#fff',.6);
+b1=dark?mix(CFG.bgCustom,'#000',.8):mix(CFG.bgCustom,'#fff',.9)
+}else{
+const p=BGS[CFG.bg]||BGS.green;
+[b1,b2]=dark?p.d:p.l
+}
+set('--bg1',b1);set('--bg2',b2);
+const acc=CFG.accent;
+set('--acc',acc);
+set('--acc2',mix(acc,'#000',.38));
+set('--acc-l',dark?mix(acc,'#fff',.45):acc);
+set('--acc-rgb',hex2rgb(acc).join(','));
+const panel=CFG.panel||(dark?mix(b2,'#fff',.06):mix(b1,'#fff',.55));
+const ink=CFG.ink||(dark?'#e8f5ee':'#0b2a1f');
+set('--panel',panel);
+set('--ink',ink);
+set('--mut',mix(ink,panel,.4));
+set('--chip',dark?'rgba(255,255,255,.09)':'rgba(0,0,0,.05)');
+set('--bd',dark?'rgba(255,255,255,.16)':'rgba(0,0,0,.14)');
+set('--fs',CFG.font/100);
+TH.panel=panel;TH.ink=ink
+}
+matchMedia('(prefers-color-scheme:dark)').addEventListener&&
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(CFG.theme==='auto')applyTheme()});
+
+/* ================= الحالة ================= */
+const S={page:PG[CFG.page]?CFG.page:'A4',entries:[],sel:null,side:0,move:false};
 let uid=0;
-
 const cur=()=>S.entries.find(e=>e.id===S.sel);
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const isNative=()=>!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
 
 let tt;
 function toast(m,ms=2600){
 const t=$('toast');
 t.textContent=m;
+const ed=$('ed').classList.contains('on');
+t.style.bottom=(ed?$('dock').offsetHeight+14:40)+'px';
 t.hidden=false;
 clearTimeout(tt);
 if(ms)tt=setTimeout(()=>t.hidden=true,ms)
 }
-const tick=()=>new Promise(r=>setTimeout(r,30));
 
-/* theme */
-const root=document.documentElement;
-root.dataset.t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
-$('bTheme').onclick=()=>{root.dataset.t=root.dataset.t==='dark'?'light':'dark'};
+function ask(msg,fn){
+$('cfMsg').textContent=msg;
+$('confirmM').hidden=false;
+$('cfOk').onclick=()=>{$('confirmM').hidden=true;fn()};
+$('cfNo').onclick=()=>$('confirmM').hidden=true
+}
 
-/* navigation */
+/* ================= التنقل ================= */
 function showEditor(){
 $('home').classList.remove('on');
 $('ed').classList.add('on');
@@ -460,32 +489,47 @@ document.body.classList.remove('inEd')
 }
 $('goNew').onclick=showEditor;
 $('back').onclick=showHome;
-$('goAbout').onclick=()=>$('about').hidden=false;
-$('aboutX').onclick=()=>$('about').hidden=true;
-$('about').onclick=e=>{if(e.target.id==='about')$('about').hidden=true};
+$('goSet').onclick=openSettings;
+$('bSet').onclick=openSettings;
+$('bTheme').onclick=()=>{
+const dark=root.dataset.t==='dark';
+CFG.theme=dark?'light':'dark';
+saveCfg();applyTheme()
+};
 
-/* popups */
-function pop(id){
-['pSize','pAdd'].forEach(p=>{$(p).hidden=p!==id||!$(p).hidden})
+/* ================= القوائم المنبثقة ================= */
+function placePop(p,btn){
+p.hidden=false;
+const r=btn.getBoundingClientRect(),w=p.offsetWidth;
+p.style.top=(r.bottom+8)+'px';
+p.style.left=clamp(r.left+r.width/2-w/2,8,innerWidth-w-8)+'px'
 }
-$('bSize').onclick=e=>{e.stopPropagation();pop('pSize')};
-$('bAdd').onclick=e=>{e.stopPropagation();pop('pAdd')};
+function pop(id,btn){
+['pSize','pAdd'].forEach(p=>{
+const el=$(p);
+if(p===id&&el.hidden)placePop(el,btn);
+else el.hidden=true
+})
+}
+$('bSize').onclick=e=>{e.stopPropagation();pop('pSize',$('bSize'))};
+$('bAdd').onclick=e=>{e.stopPropagation();pop('pAdd',$('bAdd'))};
 document.addEventListener('click',()=>pop(''));
 
+function buildSizeMenu(){
 $('pSize').innerHTML=Object.keys(PG).map(k=>
-`<button data-p="${k}"${k==='A4'?' class="on"':''}>${k}</button>`
+`<button data-p="${k}"${k===S.page?' class="on"':''}>${k} (${PG[k][0]}×${PG[k][1]})</button>`
 ).join('');
-
+$('bSize').textContent=S.page.length>4?'Ltr':S.page
+}
 $('pSize').onclick=e=>{
 const k=e.target.dataset.p;
 if(!k)return;
 S.page=k;
-$('bSize').textContent=k.length>4?'Ltr':k;
-[...$('pSize').children].forEach(b=>b.classList.toggle('on',b.dataset.p===k));
+buildSizeMenu();
 render()
 };
 
-/* images */
+/* ================= الصور ================= */
 const fi=$('fi');
 let pend=null;
 
@@ -495,7 +539,6 @@ el.onload=()=>res(el);
 el.onerror=rej;
 el.src=src
 });
-
 const shrink=(el,max)=>{
 const s=Math.min(1,max/Math.max(el.naturalWidth,el.naturalHeight));
 const c=document.createElement('canvas');
@@ -504,7 +547,6 @@ c.height=Math.round(el.naturalHeight*s);
 c.getContext('2d').drawImage(el,0,0,c.width,c.height);
 return c
 };
-
 const toB=(c,q)=>new Promise(o=>c.toBlob(o,'image/jpeg',q));
 
 async function load(src){
@@ -543,62 +585,137 @@ render();
 if(e.two&&i===0&&!e.img[1])toast('الآن اضغط على مربع «الظهر» لإضافة صورته')
 };
 
-function add(two){
-const e={id:++uid,two,size:0,rot:false,mode:'side',r:3,shadow:'gray',img:[null,null]};
+async function rotateImg(e,i){
+const im=e.img[i];
+if(!im){toast('أضف صورة أولاً');return}
+toast('جارٍ التدوير…',0);
+try{
+const el=im.el;
+const c=document.createElement('canvas');
+c.width=el.naturalHeight;c.height=el.naturalWidth;
+const g=c.getContext('2d');
+g.translate(c.width/2,c.height/2);
+g.rotate(Math.PI/2);
+g.drawImage(el,-el.naturalWidth/2,-el.naturalHeight/2);
+const b=await toB(c,.96);
+c.width=c.height=0;
+e.img[i]=await load(URL.createObjectURL(b));
+$('toast').hidden=true;
+render()
+}catch(_){toast('تعذّر تدوير الصورة')}
+}
+
+function addEntry(kind){
+const photo=kind==='photo';
+const e={
+id:++uid,two:kind==='two',size:photo?PHOTO:0,cu:[85,55],rot:false,
+mode:'side',fit:photo?'fill':'fit',sc:100,copies:photo?6:1,
+r:photo?1:3,shadow:'gray',off:{},img:[null,null]
+};
 S.entries.push(e);
 S.sel=e.id;
 S.side=0;
 render();
 pick(e,0)
 }
-$('aTwo').onclick=()=>add(true);
-$('aOne').onclick=()=>add(false);
+$('aTwo').onclick=()=>addEntry('two');
+$('aOne').onclick=()=>addEntry('one');
+$('aPhoto').onclick=()=>addEntry('photo');
 
-/* layout (mm) */
+/* ================= التخطيط (مم) ================= */
 function dims(e){
-const[,w,h]=DOCS[e.size];
-return e.rot?[h,w]:[w,h]
+let w,h;
+if(e.size===CUS){w=e.cu[0];h=e.cu[1]}
+else{w=DOCS[e.size][1];h=DOCS[e.size][2]}
+if(e.rot){const t=w;w=h;h=t}
+const s=e.sc/100;
+return[w*s,h*s]
 }
 
 function layout(){
-const[W,H]=PG[S.page],M=8,G=5,pgs=[[]];
-let y=M;
+const[W,H]=PG[S.page],M=CFG.margin,G=CFG.gap,sheets=[];
+let sh=null,row=[],curX=M,curY=M,rowH=0;
+
+const endRow=()=>{
+if(row.length){
+const used=curX-G-M;
+const shift=((W-2*M)-used)/2;
+row.forEach(p=>p.ax+=shift)
+}
+row=[]
+};
+const newSheet=()=>{sh={f:[],b:[]};sheets.push(sh);curX=M;curY=M;rowH=0;row=[]};
+
+const place=b=>{
+if(!sh)newSheet();
+if(row.length&&curX+b.w>W-M+.01){endRow();curY+=rowH+G;curX=M;rowH=0}
+if(curY+b.h>H-M+.01&&(sh.f.length||sh.b.length)){endRow();newSheet()}
+for(const p of b.parts){
+const part={e:b.e,i:p.i,c:p.c,ax:curX+p.dx,ay:curY+p.dy,bw:p.bw,bh:p.bh};
+(p.back?sh.b:sh.f).push(part);
+row.push(part)
+}
+curX+=b.w+G;
+rowH=Math.max(rowH,b.h)
+};
+
 for(const e of S.entries){
-const[w,h]=dims(e),n=e.two?2:1;
-let bw,bh;
-if(e.mode==='stack'){bw=w;bh=h*n+G*(n-1)}
-else{bw=w*n+G*(n-1);bh=h}
-const k=Math.min(1,(W-2*M)/bw,(H-2*M)/bh);
-bw*=k;bh*=k;
-const cw=w*k,ch=h*k,g=G*k;
-if(y+bh>H-M&&y>M){pgs.push([]);y=M}
-const P=pgs[pgs.length-1];
-const x0=(W-bw)/2;
-for(let i=0;i<n;i++){
-const x=e.mode==='stack'?x0:x0+(n-1-i)*(cw+g);
-P.push({e,i,x,y:e.mode==='stack'?y+i*(ch+g):y,w:cw,h:ch})
+const[dw,dh]=dims(e);
+const mode=e.two?e.mode:'side';
+const mk=(w,h,parts,c)=>{
+const k=Math.min(1,(W-2*M)/w,(H-2*M)/h);
+return{e,w:w*k,h:h*k,parts:parts.map(p=>({i:p.i,c,back:p.back||false,dx:p.dx*k,dy:p.dy*k,bw:dw*k,bh:dh*k}))}
+};
+if(!e.two){
+for(let c=0;c<e.copies;c++)place(mk(dw,dh,[{i:0,dx:0,dy:0}],c))
+}else if(mode==='stack'){
+place(mk(dw,dh*2+G,[{i:0,dx:0,dy:0},{i:1,dx:0,dy:dh+G}],0))
+}else if(mode==='split'){
+place(mk(dw,dh,[{i:0,dx:0,dy:0},{i:1,dx:0,dy:0,back:true}],0))
+}else{
+place(mk(dw*2+G,dh,[{i:0,dx:dw+G,dy:0},{i:1,dx:0,dy:0}],0))
 }
-y+=bh+G
 }
-return pgs
+endRow();
+
+const pages=[];
+sheets.forEach((s,n)=>{
+const fin=(list,back)=>list.map(p=>{
+const e=p.e,im=e.img[p.i];
+let w=p.bw,h=p.bh;
+if(im&&e.fit==='fit'){
+const ar=im.el.naturalWidth/im.el.naturalHeight;
+if(p.bw/p.bh>ar)w=p.bh*ar;else h=p.bw/ar
+}
+const of=e.off[p.i+'_'+p.c]||{x:0,y:0};
+let x=clamp(p.ax+of.x+(p.bw-w)/2,0,W-w);
+const y=clamp(p.ay+of.y+(p.bh-h)/2,0,H-h);
+const mir=back&&CFG.mirror;
+if(mir)x=W-x-w;
+return{e,i:p.i,c:p.c,x,y,w,h,mir}
+});
+pages.push({items:fin(s.f,false),back:false,n:n+1});
+if(s.b.length)pages.push({items:fin(s.b,true),back:true,n:n+1})
+});
+if(!pages.length)pages.push({items:[],back:false,n:1});
+return pages
 }
 
-/* render */
-function render(){
-const[W,H]=PG[S.page],box=$('pages');
-box.innerHTML='';
-
-layout().forEach((P,n)=>{
+/* ================= الرسم على الشاشة ================= */
+function mountPage(parent,pg,interactive){
+const[W,H]=PG[S.page];
 const d=document.createElement('div');
 d.className='pg';
 d.style.aspectRatio=W+'/'+H;
+parent.appendChild(d);
+d.style.setProperty('--u',(d.clientWidth/W)+'px');
 
-P.forEach(it=>{
-const e=it.e,im=e.img[it.i],s=document.createElement('div');
-s.className='slot'+(im?'':' empty')+(S.sel===e.id?' sel':'');
-s.style.cssText=
-`left:${it.x/W*100}%;top:${it.y/H*100}%;width:${it.w/W*100}%;height:${it.h/H*100}%`;
-
+pg.items.forEach(it=>{
+const e=it.e,im=e.img[it.i];
+if(!interactive&&!im)return;
+const s=document.createElement('div');
+s.className='slot'+(im?'':' empty')+(interactive&&S.sel===e.id?' sel':'')+(interactive&&S.move?' mv':'');
+s.style.cssText=`left:${it.x/W*100}%;top:${it.y/H*100}%;width:${it.w/W*100}%;height:${it.h/H*100}%`;
 if(im){
 s.style.backgroundImage=`url(${im.src})`;
 s.style.borderRadius=`calc(var(--u)*${e.r})`;
@@ -606,7 +723,27 @@ s.style.boxShadow=SH[e.shadow]
 }else{
 s.textContent='＋ '+(e.two?(it.i?'الظهر':'الوجه'):'صورة')
 }
+if(interactive)bindSlot(s,d,it,W,H);
+d.appendChild(s)
+});
 
+if(interactive&&!S.entries.length){
+const h=document.createElement('div');
+h.className='hint';
+h.innerHTML='ورقة بيضاء جاهزة<br>اضغط على ＋ بالأعلى لإضافة مستند';
+d.appendChild(h)
+}
+
+const l=document.createElement('div');
+l.className='pgl';
+l.textContent=`ورقة ${pg.n} — ${pg.back?'الظهر':(S.entries.some(e=>e.two&&e.mode==='split')?'الوجه':S.page)}`+(pg.back?'':'')+` — ${S.page}`;
+parent.appendChild(l)
+}
+
+function bindSlot(s,d,it,W,H){
+const e=it.e,im=e.img[it.i];
+
+if(!S.move){
 s.onclick=ev=>{
 ev.stopPropagation();
 S.sel=e.id;
@@ -614,29 +751,57 @@ S.side=it.i;
 if(!im)pick(e,it.i);
 render()
 };
-d.appendChild(s)
-});
-
-if(!S.entries.length){
-const h=document.createElement('div');
-h.className='hint';
-h.innerHTML='ورقة بيضاء جاهزة<br>اضغط على ＋ بالأعلى لإضافة مستند';
-d.appendChild(h)
+return
 }
 
-box.appendChild(d);
-d.style.setProperty('--u',(d.clientWidth/W)+'px');
-
-const l=document.createElement('div');
-l.className='pgl';
-l.textContent=`ورقة ${n+1} — ${S.page}`;
-box.appendChild(l)
+let drag=null;
+s.addEventListener('pointerdown',ev=>{
+ev.preventDefault();
+ev.stopPropagation();
+const r=d.getBoundingClientRect();
+drag={sx:ev.clientX,sy:ev.clientY,k:W/r.width,moved:false,nx:it.x,ny:it.y};
+s.setPointerCapture(ev.pointerId)
 });
+s.addEventListener('pointermove',ev=>{
+if(!drag)return;
+const dx=(ev.clientX-drag.sx)*drag.k,dy=(ev.clientY-drag.sy)*drag.k;
+if(!drag.moved&&Math.hypot(dx,dy)<1.2)return;
+drag.moved=true;
+drag.nx=clamp(it.x+dx,0,W-it.w);
+drag.ny=clamp(it.y+dy,0,H-it.h);
+s.style.left=(drag.nx/W*100)+'%';
+s.style.top=(drag.ny/H*100)+'%'
+});
+s.addEventListener('pointerup',()=>{
+if(!drag)return;
+const dd=drag;drag=null;
+S.sel=e.id;S.side=it.i;
+if(dd.moved){
+let dx=dd.nx-it.x;
+const dy=dd.ny-it.y;
+if(it.mir)dx=-dx;
+const key=it.i+'_'+it.c;
+const old=e.off[key]||{x:0,y:0};
+const nv={x:old.x+dx,y:old.y+dy};
+e.off[key]=nv;
+if(e.two&&e.mode==='split')e.off[(1-it.i)+'_'+it.c]={x:nv.x,y:nv.y}
+}else if(!im){
+pick(e,it.i)
+}
+render()
+});
+s.addEventListener('pointercancel',()=>{drag=null})
+}
 
+function render(){
+const box=$('pages');
+box.innerHTML='';
+layout().forEach(pg=>mountPage(box,pg,true));
 sheet();
-
+$('aAuto').hidden=!S.move;
+$('aMove').classList.toggle('on',S.move);
 requestAnimationFrame(()=>{
-$('pages').style.paddingBottom=document.querySelector('.dock').offsetHeight+20+'px'
+$('pages').style.paddingBottom=$('dock').offsetHeight+20+'px'
 })
 }
 
@@ -651,8 +816,8 @@ if($('ed').classList.contains('on'))render()
 },150)
 });
 
-/* sheet */
-$('szS').innerHTML=['الهويات','وثائق رسمية','وثائق A4'].map(g=>
+/* ================= لوحة المستند ================= */
+$('szS').innerHTML=GROUPS.map(g=>
 `<optgroup label="${g}">${DOCS.map((d,i)=>
 d[3]===g?`<option value="${i}">${d[0]} — ${d[1]}×${d[2]} مم</option>`:''
 ).join('')}</optgroup>`
@@ -664,40 +829,84 @@ if(!e){sh.hidden=true;return}
 sh.hidden=false;
 $('shT').textContent=DOCS[e.size][0];
 $('szS').value=e.size;
+$('cuRow').hidden=e.size!==CUS;
+$('cuW').value=e.cu[0];
+$('cuH').value=e.cu[1];
 $('sides').style.display=e.two?'flex':'none';
 $('sd0').classList.toggle('on',S.side===0);
 $('sd1').classList.toggle('on',S.side===1);
 $('bSwap').style.display=e.two?'':'none';
 $('bMode').style.display=e.two?'':'none';
-$('bMode').textContent='الترتيب: '+(e.mode==='side'?'جنب بعض':'الوجه فوق الظهر');
+$('bMode').textContent='الترتيب: '+MODE_LBL[e.mode];
+$('bFit').textContent='العرض: '+(e.fit==='fit'?'كامل الصورة':'ملء الإطار');
+$('copRow').style.display=e.two?'none':'';
+$('rSc').value=e.sc;$('vSc').textContent=e.sc+'%';
+$('rCop').value=e.copies;$('vCop').textContent=e.copies;
 $('rg').value=e.r;
 $('shS').value=e.shadow
 }
 
 $('shX').onclick=()=>{S.sel=null;render()};
 $('pages').onclick=()=>{if(S.sel){S.sel=null;render()}};
-$('szS').onchange=e=>{cur().size=+e.target.value;render()};
+
+$('szS').onchange=ev=>{
+const e=cur(),old=DOCS[e.size][3];
+e.size=+ev.target.value;
+const g=DOCS[e.size][3];
+if(g!==old){
+if(g==='وثائق A4'&&e.two)e.mode='split';
+else if(old==='وثائق A4'&&e.mode==='split')e.mode='side';
+e.fit=g==='صور شخصية'?'fill':'fit';
+if(g==='صور شخصية'&&!e.two&&e.copies===1)e.copies=6
+}
+e.off={};
+render()
+};
+$('cuW').oninput=ev=>{cur().cu[0]=clamp(+ev.target.value||85,10,420);cur().off={};render()};
+$('cuH').oninput=ev=>{cur().cu[1]=clamp(+ev.target.value||55,10,420);cur().off={};render()};
 $('sd0').onclick=()=>{S.side=0;sheet()};
 $('sd1').onclick=()=>{S.side=1;sheet()};
-$('bRot').onclick=()=>{const e=cur();e.rot=!e.rot;render()};
+$('bRot').onclick=()=>{const e=cur();e.rot=!e.rot;e.off={};render()};
 $('bSwap').onclick=()=>{cur().img.reverse();render()};
-$('bMode').onclick=()=>{const e=cur();e.mode=e.mode==='side'?'stack':'side';render()};
-$('bDel').onclick=()=>{
+$('bMode').onclick=()=>{
+const e=cur();
+e.mode=e.mode==='side'?'stack':e.mode==='stack'?'split':'side';
+e.off={};
+render()
+};
+$('bFit').onclick=()=>{const e=cur();e.fit=e.fit==='fit'?'fill':'fit';render()};
+$('bRotI').onclick=()=>{const e=cur();rotateImg(e,e.two?S.side:0)};
+$('bResetPos').onclick=()=>{cur().off={};render()};
+$('bRep').onclick=()=>{const e=cur();pick(e,e.two?S.side:0)};
+
+let rq=0;
+const later=fn=>{if(!rq)rq=requestAnimationFrame(()=>{rq=0;fn()})};
+$('rSc').oninput=ev=>{cur().sc=+ev.target.value;cur().off={};later(render)};
+$('rCop').oninput=ev=>{cur().copies=+ev.target.value;cur().off={};later(render)};
+$('rg').oninput=ev=>{cur().r=+ev.target.value;later(render)};
+$('shS').onchange=ev=>{cur().shadow=ev.target.value;render()};
+
+function delEntry(){
 S.entries=S.entries.filter(e=>e.id!==S.sel);
 S.sel=null;
 render();
 toast('تم حذف المستند')
+}
+$('bDel2').onclick=delEntry;
+$('aDel').onclick=()=>{
+if(S.sel)return ask('حذف هذا المستند؟',delEntry);
+if(!S.entries.length)return toast('لا توجد مستندات');
+ask('حذف كل المستندات من الورقة؟',()=>{S.entries=[];S.sel=null;render()})
 };
 
-let rq=0;
-$('rg').oninput=e=>{
-cur().r=+e.target.value;
-if(!rq)rq=requestAnimationFrame(()=>{rq=0;render()})
+$('aMove').onclick=()=>{
+S.move=!S.move;
+render();
+toast(S.move?'اسحب أي مستند لتحريكه — اضغط «تحريك» مرة أخرى للإيقاف':'تم إيقاف التحريك')
 };
-$('shS').onchange=e=>{cur().shadow=e.target.value;render()};
-$('bRep').onclick=()=>pick(cur(),S.side);
+$('aAuto').onclick=()=>{S.entries.forEach(e=>e.off={});render();toast('تمت إعادة الترتيب التلقائي')};
 
-/* crop */
+/* ================= القص ================= */
 let C=null;
 
 function detect(img){
@@ -721,7 +930,6 @@ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
 const i=(y*w+x)*4;
 if(Math.abs(d[i]-r)+Math.abs(d[i+1]-gg)+Math.abs(d[i+2]-b)>90){rows[y]++;cols[x]++}
 }
-
 const f=(a,len)=>{
 let s=0,e=a.length-1;
 while(s<e&&a[s]<len*.04)s++;
@@ -768,13 +976,11 @@ $('cNo').onclick=()=>$('crop').hidden=true;
 
 let dr=null;
 const cr=$('cr');
-
 cr.addEventListener('pointerdown',ev=>{
 ev.preventDefault();
 dr={k:ev.target.dataset.k||'m',x:ev.clientX,y:ev.clientY,r:{...C.r}};
 cr.setPointerCapture(ev.pointerId)
 });
-
 cr.addEventListener('pointermove',ev=>{
 if(!dr)return;
 const b=$('cimg').getBoundingClientRect();
@@ -806,13 +1012,13 @@ const c=document.createElement('canvas');
 c.width=Math.round(r.w*iw);
 c.height=Math.round(r.h*ih);
 c.getContext('2d').drawImage(el,r.x*iw,r.y*ih,r.w*iw,r.h*ih,0,0,c.width,c.height);
-const b=await new Promise(o=>c.toBlob(o,'image/jpeg',.96));
+const b=await toB(c,.96);
 e.img[i]=await load(URL.createObjectURL(b));
 $('crop').hidden=true;
 render()
 };
 
-/* export */
+/* ================= التصدير ================= */
 function rr(g,x,y,w,h,r){
 r=Math.min(r,w/2,h/2);
 g.beginPath();
@@ -824,18 +1030,17 @@ g.arcTo(x,y,x+w,y,r);
 g.closePath()
 }
 
-function renderDoc(it,px){
+function renderDoc(it,px,pad,opaque){
 const e=it.e,el=e.img[it.i].el;
 const c=document.createElement('canvas');
-c.width=Math.round((it.w+2*PAD)*px);
-c.height=Math.round((it.h+2*PAD)*px);
+c.width=Math.max(1,Math.round((it.w+2*pad)*px));
+c.height=Math.max(1,Math.round((it.h+2*pad)*px));
 const g=c.getContext('2d');
-g.fillStyle='#fff';
-g.fillRect(0,0,c.width,c.height);
+if(opaque){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height)}
 
-const x=PAD*px,y=PAD*px,w=it.w*px,h=it.h*px,r=e.r*px;
+const x=pad*px,y=pad*px,w=it.w*px,h=it.h*px,r=e.r*px;
 
-if(e.shadow!=='none'){
+if(e.shadow!=='none'&&pad>0){
 g.save();
 g.shadowColor=e.shadow==='black'?'rgba(0,0,0,.62)':'rgba(0,0,0,.3)';
 g.shadowBlur=1.6*px;
@@ -868,93 +1073,118 @@ fr.readAsDataURL(blob)
 })
 }
 
-async function saveFile(name,blob){
+function baseName(){
+const d=new Date(),p=n=>String(n).padStart(2,'0');
+const stamp=`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+const pre=(CFG.prefix||'mustamsakat').replace(/[\\/:*?"<>|]/g,'_');
+return pre+'-'+stamp
+}
 
-/* داخل تطبيق أندرويد: حفظ مؤقت ثم نافذة مشاركة (حفظ / طباعة / إرسال) */
+async function deliver(files,how,opt){
 if(isNative()){
-try{
 const{Filesystem,Share}=window.Capacitor.Plugins;
-const data=await blobToBase64(blob);
-const saved=await Filesystem.writeFile({path:name,data,directory:'CACHE'});
-await Share.share({title:name,url:saved.uri,dialogTitle:'حفظ أو طباعة أو مشاركة'});
+const folder=(CFG.folder||'Mustamsakat').replace(/[\\:*?"<>|]/g,'_');
+
+if(how==='save'&&CFG.saveMode==='documents'){
+try{
+try{await Filesystem.requestPermissions()}catch(_){}
+for(const f of files){
+await Filesystem.writeFile({path:folder+'/'+f.name,data:await blobToBase64(f.blob),directory:'DOCUMENTS',recursive:true})
+}
+toast('تم الحفظ في: Documents/'+folder,4200);
 return
+}catch(err){
+console.error(err);
+toast('تعذّر الحفظ المباشر، اختر المكان من نافذة المشاركة',3200);
+await new Promise(r=>setTimeout(r,900))
+}
+}
+
+try{
+const uris=[];
+for(const f of files){
+const r=await Filesystem.writeFile({path:f.name,data:await blobToBase64(f.blob),directory:'CACHE'});
+uris.push(r.uri)
+}
+if(opt&&opt.print)toast('اختر «طباعة» من القائمة التي ستظهر',3200);
+await Share.share({title:files[0].name,files:uris,dialogTitle:opt&&opt.print?'طباعة':'مشاركة / حفظ'})
 }catch(err){
 const m=String(err&&err.message||err);
 if(/cancel/i.test(m))return;
 console.error(err);
-toast('تعذّر الحفظ: '+m.slice(0,60));
-return
+toast('تعذّرت المشاركة: '+m.slice(0,60))
 }
+return
 }
 
 /* المتصفح */
+if(opt&&opt.print){
+window.open(URL.createObjectURL(files[0].blob),'_blank');
+return
+}
+if(how==='share'){
 try{
-const file=new File([blob],name,{type:blob.type});
-if(navigator.canShare&&navigator.canShare({files:[file]})){
-await navigator.share({files:[file],title:name});
+const fl=files.map(f=>new File([f.blob],f.name,{type:f.blob.type}));
+if(navigator.canShare&&navigator.canShare({files:fl})){
+await navigator.share({files:fl,title:files[0].name});
 return
 }
 }catch(_){}
-
+}
+for(const f of files){
 const a=document.createElement('a');
-a.href=URL.createObjectURL(blob);
-a.download=name;
+a.href=URL.createObjectURL(f.blob);
+a.download=f.name;
 document.body.appendChild(a);
 a.click();
-a.remove()
+a.remove();
+await tick()
 }
-
-const EXP={
-pdf1200:['pdf',1200],
-pdf600:['pdf',600],
-pdf300:['pdf',300],
-pngH:['png',300],
-pngN:['png',150],
-jpg:['jpg',300]
-};
+}
 
 let busy=false;
 
-async function exportAs(k){
+async function exportAs(k,how,opt){
 if(busy)return;
-const[t,dpi]=EXP[k];
-
-if(!S.entries.some(e=>e.img[0]||e.img[1])){
-toast('أضف صورة مستند أولاً');
-return
-}
+const[t,dpi]=FMT[k];
+const pages=layout().filter(p=>p.items.some(it=>it.e.img[it.i]));
+if(!pages.length){toast('أضف صورة مستند أولاً');return}
+if(t==='pdf'&&!(window.jspdf&&window.jspdf.jsPDF)){toast('مكتبة PDF غير متوفرة');return}
 
 busy=true;
 toast('جارٍ تجهيز الملف…',0);
 await tick();
 
 try{
-const pgs=layout();
 const[W,H]=PG[S.page];
+const files=[],base=baseName();
 let low=1;
 
 if(t==='pdf'){
-const pdf=new window.jspdf.jsPDF({unit:'mm',format:[W,H],orientation:'p',compress:true});
+const manual=S.entries.some(e=>Object.keys(e.off).length);
+const pad=manual?0:Math.max(0,Math.min(PAD,CFG.gap/2-.01));
+const pdf=new window.jspdf.jsPDF({unit:'mm',format:[W,H],orientation:W>H?'l':'p',compress:true});
 
-for(let n=0;n<pgs.length;n++){
-if(n)pdf.addPage([W,H]);
-for(const it of pgs[n]){
+for(let n=0;n<pages.length;n++){
+if(n)pdf.addPage([W,H],W>H?'l':'p');
+for(const it of pages[n].items){
 if(!it.e.img[it.i])continue;
-const px=Math.min(dpi/25.4,Math.sqrt(36e6/((it.w+2*PAD)*(it.h+2*PAD))));
+const px=Math.min(dpi/25.4,Math.sqrt(36e6/((it.w+2*pad)*(it.h+2*pad))));
 low=Math.min(low,px/(dpi/25.4));
-const c=renderDoc(it,px);
-pdf.addImage(c.toDataURL('image/jpeg',.95),'JPEG',it.x-PAD,it.y-PAD,it.w+2*PAD,it.h+2*PAD,undefined,'FAST');
+const c=renderDoc(it,px,pad,true);
+pdf.addImage(c.toDataURL('image/jpeg',.95),'JPEG',it.x-pad,it.y-pad,it.w+2*pad,it.h+2*pad,undefined,'FAST');
 c.width=c.height=0;
 await tick()
 }
 }
-await saveFile('mustamsakat.pdf',pdf.output('blob'))
+files.push({name:base+'.pdf',blob:pdf.output('blob')})
 
 }else{
 const px=Math.min(dpi/25.4,Math.sqrt(50e6/(W*H)));
 low=px/(dpi/25.4);
+const isJ=t==='jpg';
 
-for(let n=0;n<pgs.length;n++){
+for(let n=0;n<pages.length;n++){
 const c=document.createElement('canvas');
 c.width=Math.round(W*px);
 c.height=Math.round(H*px);
@@ -962,50 +1192,139 @@ const g=c.getContext('2d');
 g.fillStyle='#fff';
 g.fillRect(0,0,c.width,c.height);
 
-for(const it of pgs[n]){
+for(const it of pages[n].items){
 if(!it.e.img[it.i])continue;
-const d=renderDoc(it,px);
+const d=renderDoc(it,px,PAD,false);
 g.drawImage(d,Math.round((it.x-PAD)*px),Math.round((it.y-PAD)*px));
 d.width=d.height=0
 }
-
-const isJ=t==='jpg';
 const b=await blobOf(c,isJ?'image/jpeg':'image/png',.93);
-await saveFile(`mustamsakat-${n+1}.${isJ?'jpg':'png'}`,b);
-c.width=c.height=0
+files.push({name:`${base}-${n+1}.${isJ?'jpg':'png'}`,blob:b});
+c.width=c.height=0;
+await tick()
 }
 }
 
-toast(low<.97?`تم الحفظ بدقة ${Math.round(dpi*low)} DPI (حدّ ذاكرة الجهاز)`:'تم تجهيز الملف')
+$('toast').hidden=true;
+await deliver(files,how,opt);
+if(low<.97)toast(`الدقة الفعلية ${Math.round(dpi*low)} DPI (حدّ ذاكرة الجهاز)`,3500)
 
 }catch(err){
 console.error(err);
 toast('تعذّر التصدير، جرّب دقة أقل')
 }
-
 busy=false
 }
 
-$('exp').onclick=e=>{
-const k=e.target.closest('[data-x]');
-if(k)exportAs(k.dataset.x)
-};
+/* أزرار الإجراءات */
+$('aPrint').onclick=()=>exportAs('pdf300','share',{print:true});
+$('aShare').onclick=()=>exportAs(CFG.fmt,'share');
 
-/* زر الرجوع في أندرويد */
+let pickFmt=CFG.fmt;
+function buildFmt(){
+$('fmtList').innerHTML=Object.keys(FMT).map(k=>
+`<button data-f="${k}" class="${k===pickFmt?'on':''}">${FMT[k][2]}</button>`
+).join('')
+}
+$('aSave').onclick=()=>{pickFmt=CFG.fmt;buildFmt();$('exportM').hidden=false};
+$('fmtList').onclick=e=>{
+const f=e.target.dataset.f;
+if(!f)return;
+pickFmt=f;buildFmt()
+};
+$('exX').onclick=()=>$('exportM').hidden=true;
+$('exSave').onclick=()=>{$('exportM').hidden=true;exportAs(pickFmt,'save')};
+$('exShare').onclick=()=>{$('exportM').hidden=true;exportAs(pickFmt,'share')};
+
+/* المعاينة */
+$('aPrev').onclick=()=>{
+if(!S.entries.some(e=>e.img[0]||e.img[1])){toast('أضف صورة مستند أولاً');return}
+const box=$('pvPages');
+box.innerHTML='';
+$('preview').hidden=false;
+layout().filter(p=>p.items.some(it=>it.e.img[it.i])).forEach(pg=>mountPage(box,pg,false))
+};
+$('pvX').onclick=()=>$('preview').hidden=true;
+$('pvPrint').onclick=()=>{$('preview').hidden=true;exportAs('pdf300','share',{print:true})};
+
+/* ================= الإعدادات (الواجهة) ================= */
+function syncSettings(){
+[...$('segTheme').children].forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.theme));
+$('swAcc').innerHTML=ACCS.map(c=>`<button class="dot${CFG.accent===c?' on':''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('');
+$('cAcc').value=CFG.accent;
+$('swBg').innerHTML=Object.keys(BGS).map(k=>
+`<button class="dot${CFG.bg===k?' on':''}" data-b="${k}" style="background:linear-gradient(135deg,${BGS[k].l[0]},${BGS[k].l[1]} 55%,${BGS[k].d[1]})" aria-label="${k}"></button>`
+).join('');
+$('cBg').value=CFG.bgCustom||'#c9e6d6';
+$('cPanel').value=CFG.panel||TH.panel;
+$('cInk').value=CFG.ink||TH.ink;
+$('rFont').value=CFG.font;$('vFont').textContent=CFG.font+'%';
+$('sPage').value=CFG.page;
+$('nMargin').value=CFG.margin;
+$('nGap').value=CFG.gap;
+$('kMirror').checked=CFG.mirror;
+$('sSave').value=CFG.saveMode;
+$('tFolder').value=CFG.folder;
+$('tPrefix').value=CFG.prefix;
+$('sFmt').value=CFG.fmt
+}
+function openSettings(){syncSettings();$('settings').hidden=false}
+const upd=()=>{saveCfg();applyTheme();syncSettings()};
+
+$('sPage').innerHTML=Object.keys(PG).map(k=>`<option value="${k}">${k} — ${PG[k][0]}×${PG[k][1]} مم</option>`).join('');
+$('sFmt').innerHTML=Object.keys(FMT).map(k=>`<option value="${k}">${FMT[k][2]}</option>`).join('');
+
+$('setX').onclick=()=>$('settings').hidden=true;
+$('settings').onclick=e=>{if(e.target.id==='settings')$('settings').hidden=true};
+
+$('segTheme').onclick=e=>{const v=e.target.dataset.v;if(v){CFG.theme=v;upd()}};
+$('swAcc').onclick=e=>{const c=e.target.dataset.c;if(c){CFG.accent=c;upd()}};
+$('cAcc').oninput=e=>{CFG.accent=e.target.value;saveCfg();applyTheme()};
+$('swBg').onclick=e=>{const b=e.target.dataset.b;if(b){CFG.bg=b;CFG.bgCustom='';upd()}};
+$('cBg').oninput=e=>{CFG.bg='custom';CFG.bgCustom=e.target.value;saveCfg();applyTheme()};
+$('cPanel').oninput=e=>{CFG.panel=e.target.value;saveCfg();applyTheme()};
+$('cInk').oninput=e=>{CFG.ink=e.target.value;saveCfg();applyTheme()};
+$('rPanel').onclick=()=>{CFG.panel='';upd()};
+$('rInk').onclick=()=>{CFG.ink='';upd()};
+$('rFont').oninput=e=>{CFG.font=+e.target.value;$('vFont').textContent=CFG.font+'%';saveCfg();applyTheme()};
+
+$('sPage').onchange=e=>{CFG.page=e.target.value;S.page=CFG.page;saveCfg();buildSizeMenu();render()};
+$('nMargin').oninput=e=>{CFG.margin=clamp(+e.target.value||0,0,25);saveCfg();render()};
+$('nGap').oninput=e=>{CFG.gap=clamp(+e.target.value||0,0,20);saveCfg();render()};
+$('kMirror').onchange=e=>{CFG.mirror=e.target.checked;saveCfg();render()};
+$('sSave').onchange=e=>{CFG.saveMode=e.target.value;saveCfg()};
+$('tFolder').oninput=e=>{CFG.folder=e.target.value.trim()||'Mustamsakat';saveCfg()};
+$('tPrefix').oninput=e=>{CFG.prefix=e.target.value.trim()||'mustamsakat';saveCfg()};
+$('sFmt').onchange=e=>{CFG.fmt=e.target.value;saveCfg()};
+$('setReset').onclick=()=>ask('إعادة كل الإعدادات إلى الوضع الافتراضي؟',()=>{
+CFG=Object.assign({},DEF);
+S.page=CFG.page;
+saveCfg();applyTheme();syncSettings();buildSizeMenu();render()
+});
+
+/* ================= زر الرجوع (أندرويد) ================= */
+function handleBack(){
+if(!$('confirmM').hidden){$('confirmM').hidden=true;return true}
+if(!$('exportM').hidden){$('exportM').hidden=true;return true}
+if(!$('preview').hidden){$('preview').hidden=true;return true}
+if(!$('settings').hidden){$('settings').hidden=true;return true}
+if(!$('crop').hidden){$('crop').hidden=true;return true}
+if(!$('pSize').hidden||!$('pAdd').hidden){pop('');return true}
+if(S.sel){S.sel=null;render();return true}
+if(S.move){S.move=false;render();return true}
+if($('ed').classList.contains('on')){showHome();return true}
+return false
+}
 (function(){
 if(!isNative())return;
 const App=window.Capacitor.Plugins.App;
 if(!App||!App.addListener)return;
-App.addListener('backButton',()=>{
-if(!$('crop').hidden)$('crop').hidden=true;
-else if(!$('about').hidden)$('about').hidden=true;
-else if(!$('pSize').hidden||!$('pAdd').hidden)pop('');
-else if(S.sel){S.sel=null;render()}
-else if($('ed').classList.contains('on'))showHome();
-else App.exitApp()
-})
+App.addListener('backButton',()=>{if(!handleBack())App.exitApp()})
 })();
 
+/* ================= بدء التشغيل ================= */
+applyTheme();
+buildSizeMenu();
 render();
 </script>
 </body>
