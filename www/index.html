@@ -6,6 +6,8 @@
 <title>مرتّب المستمسكات</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 
 <style>
 :root{
@@ -25,31 +27,32 @@ radial-gradient(520px 420px at 90% -5%,rgba(224,184,76,.32),transparent 70%),
 radial-gradient(640px 560px at -10% 105%,rgba(var(--acc-rgb),.38),transparent 70%),
 linear-gradient(160deg,var(--bg1),var(--bg2))
 }
-button,select,input{font:inherit;color:inherit}
-button{cursor:pointer;border:0;background:none}
-button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-input,select{-webkit-user-select:text;user-select:text}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+button:disabled{opacity:.4;pointer-events:none}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input,select,textarea{-webkit-user-select:text;user-select:text}
 .blob{position:fixed;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(var(--acc-rgb),.35),transparent 68%);animation:drift 16s ease-in-out infinite alternate}
 .b1{width:260px;height:260px;top:-60px;right:-80px}
 .b2{width:300px;height:300px;bottom:-100px;left:-90px;animation-delay:-7s}
 .b3{width:200px;height:200px;top:42%;left:-60px;background:radial-gradient(circle,rgba(224,184,76,.4),transparent 68%);animation-delay:-3s}
 body.inEd .blob{animation:none}
-.view{position:fixed;inset:0;display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.view{position:fixed;inset:0;display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
 .view.on{display:flex}
 
 /* الرئيسية */
-.hm{margin:auto;width:min(92%,420px);display:flex;flex-direction:column;gap:14px;text-align:center;position:relative}
+.hm{margin:auto;width:min(92%,420px);display:flex;flex-direction:column;gap:12px;text-align:center;position:relative}
 h1{margin:6px 0 0;font-size:2em;font-weight:800;background:linear-gradient(90deg,var(--acc-l),#c99a2e);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{margin:0 0 10px;color:var(--mut);line-height:1.7}
-.card{border-radius:24px;padding:20px 18px;display:flex;align-items:center;gap:14px;text-align:right;font-weight:600;font-size:1.2em;transition:transform .15s;position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--bd);box-shadow:var(--sh)}
+.sub{margin:0 0 8px;color:var(--mut);line-height:1.7}
+.card{border-radius:22px;padding:16px 18px;display:flex;align-items:center;gap:14px;text-align:right;font-weight:600;font-size:1.12em;transition:transform .15s;position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--bd);box-shadow:var(--sh);width:100%}
 .card:active{transform:scale(.97)}
 .card small{display:block;font-weight:400;color:var(--mut);font-size:.72em;margin-top:2px}
 .card.pri{background:linear-gradient(135deg,var(--acc2),var(--acc));color:#fff;border-color:transparent;box-shadow:0 12px 30px rgba(var(--acc-rgb),.45)}
 .card.pri small{color:rgba(255,255,255,.85)}
 .card.pri::after{content:"";position:absolute;top:0;bottom:0;width:60px;left:-90px;background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);animation:sheen 4.2s ease-in-out infinite}
-.ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:rgba(255,255,255,.22);flex:none;font-size:22px}
+.ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.22);flex:none;font-size:21px}
 .card:not(.pri) .ic{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#4a3604}
-.hero{position:relative;height:178px;width:250px;margin:0 auto}
+.hero{position:relative;height:160px;width:250px;margin:0 auto}
 .hc{position:absolute;left:50%;top:50%;width:152px;height:98px;margin:-49px 0 0 -76px;border-radius:17px;border:1px solid rgba(255,255,255,.7);box-shadow:0 14px 34px rgba(10,70,45,.3);padding:13px;display:flex;gap:11px;transform:translate(var(--x),var(--y)) rotate(var(--r));animation:cin .9s cubic-bezier(.2,.9,.3,1.25) both,fl 5s ease-in-out .9s infinite}
 .hc .ph{width:32px;height:42px;border-radius:9px;background:currentColor;opacity:.28;flex:none}
 .hc .ln{flex:1;padding-top:4px}
@@ -60,55 +63,106 @@ h1{margin:6px 0 0;font-size:2em;font-weight:800;background:linear-gradient(90deg
 .hc.c{--x:0px;--y:8px;--r:-3deg;z-index:2;color:#4a3604;background:linear-gradient(135deg,#f6dd86,#d9a93a);animation-delay:.24s,-3s}
 
 /* الشريط العلوي */
-.bar{display:flex;align-items:center;gap:6px;margin:10px 10px 0;padding:7px 8px;border-radius:20px;position:relative;z-index:5;background:linear-gradient(120deg,var(--acc2),var(--acc));color:#fff;box-shadow:var(--sh)}
-.bar .sp{flex:1;min-width:0;font-weight:800;font-size:1.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ib{min-width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);font-weight:800;font-size:.85em;padding:0 8px;color:#fff;flex:none}
-.ib.pri{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05;box-shadow:0 0 0 3px rgba(246,221,134,.3)}
+.bar{display:flex;align-items:center;gap:6px;margin:8px 10px 0;padding:6px 8px;border-radius:20px;position:relative;z-index:5;background:linear-gradient(120deg,var(--acc2),var(--acc));color:#fff;box-shadow:var(--sh)}
+.pn{flex:1;min-width:0;text-align:right;font-weight:800;font-size:1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;padding:0 4px}
+.ib{min-width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);font-weight:800;font-size:1.05em;padding:0 8px;color:#fff;flex:none}
+.ib.gold{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05;border-color:transparent}
 .ib svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pop{position:fixed;min-width:200px;border-radius:18px;padding:6px;z-index:40;display:flex;flex-direction:column;background:var(--panel);color:var(--ink);border:1px solid var(--bd);box-shadow:var(--sh);animation:dd .18s ease-out}
+.pop{position:fixed;min-width:210px;max-height:72vh;overflow:auto;border-radius:18px;padding:6px;z-index:40;display:flex;flex-direction:column;background:var(--panel);color:var(--ink);border:1px solid var(--bd);box-shadow:var(--sh);animation:dd .18s ease-out}
 .pop[hidden]{display:none}
-.pop button{padding:12px 14px;text-align:right;border-radius:12px;font-weight:600}
+.pop button{padding:11px 14px;text-align:right;border-radius:12px;font-weight:600;display:flex;gap:10px;align-items:center}
 .pop button:active,.pop button.on{background:var(--acc);color:#fff}
 .pop hr{border:0;border-top:1px solid var(--bd);margin:4px 6px;width:calc(100% - 12px)}
 
-/* الورقة */
-.scroll{flex:1;overflow:auto;padding:14px 14px 260px;-webkit-overflow-scrolling:touch;background-image:radial-gradient(rgba(var(--acc-rgb),.18) 1px,transparent 1.3px);background-size:18px 18px}
-.pg{position:relative;width:min(100%,560px);margin:0 auto 6px;background:#fff;border-radius:3px;box-shadow:0 6px 24px rgba(0,0,0,.28);overflow:hidden}
-.pgl{width:min(100%,560px);margin:0 auto 16px;text-align:center;font-size:.8em;color:var(--mut)}
-.slot{position:absolute;background-color:#f1f1f1;cursor:pointer}
-.slot .im{position:absolute;inset:0;border-radius:inherit;background-size:cover;background-position:center;pointer-events:none}
-.slot.empty{border:2px dashed #7bb899;background:#f4faf7;display:grid;place-items:center;color:#1f7a4d;font-weight:700;font-size:clamp(10px,3vw,15px);border-radius:calc(var(--u)*2);text-align:center;padding:4px}
-.slot.sel{outline:2.5px solid var(--acc);outline-offset:2px;z-index:3}
-.slot.mv{cursor:grab;touch-action:none}
+/* منطقة الأوراق */
+.scroll{flex:1;position:relative;overflow:auto;-webkit-overflow-scrolling:touch;background-image:radial-gradient(rgba(var(--acc-rgb),.18) 1px,transparent 1.3px);background-size:18px 18px}
+.scroll.hzv{overflow:hidden}
+#pages.vt{display:block;padding:12px 0 220px}
+#pages.hz{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:100%;align-items:flex-start;padding:8px 0;-webkit-overflow-scrolling:touch}
+.pgw{padding:0 16px;margin-bottom:6px;display:flex;flex-direction:column;align-items:center}
+.hz .pgw{flex:0 0 100%;scroll-snap-align:center;margin:0}
+.pg{position:relative;width:var(--pw,min(100%,560px));background:#fff;border-radius:3px;box-shadow:0 6px 24px rgba(0,0,0,.28)}
+.pgl{width:var(--pw,min(100%,560px));margin:6px auto 14px;text-align:center;font-size:.8em;color:var(--mut)}
+.it{position:absolute;touch-action:pan-y;cursor:pointer;transform-origin:center center}
+.it .im{position:absolute;inset:0;border-radius:inherit;background-size:cover;background-position:center;pointer-events:none}
+.it.empty{border:2px dashed #7bb899;background:#f4faf7;display:grid;place-items:center;color:#1f7a4d;font-weight:700;font-size:clamp(10px,3vw,15px);border-radius:calc(var(--u)*2);text-align:center;padding:4px}
+.it .tx{position:absolute;inset:0;overflow:hidden;line-height:1.35;white-space:pre-wrap;word-break:normal;pointer-events:none;padding:calc(var(--u)*1.2)}
+.it canvas.qr{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none;background:#fff}
 .hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#6b8f7d;padding:30px;line-height:1.8;pointer-events:none}
 .wm{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;display:flex;flex-wrap:wrap;align-content:space-around;justify-content:space-around}
 .wm span{transform:rotate(-28deg);font-weight:800;color:#000;font-size:calc(var(--u)*5);white-space:nowrap;padding:calc(var(--u)*5)}
+.gl{position:absolute;background:#ff2d87;z-index:30;pointer-events:none}
+.gl.v{top:0;bottom:0;width:1px}
+.gl.h{left:0;right:0;height:1px}
+
+/* مربع التحديد والمقابض */
+.sbx{position:absolute;border:2px solid var(--acc);z-index:20;touch-action:none;cursor:move;transform-origin:center center;box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+.sbx.lk{border-style:dashed;cursor:not-allowed}
+.hd{position:absolute;width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-size:15px;font-style:normal;line-height:1;touch-action:none;box-shadow:0 2px 6px rgba(0,0,0,.45);border:2px solid #fff;transform:translate(-50%,-50%) rotate(calc(var(--rot,0)*-1deg));cursor:pointer}
+.hd::after{content:"";position:absolute;inset:-9px}
+.hd[data-h=tl]{left:0;top:0}.hd[data-h=t]{left:50%;top:0}.hd[data-h=tr]{left:100%;top:0}
+.hd[data-h=r]{left:100%;top:50%}.hd[data-h=br]{left:100%;top:100%}.hd[data-h=b]{left:50%;top:100%}
+.hd[data-h=bl]{left:0;top:100%}.hd[data-h=l]{left:0;top:50%}
+.hd.rt{left:50%;top:-38px;background:#d9a93a;color:#3a2b05}
+.sbx::before{content:"";position:absolute;left:50%;top:-26px;height:26px;width:2px;background:var(--acc);margin-left:-1px}
+.sbx.lk::before{display:none}
+.rl{position:absolute;left:50%;top:-66px;transform:translateX(-50%) rotate(calc(var(--rot,0)*-1deg));background:#0b2a1f;color:#fff;border-radius:8px;padding:1px 8px;font-size:12px;white-space:nowrap;display:none}
+.sbx.rting .rl{display:block}
+.lkb{position:absolute;right:4px;top:4px;font-size:15px;transform:rotate(calc(var(--rot,0)*-1deg))}
 
 /* اللوحة السفلية */
-.dock{position:fixed;left:0;right:0;bottom:0;padding:0 10px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:6;pointer-events:none}
+.dock{position:fixed;left:0;right:0;bottom:0;padding:0 10px calc(8px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:7px;z-index:6;pointer-events:none}
+body.pOpen .dock{display:none}
 .dock>*{pointer-events:auto}
-.sheet{border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:9px;max-height:44vh;overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--bd);box-shadow:var(--sh);animation:up .26s ease-out}
-.sheet[hidden]{display:none}
-.sh-h{display:flex;align-items:center;justify-content:space-between;font-weight:800;gap:8px}
+.navbar{align-self:center;display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:999px;background:var(--panel);border:1px solid var(--bd);box-shadow:var(--sh)}
+.navbar button{min-width:36px;height:34px;border-radius:999px;font-weight:800;padding:0 10px;background:var(--chip)}
+.navbar .cnt{min-width:64px;text-align:center;font-weight:800;font-size:.92em}
+.navbar .sep{width:1px;height:20px;background:var(--bd);margin:0 2px}
+.seltb,.bnav{display:grid;gap:4px;padding:6px;border-radius:20px;background:var(--panel);border:1px solid var(--bd);box-shadow:var(--sh)}
+.seltb{grid-template-columns:repeat(7,1fr)}
+.bnav{grid-template-columns:repeat(5,1fr)}
+.seltb[hidden]{display:none}
+.tbb{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;border-radius:14px;font-size:.68em;font-weight:600;color:var(--ink)}
+.tbb i{font-style:normal;font-size:1.75em;line-height:1.1}
+.tbb:active{background:var(--chip)}
+.tbb.red{color:#d64533}
+.tbb.hl{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05}
+.bnav .tbb{font-size:.74em;padding:8px 2px}
+
+/* الخصائص */
+.props{position:fixed;left:0;right:0;bottom:0;z-index:8;margin:0 auto;max-width:640px;border-radius:24px 24px 0 0;background:var(--panel);color:var(--ink);border:1px solid var(--bd);box-shadow:0 -8px 30px rgba(0,0,0,.25);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;max-height:50vh;animation:up .22s ease-out}
+.props[hidden]{display:none}
+.ph{display:flex;align-items:center;gap:8px}
+.ph b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg2{display:flex;border-radius:12px;overflow:hidden;border:1px solid var(--bd)}
+.seg2 button{padding:7px 12px;font-weight:600;background:var(--chip);font-size:.87em}
+.seg2 button.on{background:var(--acc);color:#fff}
+.ptabs{display:flex;gap:6px;overflow-x:auto}
+.ptabs button{flex:1;padding:8px 10px;border-radius:12px;background:var(--chip);font-weight:700;font-size:.9em;white-space:nowrap}
+.ptabs button.on{background:var(--acc);color:#fff}
+.pbody{overflow:auto;display:flex;flex-direction:column;gap:9px;padding-bottom:4px}
+.pp{display:flex;flex-direction:column;gap:9px}
+.pp[hidden]{display:none}
 .row{display:flex;gap:7px;flex-wrap:wrap}
 .row>*{flex:1 1 auto}
-.sb{padding:9px 11px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);font-size:.87em;font-weight:600;white-space:nowrap;color:var(--ink)}
+.sb{padding:9px 11px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);font-size:.87em;font-weight:600;white-space:nowrap;color:var(--ink);text-align:center}
 .sb.on{background:var(--acc);color:#fff;border-color:transparent}
 .sb.red{color:#d64533}
-select,input[type=text],input[type=number]{width:100%;padding:10px;border-radius:12px;border:1px solid var(--bd);background:var(--chip);color:var(--ink);font-size:.95em;font-weight:600}
+select,input[type=text],input[type=number],textarea{width:100%;padding:10px;border-radius:12px;border:1px solid var(--bd);background:var(--chip);color:var(--ink);font-size:.95em;font-weight:600}
+textarea{resize:none;min-height:70px;line-height:1.6}
 select option,select optgroup{color:#0b2a1f;background:#fff}
 .lb{display:flex;align-items:center;gap:10px;font-size:.87em;font-weight:600}
 .lb input[type=range]{flex:1;accent-color:var(--acc)}
 .lb input[type=number],.lb select{width:auto;flex:1}
-.lb input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc)}
-.lb b{min-width:38px;text-align:center}
-.act{border-radius:20px;padding:8px;display:flex;gap:7px;overflow-x:auto;background:var(--panel);border:1px solid var(--bd);box-shadow:var(--sh)}
-.chip{flex:none;padding:11px 14px;border-radius:14px;font-weight:700;font-size:.87em;background:linear-gradient(135deg,var(--acc2),var(--acc));color:#fff;white-space:nowrap;box-shadow:0 4px 14px rgba(var(--acc-rgb),.3);transition:transform .15s}
+.lb input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc);flex:none}
+.lb b{min-width:42px;text-align:center}
+.chip{flex:none;padding:11px 14px;border-radius:14px;font-weight:700;font-size:.87em;background:linear-gradient(135deg,var(--acc2),var(--acc));color:#fff;white-space:nowrap;box-shadow:0 4px 14px rgba(var(--acc-rgb),.3);transition:transform .15s;text-align:center}
 .chip:active{transform:scale(.94)}
 .chip.gold{background:linear-gradient(135deg,#f6dd86,#d9a93a);color:#3a2b05}
 .chip.o{background:var(--chip);color:var(--ink);border:1px solid var(--bd);box-shadow:none}
 .chip.o.on{background:var(--acc);color:#fff;border-color:transparent}
 .chip.red{color:#d64533}
+input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);border-radius:10px;background:none;flex:none}
 
 /* النوافذ */
 .modal{position:fixed;inset:0;z-index:50;background:rgba(0,20,10,.6);display:grid;place-items:center;padding:14px}
@@ -124,7 +178,6 @@ select option,select optgroup{color:#0b2a1f;background:#fff}
 .sw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .dot{width:36px;height:36px;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px var(--bd)}
 .dot.on{border-color:var(--ink)}
-input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);border-radius:10px;background:none}
 .cr2{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.9em;font-weight:600}
 .cr2 span{flex:1}
 .fmt{display:flex;flex-direction:column;gap:6px;margin:10px 0}
@@ -132,9 +185,24 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 .fmt button.on{background:var(--acc);color:#fff;border-color:transparent}
 .pv{position:fixed;inset:0;z-index:50;background:var(--bg2);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
 .pv[hidden]{display:none}
-.pv .scroll{padding-bottom:24px}
 .pvb{display:flex;gap:8px;padding:10px;align-items:center;background:var(--panel);border-bottom:1px solid var(--bd)}
 .pvb b{flex:1;font-weight:800}
+.lib{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.lrow{display:flex;gap:10px;align-items:center;padding:8px;border-radius:16px;background:var(--chip);border:1px solid var(--bd)}
+.lrow .th{width:54px;height:72px;border-radius:8px;background:#fff center/cover no-repeat;flex:none;display:grid;place-items:center;font-size:26px;border:1px solid var(--bd)}
+.lrow .nf{flex:1;min-width:0;font-weight:700;font-size:.92em}
+.lrow .nf small{display:block;font-weight:400;color:var(--mut);font-size:.8em}
+.lrow .nf b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow .ac{display:flex;flex-direction:column;gap:5px}
+.lrow .ac button{padding:6px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--bd);font-size:.8em;font-weight:700}
+.lrow .ac button.red{color:#d64533}
+.emp{text-align:center;color:var(--mut);padding:24px 0}
+.qrp{display:grid;place-items:center;margin:10px 0}
+.qrp canvas{width:180px;height:180px;image-rendering:pixelated;background:#fff;border-radius:8px;border:1px solid var(--bd)}
+.note{font-size:.8em;color:var(--mut);line-height:1.7;margin:6px 0}
+.dchips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.dchips button{flex:1 1 auto;min-width:48px;padding:11px 0;border-radius:12px;background:var(--chip);border:1px solid var(--bd);font-weight:800}
+.dchips button.on{background:var(--acc);color:#fff;border-color:transparent}
 .cw{width:min(100%,520px);display:flex;flex-direction:column;gap:12px;align-items:center}
 .cbox{position:relative;direction:ltr;display:inline-block;touch-action:none;user-select:none}
 .cbox img{display:block;max-width:100%;max-height:64vh;pointer-events:none}
@@ -161,6 +229,7 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <div class="blob b2"></div>
 <div class="blob b3"></div>
 
+<!-- الرئيسية -->
 <section id="home" class="view on">
 <main class="hm">
 <div class="hero" aria-hidden="true">
@@ -171,62 +240,71 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <h1>مرتّب المستمسكات</h1>
 <p class="sub">صوّر هويتك ومستمسكاتك ورتّبها على ورقة جاهزة للطباعة</p>
 
-<button class="card pri" id="goNew">
-<span class="ic">＋</span>
-<span id="goNewT">إنشاء مستند<small id="goNewS">ورقة بيضاء جاهزة للترتيب</small></span>
-</button>
-
-<button class="card" id="goSet">
-<span class="ic">⚙</span>
-<span>الإعدادات<small>الألوان، الورقة، مكان الحفظ</small></span>
-</button>
+<button class="card pri" id="goNew"><span class="ic">＋</span><span>إنشاء مستند<small id="goNewS">ورقة بيضاء جاهزة للترتيب</small></span></button>
+<button class="card" id="goLib"><span class="ic">📁</span><span>المحفوظات<small>مشاريعك وملفاتك المحفوظة</small></span></button>
+<button class="card" id="goSet"><span class="ic">⚙</span><span>الإعدادات<small>الألوان، الورقة، مكان الحفظ</small></span></button>
 </main>
 </section>
 
+<!-- المحرر -->
 <section id="ed" class="view">
 <header class="bar" id="hdr">
 <button class="ib" id="back" aria-label="رجوع"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-<span class="sp" id="hdrT">المستمسكات</span>
-<button class="ib" id="bSize" aria-label="حجم الورقة">A4</button>
-<button class="ib" id="bTheme" aria-label="الوضع الليلي"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg></button>
-<button class="ib" id="bSet" aria-label="الإعدادات"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
-<button class="ib pri" id="bAdd" aria-label="إضافة مستند"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+<button class="pn" id="pname">مشروع جديد</button>
+<button class="ib" id="bUndo" aria-label="تراجع">↶</button>
+<button class="ib" id="bRedo" aria-label="إعادة">↷</button>
+<button class="ib gold" id="bSave" aria-label="حفظ المشروع">💾</button>
+<button class="ib" id="bMenu" aria-label="القائمة"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
 </header>
 
-<div class="pop" id="pSize" hidden></div>
-<div class="pop" id="pAdd" hidden>
-<button id="aTwo">🪪 مستند وجه وظهر</button>
-<button id="aOne">📄 مستند بوجه واحد</button>
-<button id="aPhoto">👤 صورة شخصية</button>
-<hr>
-<button id="aMulti">🖼 عدة صور دفعة واحدة</button>
-</div>
-
-<div class="scroll" id="pages"></div>
+<div class="scroll" id="viewport"><div id="pages" class="vt"></div></div>
 
 <div class="dock" id="dock">
-<div class="sheet" id="sheet" hidden>
-<div class="sh-h"><span id="shT">المستند</span><button class="sb" id="shX">إغلاق ✕</button></div>
-
-<select id="szS" aria-label="نوع المستند"></select>
-
-<div class="row" id="cuRow" hidden>
-<label class="lb">العرض (مم)<input type="number" id="cuW" min="10" max="420"></label>
-<label class="lb">الارتفاع (مم)<input type="number" id="cuH" min="10" max="420"></label>
+<div class="navbar" id="navbar">
+<button id="nPrev" aria-label="الورقة السابقة">▲</button>
+<span class="cnt" id="nCount">1 / 1</span>
+<button id="nNext" aria-label="الورقة التالية">▼</button>
+<span class="sep"></span>
+<button id="nAdd" aria-label="إضافة ورقة">＋ورقة</button>
+<button id="nMode" aria-label="نمط التنقل">↕</button>
 </div>
 
-<div class="row" id="sides">
-<button class="sb" id="sd0">الوجه</button>
-<button class="sb" id="sd1">الظهر</button>
+<div class="seltb" id="seltb" hidden>
+<button class="tbb hl" id="tbProps"><i>⚙</i>خصائص</button>
+<button class="tbb" id="tbDup"><i>⧉</i>تكرار</button>
+<button class="tbb" id="tbCopy"><i>⎘</i>نسخ</button>
+<button class="tbb" id="tbPaste"><i>📋</i>لصق</button>
+<button class="tbb" id="tbRot"><i>↻</i>تدوير</button>
+<button class="tbb red" id="tbDel"><i>🗑</i>حذف</button>
+<button class="tbb" id="tbX"><i>✕</i>إلغاء</button>
 </div>
 
+<div class="bnav" id="bnav">
+<button class="tbb hl" id="nbAdd"><i>＋</i>إضافة</button>
+<button class="tbb" id="nbPrev"><i>👁</i>معاينة</button>
+<button class="tbb" id="nbPrint"><i>🖨</i>طباعة</button>
+<button class="tbb" id="nbShare"><i>↗</i>مشاركة</button>
+<button class="tbb" id="nbSave"><i>⬇</i>تصدير</button>
+</div>
+</div>
+
+<!-- الخصائص -->
+<div class="props" id="props" hidden>
+<div class="ph">
+<b id="prT">الخصائص</b>
+<span class="seg2" id="prSides" hidden><button id="sd0">الوجه</button><button id="sd1">الظهر</button></span>
+<button class="sb" id="prX">✕ إغلاق</button>
+</div>
+<div class="ptabs" id="ptabs"></div>
+<div class="pbody">
+
+<div class="pp" id="pp-img">
 <div class="row">
-<button class="sb" id="bCrop">✂ قص</button>
-<button class="sb" id="bAuto">⌖ حواف تلقائي</button>
 <button class="sb" id="bRep">🖼 استبدال</button>
+<button class="sb" id="bCrop">✂ قص يدوي</button>
+<button class="sb" id="bAuto">⌖ قص تلقائي</button>
 <button class="sb" id="bRotI">↻ تدوير الصورة</button>
 </div>
-
 <div class="row" id="fltRow">
 <button class="sb" data-flt="normal">أصلي</button>
 <button class="sb" data-flt="scan">✨ مسح ضوئي</button>
@@ -235,38 +313,113 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 </div>
 <label class="lb">السطوع<input type="range" id="rBr" min="-50" max="50" step="5"></label>
 <label class="lb">التباين<input type="range" id="rCt" min="-50" max="80" step="5"></label>
-
-<div class="row">
-<button class="sb" id="bRot">⟲ تدوير القالب</button>
-<button class="sb" id="bSwap">⇄ تبديل الوجهين</button>
-<button class="sb" id="bMode">الترتيب: جنب</button>
-<button class="sb" id="bFit">العرض: كامل</button>
 </div>
 
-<label class="lb">الحجم<input type="range" id="rSc" min="30" max="150" step="5"><b id="vSc"></b></label>
-<label class="lb">عدد النسخ<input type="range" id="rCop" min="1" max="30" step="1"><b id="vCop"></b></label>
+<div class="pp" id="pp-text" hidden>
+<textarea id="tTxt" placeholder="اكتب النص هنا"></textarea>
+<div class="row" style="align-items:center">
+<input type="color" id="tColor" aria-label="لون الخط">
+<label class="lb" style="flex:3">الحجم<input type="range" id="tSize" min="6" max="120" step="1"><b id="vTs"></b></label>
+</div>
+<div class="row">
+<button class="sb" id="tBold"><b>B</b> غامق</button>
+<button class="sb" id="tIt"><i>I</i> مائل</button>
+<button class="sb" id="tUl"><u>U</u> تحته خط</button>
+</div>
+<div class="row">
+<button class="sb" id="tAlR">يمين</button>
+<button class="sb" id="tAlC">وسط</button>
+<button class="sb" id="tAlL">يسار</button>
+</div>
+</div>
+
+<div class="pp" id="pp-qr" hidden>
+<textarea id="qData" placeholder="النص أو الرابط داخل الباركود"></textarea>
+<button class="chip" id="qApply">تطبيق</button>
+<p class="note">الباركود لا يتسع للصورة نفسها. ضع فيه رابط الملف بعد رفعه (مثل Google Drive) ليفتح المستند عند المسح.</p>
+</div>
+
+<div class="pp" id="pp-size" hidden>
+<div id="szWrap"><select id="szS" aria-label="نوع المستند"></select></div>
+<div class="row" id="cuRow" hidden>
+<label class="lb">العرض (مم)<input type="number" id="cuW" min="10" max="420"></label>
+<label class="lb">الارتفاع (مم)<input type="number" id="cuH" min="10" max="420"></label>
+</div>
+<div class="row">
+<button class="sb" id="zOut">➖ تصغير</button>
+<button class="sb" id="zIn">➕ تكبير</button>
+<button class="sb" id="bRot90">↻ تدوير 90°</button>
+</div>
+<label class="lb">الدوران<input type="range" id="rRot" min="-180" max="180" step="1"><b id="vRot"></b></label>
+<div class="row">
+<button class="sb" id="bFill">↔ ملء عرض الورقة</button>
+<button class="sb" id="bFitImg">ملاءمة الصورة</button>
+</div>
+<div class="row" id="twoRow">
+<button class="sb" id="bMode">الترتيب: جنب</button>
+<button class="sb" id="bSwap">⇄ تبديل الوجهين</button>
+</div>
+</div>
+
+<div class="pp" id="pp-shape" hidden>
 <label class="lb">انحناء الحواف<input type="range" id="rg" min="0" max="10" step=".5"></label>
 <label class="lb">الظل
 <select id="shS"><option value="gray">رمادي</option><option value="black">أسود</option><option value="none">بدون</option></select>
 </label>
+</div>
 
+<div class="pp" id="pp-arr" hidden>
+<div class="lbl" style="margin:0">محاذاة داخل الورقة</div>
 <div class="row">
+<button class="sb" id="aR">⇥ يمين</button>
+<button class="sb" id="aC">↔ وسط</button>
+<button class="sb" id="aL">⇤ يسار</button>
+</div>
+<div class="row">
+<button class="sb" id="aT">⤒ أعلى</button>
+<button class="sb" id="aM">↕ منتصف</button>
+<button class="sb" id="aB">⤓ أسفل</button>
+</div>
+<div class="row">
+<button class="sb" id="zFront">إلى الأمام</button>
+<button class="sb" id="zBack">إلى الخلف</button>
+<button class="sb" id="bLock">🔓 قفل</button>
+</div>
+<div class="row">
+<button class="sb" id="mvPrev">⬆ نقل للورقة السابقة</button>
+<button class="sb" id="mvNext">⬇ نقل للورقة التالية</button>
+</div>
 <button class="sb" id="bResetPos">↺ موضع تلقائي</button>
-<button class="sb" id="bDup">⧉ تكرار المستند</button>
-<button class="sb red" id="bDel2">🗑 حذف المستند</button>
+</div>
+
 </div>
 </div>
 
-<div class="act" id="act">
-<button class="chip gold" id="aPrev">👁 معاينة</button>
-<button class="chip" id="aPrint">🖨 طباعة</button>
-<button class="chip o" id="aShare">↗ مشاركة</button>
-<button class="chip o" id="aSave">⬇ حفظ</button>
-<button class="chip o" id="aWm">🛡 حماية</button>
-<button class="chip o" id="aMove">✥ تحريك</button>
-<button class="chip o" id="aAuto" hidden>↺ ترتيب تلقائي</button>
-<button class="chip o red" id="aDel">🗑 حذف</button>
+<div class="pop" id="pSize" hidden></div>
+<div class="pop" id="pAdd" hidden>
+<button data-add="two">🪪 مستند وجه وظهر</button>
+<button data-add="one">📄 مستند بوجه واحد</button>
+<button data-add="photo">👤 صورة شخصية</button>
+<button data-add="multi">🖼 عدة صور دفعة واحدة</button>
+<hr>
+<button data-add="text">🔤 مربع نص</button>
+<button data-add="qr">▦ باركود</button>
 </div>
+<div class="pop" id="pMenu" hidden>
+<button data-act="size">📐 حجم الورقة</button>
+<button data-act="land">↔ ورقة أفقية / عمودية</button>
+<button data-act="addpage">📃 إضافة ورقة</button>
+<button data-act="duppage">⧉ نسخ الورقة الحالية</button>
+<button data-act="delpage">🗑 حذف الورقة الحالية</button>
+<hr>
+<button data-act="auto">✨ ترتيب تلقائي لكل الأوراق</button>
+<button data-act="wm">🛡 علامة مائية</button>
+<button data-act="paste">📋 لصق</button>
+<hr>
+<button data-act="lib">📁 المحفوظات</button>
+<button data-act="new">🆕 مشروع جديد</button>
+<button data-act="theme">🌙 الوضع الليلي</button>
+<button data-act="settings">⚙ الإعدادات</button>
 </div>
 </section>
 
@@ -277,13 +430,13 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <button class="chip" id="pvPrint">🖨 طباعة</button>
 <button class="chip o" id="pvX">إغلاق</button>
 </div>
-<div class="scroll" id="pvPages"></div>
+<div class="scroll" style="flex:1"><div id="pvPages" class="vt"></div></div>
 </div>
 
 <!-- التصدير -->
 <div class="modal" id="exportM" hidden>
 <div class="mb">
-<div class="mh"><h2>حفظ / مشاركة</h2></div>
+<div class="mh"><h2>تصدير</h2></div>
 <div class="fmt" id="fmtList"></div>
 <div class="row">
 <button class="chip" id="exSave" style="flex:1">⬇ حفظ</button>
@@ -293,11 +446,65 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 </div>
 </div>
 
+<!-- التكرار -->
+<div class="modal" id="dupM" hidden>
+<div class="mb">
+<div class="mh"><h2>⧉ تكرار المستند</h2></div>
+<p class="note">اختر عدد النسخ الإضافية أو اكتب رقماً:</p>
+<div class="dchips" id="dupChips">
+<button data-n="1">1</button><button data-n="2">2</button><button data-n="4">4</button><button data-n="6">6</button><button data-n="8">8</button><button data-n="10">10</button>
+</div>
+<input type="number" id="dupN" min="1" max="60" value="2" inputmode="numeric">
+<div class="row" style="margin-top:14px">
+<button class="chip" id="dupOk" style="flex:1">تكرار</button>
+<button class="chip o" id="dupX" style="flex:1">إلغاء</button>
+</div>
+</div>
+</div>
+
+<!-- الباركود -->
+<div class="modal" id="qrM" hidden>
+<div class="mb">
+<div class="mh"><h2>▦ باركود</h2></div>
+<textarea id="qrT" placeholder="اكتب النص أو الصق الرابط" style="margin-top:10px"></textarea>
+<div class="qrp"><canvas id="qrPrev" width="10" height="10"></canvas></div>
+<p class="note">الباركود لا يتسع للصورة نفسها (سعته بضعة كيلوبايت فقط). ارفع الملف إلى خدمة تخزين وضع رابطه هنا ليفتح المستند عند المسح.</p>
+<div class="row" style="margin-top:10px">
+<button class="chip" id="qrOk" style="flex:1">إضافة للورقة</button>
+<button class="chip o" id="qrX" style="flex:1">إلغاء</button>
+</div>
+</div>
+</div>
+
+<!-- إعادة التسمية -->
+<div class="modal" id="rnM" hidden>
+<div class="mb">
+<div class="mh"><h2>اسم المشروع</h2></div>
+<input type="text" id="rnT" style="margin-top:10px">
+<div class="row" style="margin-top:14px">
+<button class="chip" id="rnOk" style="flex:1">حفظ الاسم</button>
+<button class="chip o" id="rnX" style="flex:1">إلغاء</button>
+</div>
+</div>
+</div>
+
+<!-- المحفوظات -->
+<div class="modal" id="libM" hidden>
+<div class="mb">
+<div class="mh"><h2>📁 المحفوظات</h2><button class="sb" id="libX">إغلاق ✕</button></div>
+<div class="seg" id="libTabs" style="margin-top:10px">
+<button data-t="p">المشاريع</button>
+<button data-t="f">الملفات المصدّرة</button>
+</div>
+<div class="lib" id="libList"></div>
+</div>
+</div>
+
 <!-- العلامة المائية -->
 <div class="modal" id="wmM" hidden>
 <div class="mb">
 <div class="mh"><h2>🛡 علامة مائية</h2></div>
-<p style="font-size:.87em;color:var(--mut);margin:6px 0 10px">نص مائل شفاف فوق الورقة يمنع استخدام نسخة المستمسك في غير غرضها.</p>
+<p class="note">نص مائل شفاف فوق الورقة يمنع استخدام نسخة المستمسك في غير غرضها.</p>
 <input type="text" id="wmT" placeholder="مثال: نسخة مخصصة للتعيين فقط">
 <label class="lb" style="margin-top:10px">الشفافية<input type="range" id="wmA" min="5" max="45"><b id="vWmA"></b></label>
 <div class="row" style="margin-top:14px">
@@ -330,26 +537,28 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <button data-v="light">فاتح</button>
 <button data-v="dark">ليلي</button>
 </div>
-
 <div class="lbl">لون التطبيق</div>
 <div class="sw"><span class="sw" id="swAcc"></span><input type="color" id="cAcc" aria-label="لون مخصص"></div>
-
 <div class="lbl">خلفية التطبيق</div>
 <div class="sw"><span class="sw" id="swBg"></span><input type="color" id="cBg" aria-label="خلفية مخصصة"></div>
-
 <div class="cr2"><span>لون النوافذ</span><input type="color" id="cPanel"><button class="sb" id="rPanel">افتراضي</button></div>
 <div class="cr2"><span>لون الكتابة</span><input type="color" id="cInk"><button class="sb" id="rInk">افتراضي</button></div>
-
 <label class="lb" style="margin-top:10px">حجم الخط<input type="range" id="rFont" min="85" max="125" step="5"><b id="vFont"></b></label>
 
-<h3>الورقة</h3>
+<h3>الورقة والتنقل</h3>
 <div class="lbl">حجم الورقة الافتراضي</div>
 <select id="sPage"></select>
 <div class="row" style="margin-top:8px">
 <label class="lb">الهامش (مم)<input type="number" id="nMargin" min="0" max="25" step="1"></label>
 <label class="lb">المسافة (مم)<input type="number" id="nGap" min="0" max="20" step="1"></label>
 </div>
-<label class="lb" style="margin-top:8px"><input type="checkbox" id="kVc">توسيط المحتوى عمودياً في الورقة</label>
+<div class="lbl">التنقل بين الأوراق</div>
+<div class="seg" id="segNav">
+<button data-v="v">↕ للأعلى والأسفل</button>
+<button data-v="h">↔ يمين ويسار</button>
+</div>
+<label class="lb" style="margin-top:10px"><input type="checkbox" id="kSnap">المغناطيس والخطوط الإرشادية أثناء التحريك</label>
+<label class="lb" style="margin-top:6px"><input type="checkbox" id="kVc">توسيط المحتوى عمودياً عند الترتيب التلقائي</label>
 <label class="lb" style="margin-top:6px"><input type="checkbox" id="kCut">خطوط قص رفيعة حول المستندات</label>
 <label class="lb" style="margin-top:6px"><input type="checkbox" id="kMirror">عكس موضع الظهر أفقياً (للطباعة على الوجهين)</label>
 <label class="lb" style="margin-top:6px"><input type="checkbox" id="kAuto">قص الحواف تلقائياً عند إضافة الصورة</label>
@@ -395,8 +604,9 @@ const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const isNative=()=>!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
 const tick=()=>new Promise(r=>setTimeout(r,30));
+const rotv=(x,y,deg)=>{const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return[x*c-y*s,x*s+y*c]};
 
-/* ================= البيانات ================= */
+/* ================= الثوابت ================= */
 const DOCS=[
 ['البطاقة الوطنية الموحدة',85.6,54,'الهويات'],
 ['هوية الأحوال المدنية',85,105,'الهويات'],
@@ -420,7 +630,7 @@ const GROUPS=['الهويات','وثائق رسمية','وثائق A4','صور �
 const CUS=DOCS.length-1;
 const PHOTO=12;
 const PG={A3:[297,420],A4:[210,297],A5:[148,210],A6:[105,148],Letter:[215.9,279.4]};
-const SH={
+const SHD={
 none:'none',
 gray:'0 calc(var(--u)*.5) calc(var(--u)*1.6) rgba(0,0,0,.3)',
 black:'0 calc(var(--u)*.5) calc(var(--u)*1.6) rgba(0,0,0,.62)'
@@ -429,19 +639,21 @@ const FMT={
 pdf300:['pdf',300,'PDF — دقة 300 (سريع)'],
 pdf600:['pdf',600,'PDF — دقة 600'],
 pdf1200:['pdf',1200,'PDF — دقة 1200 (بطيء وكبير الحجم)'],
+docx:['docx',200,'Word — ملف docx'],
 pngH:['png',300,'PNG — جودة عالية'],
 pngN:['png',150,'PNG — حجم عادي'],
 jpg:['jpg',300,'JPG']
 };
+const MIME={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',png:'image/png',jpg:'image/jpeg'};
 const MODE_LBL={side:'جنب بعض',stack:'فوق بعض',split:'ورقتين (وجه / ظهر)'};
-const PAD=2.4;
 const NOFLT=()=>({f:'normal',b:0,c:0});
+const HANDLES=['tl','t','tr','r','br','b','bl','l'];
+const ARROW={tl:'↖',t:'↑',tr:'↗',r:'→',br:'↘',b:'↓',bl:'↙',l:'←'};
 
-/* ================= الإعدادات ================= */
+/* ================= الإعدادات والثيم ================= */
 const DEF={theme:'auto',accent:'#1f7a4d',bg:'green',bgCustom:'',panel:'',ink:'',font:100,
-page:'A4',margin:8,gap:5,mirror:false,vcenter:false,cutLines:false,autoCrop:false,
-saveMode:'folder',treeUri:'',treeName:'',prefix:'mustamsakat',fmt:'pdf300',q:94,
-wmText:'',wmAlpha:18};
+page:'A4',margin:8,gap:5,mirror:false,vcenter:false,cutLines:false,autoCrop:false,snap:true,nav:'v',
+saveMode:'folder',treeUri:'',treeName:'',prefix:'mustamsakat',fmt:'pdf300',q:94,wmText:'',wmAlpha:18};
 const ACCS=['#1f7a4d','#2563eb','#7c3aed','#0d9488','#e11d48','#ea580c'];
 const BGS={
 green:{l:['#f5fbf8','#c9e6d6'],d:['#04120c','#0b2a1d']},
@@ -494,23 +706,41 @@ TH.panel=panel;TH.ink=ink
 try{matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(CFG.theme==='auto')applyTheme()})}catch(_){}
 
 /* ================= الحالة ================= */
-const S={page:PG[CFG.page]?CFG.page:'A4',land:false,entries:[],sel:null,side:0,move:false,lastSize:null};
+const S={page:PG[CFG.page]?CFG.page:'A4',land:false,pages:[{items:[]}],cur:0,sel:null,
+name:'مشروع جديد',libId:null,clip:null,lastSize:null,ptab:'img',props:false,libTab:'p'};
+const IM=new Map();
 let uid=0;
-const cur=()=>S.entries.find(e=>e.id===S.sel);
+const nid=()=>++uid;
+let PN=[];
 const pd=()=>{const d=PG[S.page];return S.land?[d[1],d[0]]:[d[0],d[1]]};
-const sideIm=()=>{const e=cur();return e?e.img[e.two?S.side:0]:null};
+
+function findItem(id){
+if(id==null)return null;
+for(let pi=0;pi<S.pages.length;pi++){
+const it=S.pages[pi].items.find(x=>x.id===id);
+if(it)return{it,pi}
+}
+return null
+}
+const cs=()=>{const f=findItem(S.sel);return f?f.it:null};
+function groupOf(it){
+const out=[];
+S.pages.forEach((p,pi)=>p.items.forEach(x=>{if(x.g===it.g)out.push({it:x,pi})}));
+out.sort((a,b)=>(a.it.side||0)-(b.it.side||0));
+return out
+}
+const hasContent=pg=>pg.items.some(it=>it.kind!=='img'||it.imgId);
 
 let tt;
 function toast(m,ms=2600){
 const t=$('toast');
 t.textContent=m;
 const ed=$('ed').classList.contains('on');
-t.style.bottom=(ed?$('dock').offsetHeight+14:40)+'px';
+t.style.bottom=(ed&&!S.props?$('dock').offsetHeight+14:40)+'px';
 t.hidden=false;
 clearTimeout(tt);
 if(ms)tt=setTimeout(()=>t.hidden=true,ms)
 }
-
 function ask(msg,fn){
 $('cfMsg').textContent=msg;
 $('confirmM').hidden=false;
@@ -518,74 +748,141 @@ $('cfOk').onclick=()=>{$('confirmM').hidden=true;fn()};
 $('cfNo').onclick=()=>$('confirmM').hidden=true
 }
 
-/* ================= الحفظ التلقائي للجلسة (IndexedDB) ================= */
+/* ================= قاعدة البيانات ================= */
 const IDB={
 db:null,
-open(){return new Promise((res,rej)=>{const r=indexedDB.open('mst',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
-async get(k){
+open(){return new Promise((res,rej)=>{
+const r=indexedDB.open('mst',2);
+r.onupgradeneeded=()=>{const d=r.result;['kv','meta','data'].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n)})};
+r.onsuccess=()=>res(r.result);
+r.onerror=()=>rej(r.error)
+})},
+async tx(store,mode,fn){
 const db=this.db||(this.db=await this.open());
-return new Promise((res,rej)=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})
+return new Promise((res,rej)=>{
+const t=db.transaction(store,mode);
+const rq=fn(t.objectStore(store));
+t.oncomplete=()=>res(rq&&rq.result);
+t.onerror=()=>rej(t.error);
+t.onabort=()=>rej(t.error)
+})
 },
-async set(k,v){
-const db=this.db||(this.db=await this.open());
-return new Promise((res,rej)=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})
-}
+get(s,k){return this.tx(s,'readonly',st=>st.get(k))},
+set(s,k,v){return this.tx(s,'readwrite',st=>st.put(v,k))},
+del(s,k){return this.tx(s,'readwrite',st=>st.delete(k))},
+all(s){return this.tx(s,'readonly',st=>st.getAll())}
 };
 
-let ssT;
-const queueSave=()=>{clearTimeout(ssT);ssT=setTimeout(saveSession,1200)};
+/* ================= السجل (تراجع / إعادة) ================= */
+const HI={st:[],i:-1};
+let READY=false,ssT=0,cmT=0;
+const snapState=()=>JSON.stringify({page:S.page,land:S.land,pages:S.pages});
+
+function commit(){
+const s=snapState();
+if(HI.st[HI.i]===s){queueSave();return}
+HI.st=HI.st.slice(0,HI.i+1);
+HI.st.push(s);
+if(HI.st.length>60)HI.st.shift();
+HI.i=HI.st.length-1;
+updUndo();
+queueSave()
+}
+const commitSoon=()=>{clearTimeout(cmT);cmT=setTimeout(commit,500)};
+function updUndo(){$('bUndo').disabled=HI.i<=0;$('bRedo').disabled=HI.i>=HI.st.length-1}
+function applyState(s){
+const o=JSON.parse(s);
+S.page=o.page;S.land=o.land;S.pages=o.pages;
+if(!findItem(S.sel))S.sel=null;
+S.cur=clamp(S.cur,0,S.pages.length-1);
+buildSizeMenu();
+renderAll();
+updUndo();
+queueSave()
+}
+$('bUndo').onclick=()=>{clearTimeout(cmT);commit();if(HI.i>0){HI.i--;applyState(HI.st[HI.i])}};
+$('bRedo').onclick=()=>{if(HI.i<HI.st.length-1){HI.i++;applyState(HI.st[HI.i])}};
+
+/* ================= حفظ الجلسة والمشاريع ================= */
+function queueSave(){
+if(!READY)return;
+clearTimeout(ssT);
+ssT=setTimeout(saveSession,1500)
+}
+
+async function exportProject(){
+const images={};
+for(const pg of S.pages)for(const it of pg.items){
+if(it.kind==='img'&&it.imgId&&!images[it.imgId]){
+const im=IM.get(it.imgId);
+if(!im)continue;
+if(!im.blob)im.blob=await (await fetch(im.el.src)).blob();
+images[it.imgId]=im.blob
+}
+}
+return{v:2,name:S.name,libId:S.libId,uid,page:S.page,land:S.land,pages:S.pages,images}
+}
+
+async function importProject(p){
+IM.clear();
+for(const k of Object.keys(p.images||{})){
+const blob=p.images[k];
+const im=await loadImage(URL.createObjectURL(blob));
+im.blob=blob;im.id=+k;
+IM.set(+k,im)
+}
+S.pages=p.pages&&p.pages.length?p.pages:[{items:[]}];
+S.page=PG[p.page]?p.page:'A4';
+S.land=!!p.land;
+S.name=p.name||'مشروع';
+S.libId=p.libId||null;
+let mx=p.uid||0;
+S.pages.forEach(pg=>pg.items.forEach(it=>{mx=Math.max(mx,it.id||0,it.g||0,it.imgId||0)}));
+uid=mx;
+S.cur=0;S.sel=null
+}
 
 async function saveSession(){
-try{
-const ents=[];
-for(const e of S.entries){
-const imgs=[];
-for(const im of e.img){
-if(!im){imgs.push(null);continue}
-if(!im.blob)im.blob=await (await fetch(im.el.src)).blob();
-imgs.push({blob:im.blob,flt:im.flt})
-}
-const rest=Object.assign({},e);
-delete rest.img;
-ents.push(Object.assign(rest,{imgs}))
-}
-await IDB.set('session',{v:1,page:S.page,land:S.land,uid,entries:ents})
-}catch(err){console.warn('session',err)}
+try{await IDB.set('kv','session',await exportProject())}catch(err){console.warn('session',err)}
 }
 
 async function restoreSession(){
 try{
-const s=await IDB.get('session');
-if(!s||!s.entries||!s.entries.length)return;
+const p=await IDB.get('kv','session');
+if(!p||p.v!==2||!p.pages)return;
+if(!p.pages.some(pg=>pg.items.length))return;
 toast('جارٍ استرجاع عملك السابق…',0);
-for(const x of s.entries){
-const imgs=[null,null];
-for(let i=0;i<2;i++){
-const q=x.imgs&&x.imgs[i];
-if(q){
-const im=await load(URL.createObjectURL(q.blob));
-im.blob=q.blob;
-im.flt=q.flt||NOFLT();
-imgs[i]=im
-}
-}
-const rest=Object.assign({},x);
-delete rest.imgs;
-S.entries.push(Object.assign(newEntry('one'),rest,{img:imgs}))
-}
-uid=Math.max(uid,s.uid||0,...S.entries.map(e=>e.id));
-if(PG[s.page])S.page=s.page;
-S.land=!!s.land;
-buildSizeMenu();
-$('toast').hidden=true;
-updateHome();
-render()
+await importProject(p);
+$('toast').hidden=true
 }catch(err){console.warn('restore',err);$('toast').hidden=true}
 }
 
+async function saveProject(){
+try{
+toast('جارٍ حفظ المشروع…',0);
+if(!S.libId)S.libId=Date.now().toString(36);
+const p=await exportProject();
+const c=pageCanvas(S.pages[0],.9);
+const thumb=c.toDataURL('image/jpeg',.6);
+c.width=c.height=0;
+await IDB.set('data','p:'+S.libId,p);
+await IDB.set('meta','p:'+S.libId,{t:'p',id:S.libId,name:S.name,date:Date.now(),thumb,n:S.pages.length});
+toast('تم حفظ المشروع في «المحفوظات» ✓')
+}catch(err){console.error(err);toast('تعذّر حفظ المشروع')}
+}
+
+function newProject(){
+IM.clear();
+S.pages=[{items:[]}];S.cur=0;S.sel=null;S.name='مشروع جديد';S.libId=null;S.props=false;
+HI.st=[];HI.i=-1;
+closePropsUI();
+commit();
+renderAll()
+}
+
 function updateHome(){
-const n=S.entries.length;
-$('goNewS').textContent=n?`متابعة العمل السابق (${n} مستند)`:'ورقة بيضاء جاهزة للترتيب'
+const n=S.pages.reduce((a,p)=>a+p.items.length,0);
+$('goNewS').textContent=n?`متابعة: ${S.name}`:'ورقة بيضاء جاهزة للترتيب'
 }
 
 /* ================= التنقل ================= */
@@ -593,62 +890,92 @@ function showEditor(){
 $('home').classList.remove('on');
 $('ed').classList.add('on');
 document.body.classList.add('inEd');
-render()
+renderAll()
 }
 function showHome(){
+closePropsUI();
 $('ed').classList.remove('on');
 $('home').classList.add('on');
 document.body.classList.remove('inEd');
 updateHome()
 }
 $('goNew').onclick=showEditor;
-$('back').onclick=showHome;
+$('goLib').onclick=()=>openLib();
 $('goSet').onclick=openSettings;
-$('bSet').onclick=openSettings;
-$('bTheme').onclick=()=>{
-CFG.theme=root.dataset.t==='dark'?'light':'dark';
-saveCfg();applyTheme()
-};
+$('back').onclick=showHome;
 
 /* ================= القوائم المنبثقة ================= */
 function placePop(p,btn){
 p.hidden=false;
 const r=btn.getBoundingClientRect(),w=p.offsetWidth;
-p.style.top=(r.bottom+8)+'px';
+const below=r.bottom+8;
+if(r.top>innerHeight/2){p.style.top='auto';p.style.bottom=(innerHeight-r.top+8)+'px'}
+else{p.style.bottom='auto';p.style.top=below+'px'}
 p.style.left=clamp(r.left+r.width/2-w/2,8,innerWidth-w-8)+'px'
 }
-function pop(id,btn){
-['pSize','pAdd'].forEach(p=>{
-const el=$(p);
-if(p===id&&el.hidden)placePop(el,btn);
-else el.hidden=true
-})
+function closePops(){['pSize','pAdd','pMenu'].forEach(p=>$(p).hidden=true)}
+function openPop(id,btn){
+const el=$(id),was=!el.hidden;
+closePops();
+if(!was)placePop(el,btn)
 }
-$('bSize').onclick=e=>{e.stopPropagation();pop('pSize',$('bSize'))};
-$('bAdd').onclick=e=>{e.stopPropagation();pop('pAdd',$('bAdd'))};
-document.addEventListener('click',()=>pop(''));
+document.addEventListener('click',()=>closePops());
+$('bMenu').onclick=e=>{e.stopPropagation();openPop('pMenu',$('bMenu'))};
+$('nbAdd').onclick=e=>{e.stopPropagation();openPop('pAdd',$('nbAdd'))};
 
 function buildSizeMenu(){
 $('pSize').innerHTML=Object.keys(PG).map(k=>
-`<button data-p="${k}"${k===S.page?' class="on"':''}>${k} (${PG[k][0]}×${PG[k][1]})</button>`
-).join('')+`<hr><button data-o="1"${S.land?' class="on"':''}>↔ ورقة أفقية</button>`;
-$('bSize').textContent=(S.page.length>4?'Ltr':S.page)+(S.land?'↔':'')
+`<button data-p="${k}"${k===S.page?' class="on"':''}>${k}</button>`
+).join('')+`<hr><button data-o="1"${S.land?' class="on"':''}>↔ ورقة أفقية</button>`
 }
 $('pSize').onclick=e=>{
-const k=e.target.dataset.p;
-if(k)S.page=k;
-else if(e.target.dataset.o)S.land=!S.land;
+const b=e.target.closest('button');
+if(!b)return;
+if(b.dataset.p)S.page=b.dataset.p;
+else if(b.dataset.o)S.land=!S.land;
 else return;
-S.entries.forEach(x=>x.off={});
 buildSizeMenu();
-render()
+commit();
+renderAll()
+};
+
+$('pMenu').onclick=e=>{
+const b=e.target.closest('button');
+if(!b)return;
+const a=b.dataset.act;
+e.stopPropagation();
+closePops();
+if(a==='size'){setTimeout(()=>placePop($('pSize'),$('bMenu')),10)}
+else if(a==='land'){S.land=!S.land;buildSizeMenu();commit();renderAll()}
+else if(a==='addpage')addPage();
+else if(a==='duppage')dupPage();
+else if(a==='delpage')delPage();
+else if(a==='auto')ask('إعادة ترتيب كل المستندات تلقائياً؟ سيتم تجاهل المواضع اليدوية.',autoArrange);
+else if(a==='wm')openWm();
+else if(a==='paste')pasteClip();
+else if(a==='lib')openLib();
+else if(a==='new')ask('بدء مشروع جديد؟ احفظ المشروع الحالي أولاً (💾) إن أردت الاحتفاظ به.',newProject);
+else if(a==='theme'){CFG.theme=root.dataset.t==='dark'?'light':'dark';saveCfg();applyTheme()}
+else if(a==='settings')openSettings()
+};
+
+$('pAdd').onclick=e=>{
+const b=e.target.closest('button');
+if(!b)return;
+const k=b.dataset.add;
+closePops();
+e.stopPropagation();
+if(k==='multi'){fiM.value='';fiM.click()}
+else if(k==='text')addText();
+else if(k==='qr')openQr();
+else addDoc(k)
 };
 
 /* ================= الصور ================= */
 const fi=$('fi'),fiM=$('fiM');
 let pend=null;
 
-const mkImg=src=>new Promise((res,rej)=>{
+const mkImgEl=src=>new Promise((res,rej)=>{
 const el=new Image();
 el.onload=()=>res(el);
 el.onerror=rej;
@@ -663,19 +990,27 @@ c.getContext('2d').drawImage(el,0,0,c.width,c.height);
 return c
 };
 const toB=(c,q)=>new Promise(o=>c.toBlob(o,'image/jpeg',q));
+const blobOf=(c,t,q)=>new Promise(o=>c.toBlob(o,t,q));
 
-async function load(src){
-let el=await mkImg(src);
+async function loadImage(src){
+let el=await mkImgEl(src);
 if(Math.max(el.naturalWidth,el.naturalHeight)>3600){
 const c=shrink(el,3600);
 const b=await toB(c,.95);
 c.width=c.height=0;
-el=await mkImg(URL.createObjectURL(b))
+el=await mkImgEl(URL.createObjectURL(b))
 }
 const t=shrink(el,900);
 const tb=await toB(t,.85);
 t.width=t.height=0;
-return{src:URL.createObjectURL(tb),el,flt:NOFLT(),blob:null}
+return{src:URL.createObjectURL(tb),el,blob:null,id:0}
+}
+
+function setImg(it,im){
+im.id=nid();
+IM.set(im.id,im);
+it.imgId=im.id;
+if(it.autoFit)fitItem(it)
 }
 
 async function applyCrop(im,r){
@@ -686,21 +1021,19 @@ c.height=Math.max(1,Math.round(r.h*ih));
 c.getContext('2d').drawImage(el,r.x*iw,r.y*ih,r.w*iw,r.h*ih,0,0,c.width,c.height);
 const b=await toB(c,.96);
 c.width=c.height=0;
-const n=await load(URL.createObjectURL(b));
-n.flt=im.flt;
-return n
+return await loadImage(URL.createObjectURL(b))
 }
 
 async function autoCropImg(im){
 try{
 const r=detect(im.el);
-if(r.w>.97&&r.h>.97)return im;
-return await applyCrop(im,r)
-}catch(_){return im}
+if(r.w>.97&&r.h>.97)return{im,done:false};
+return{im:await applyCrop(im,r),done:true}
+}catch(_){return{im,done:false}}
 }
 
-function pick(e,i){
-pend={e,i};
+function pick(it,opts){
+pend={it,opts};
 fi.value='';
 fi.click()
 }
@@ -708,19 +1041,21 @@ fi.click()
 fi.onchange=async()=>{
 const f=fi.files[0];
 if(!f||!pend)return;
-const{e,i}=pend;
+const{it,opts}=pend;
 toast('جارٍ معالجة الصورة…',0);
 try{
-let im=await load(URL.createObjectURL(f));
-if(CFG.autoCrop)im=await autoCropImg(im);
-e.img[i]=im;
+let im=await loadImage(URL.createObjectURL(f));
+if(CFG.autoCrop)im=(await autoCropImg(im)).im;
+setImg(it,im);
 $('toast').hidden=true
 }catch(_){
 toast('تعذّر فتح الصورة');
 return
 }
-render();
-if(e.two&&i===0&&!e.img[1])toast('الآن اضغط على مربع «الظهر» لإضافة صورته')
+const two=it.two&&it.side===0&&!groupOf(it).some(x=>x.it.side===1&&x.it.imgId);
+if(opts&&opts.copies)dupGroup(it,opts.copies);
+else{commit();renderAll()}
+if(two)toast('الآن اضغط على مربع «الظهر» لإضافة صورته')
 };
 
 fiM.onchange=async()=>{
@@ -730,148 +1065,312 @@ let n=0;
 for(const f of fs){
 toast(`جارٍ معالجة الصور ${++n}/${fs.length}…`,0);
 try{
-let im=await load(URL.createObjectURL(f));
-if(CFG.autoCrop)im=await autoCropImg(im);
-const e=newEntry('one');
-e.size=S.lastSize!=null?S.lastSize:0;
-e.img[0]=im;
-S.entries.push(e)
+let im=await loadImage(URL.createObjectURL(f));
+if(CFG.autoCrop)im=(await autoCropImg(im)).im;
+const g=nid();
+const size=S.lastSize!=null&&DOCS[S.lastSize][3]!=='صور شخصية'?S.lastSize:0;
+const it=mkImgItem(g,0,false,size,'side',false);
+sizeGroup([it]);
+setImg(it,im);
+placeGroup([it],S.cur)
 }catch(_){}
 }
 $('toast').hidden=true;
 S.sel=null;
-render()
+commit();
+renderAll()
 };
 
-async function rotateImg(e,i){
-const im=e.img[i];
-if(!im){toast('أضف صورة أولاً');return}
-toast('جارٍ التدوير…',0);
-try{
-const el=im.el;
-const c=document.createElement('canvas');
-c.width=el.naturalHeight;c.height=el.naturalWidth;
-const g=c.getContext('2d');
-g.translate(c.width/2,c.height/2);
-g.rotate(Math.PI/2);
-g.drawImage(el,-el.naturalWidth/2,-el.naturalHeight/2);
-const b=await toB(c,.96);
-c.width=c.height=0;
-const n=await load(URL.createObjectURL(b));
-n.flt=im.flt;
-e.img[i]=n;
-$('toast').hidden=true;
-render()
-}catch(_){toast('تعذّر تدوير الصورة')}
+/* ================= العناصر ================= */
+const baseItem=()=>({id:nid(),g:0,x:0,y:0,w:40,h:25,rot:0,auto:true,lock:false});
+function mkImgItem(g,side,two,size,mode,photo){
+return Object.assign(baseItem(),{g,kind:'img',side,two,mode,size,cu:[85,55],bw:40,bh:25,imgId:null,r:photo?1:3,shadow:'gray',flt:NOFLT(),autoFit:!photo})
+}
+function mkTextItem(){
+return Object.assign(baseItem(),{g:nid(),kind:'text',w:70,h:22,text:'نص جديد',color:'#111111',fs:18,bold:true,it:false,ul:false,al:'center'})
+}
+function mkQrItem(data){
+return Object.assign(baseItem(),{g:nid(),kind:'qr',w:32,h:32,data})
 }
 
-function newEntry(kind){
-const photo=kind==='photo';
-let size=0;
-if(photo)size=PHOTO;
-else if(S.lastSize!=null&&DOCS[S.lastSize][3]!=='صور شخصية')size=S.lastSize;
-const e={
-id:++uid,two:kind==='two',size,cu:[85,55],rot:false,
-mode:'side',fit:photo?'fill':'fit',sc:100,copies:photo?6:1,
-r:photo?1:3,shadow:'gray',off:{},img:[null,null]
-};
-if(e.two&&DOCS[size][3]==='وثائق A4')e.mode='split';
-return e
+const typeDims=it=>it.size===CUS?it.cu.slice():[DOCS[it.size][1],DOCS[it.size][2]];
+
+function sizeGroup(items){
+const[W,H]=pd(),M=CFG.margin,G=CFG.gap,f=items[0];
+const[w,h]=typeDims(f);
+const n=items.length,mode=f.mode;
+let bw=w,bh=h;
+if(n>1){if(mode==='stack')bh=h*2+G;else if(mode==='side')bw=w*2+G}
+const k=Math.min(1,(W-2*M)/bw,(H-2*M)/bh);
+items.forEach(it=>{it.bw=w*k;it.bh=h*k;it.w=it.bw;it.h=it.bh})
 }
 
-function addEntry(kind){
-const e=newEntry(kind);
-S.entries.push(e);
-S.sel=e.id;
-S.side=0;
-render();
-pick(e,0)
-}
-$('aTwo').onclick=()=>addEntry('two');
-$('aOne').onclick=()=>addEntry('one');
-$('aPhoto').onclick=()=>addEntry('photo');
-$('aMulti').onclick=()=>{fiM.value='';fiM.click()};
-
-/* ================= التخطيط (مم) ================= */
-function dims(e){
-let w,h;
-if(e.size===CUS){w=e.cu[0];h=e.cu[1]}
-else{w=DOCS[e.size][1];h=DOCS[e.size][2]}
-if(e.rot){const t=w;w=h;h=t}
-const s=e.sc/100;
-return[w*s,h*s]
-}
-
-function layout(){
-const[W,H]=pd(),M=CFG.margin,G=CFG.gap,sheets=[];
-let sh=null,row=[],curX=M,curY=M,rowH=0;
-
-const endRow=()=>{
-if(row.length){
-const used=curX-G-M;
-const shift=((W-2*M)-used)/2;
-row.forEach(p=>p.ax+=shift)
-}
-row=[]
-};
-const newSheet=()=>{sh={f:[],b:[]};sheets.push(sh);curX=M;curY=M;rowH=0;row=[]};
-
-const place=b=>{
-if(!sh)newSheet();
-if(row.length&&curX+b.w>W-M+.01){endRow();curY+=rowH+G;curX=M;rowH=0}
-if(curY+b.h>H-M+.01&&(sh.f.length||sh.b.length)){endRow();newSheet()}
-for(const p of b.parts){
-const part={e:b.e,i:p.i,c:p.c,ax:curX+p.dx,ay:curY+p.dy,bw:p.bw,bh:p.bh};
-(p.back?sh.b:sh.f).push(part);
-row.push(part)
-}
-curX+=b.w+G;
-rowH=Math.max(rowH,b.h)
-};
-
-for(const e of S.entries){
-const[dw,dh]=dims(e);
-const mode=e.two?e.mode:'side';
-const mk=(w,h,parts,c)=>{
-const k=Math.min(1,(W-2*M)/w,(H-2*M)/h);
-return{e,w:w*k,h:h*k,parts:parts.map(p=>({i:p.i,c,back:p.back||false,dx:p.dx*k,dy:p.dy*k,bw:dw*k,bh:dh*k}))}
-};
-for(let c=0;c<e.copies;c++){
-if(!e.two)place(mk(dw,dh,[{i:0,dx:0,dy:0}],c));
-else if(mode==='stack')place(mk(dw,dh*2+G,[{i:0,dx:0,dy:0},{i:1,dx:0,dy:dh+G}],c));
-else if(mode==='split')place(mk(dw,dh,[{i:0,dx:0,dy:0},{i:1,dx:0,dy:0,back:true}],c));
-else place(mk(dw*2+G,dh,[{i:0,dx:dw+G,dy:0},{i:1,dx:0,dy:0}],c))
-}
-}
-endRow();
-
-const pages=[];
-sheets.forEach((s,n)=>{
-if(CFG.vcenter){
-let bottom=M;
-s.f.concat(s.b).forEach(p=>{bottom=Math.max(bottom,p.ay+p.bh)});
-const sy=(H-M-bottom)/2;
-if(sy>0)s.f.concat(s.b).forEach(p=>p.ay+=sy)
-}
-const fin=(list,back)=>list.map(p=>{
-const e=p.e,im=e.img[p.i];
-let w=p.bw,h=p.bh;
-if(im&&e.fit==='fit'){
+function fitItem(it){
+let w=it.bw,h=it.bh;
+const im=it.imgId&&IM.get(it.imgId);
+if(im&&it.autoFit){
 const ar=im.el.naturalWidth/im.el.naturalHeight;
-if(p.bw/p.bh>ar)w=p.bh*ar;else h=p.bw/ar
+if(it.bw/it.bh>ar)w=it.bh*ar;else h=it.bw/ar
 }
-const of=e.off[p.i+'_'+p.c]||{x:0,y:0};
-let x=clamp(p.ax+of.x+(p.bw-w)/2,0,W-w);
-const y=clamp(p.ay+of.y+(p.bh-h)/2,0,H-h);
-const mir=back&&CFG.mirror;
-if(mir)x=W-x-w;
-return{e,i:p.i,c:p.c,x,y,w,h,mir}
+const cx=it.x+it.w/2,cy=it.y+it.h/2;
+it.w=w;it.h=h;it.x=cx-w/2;it.y=cy-h/2;
+clampItem(it)
+}
+
+function clampItem(it){
+const[W,H]=pd();
+const cx=clamp(it.x+it.w/2,0,W),cy=clamp(it.y+it.h/2,0,H);
+it.x=cx-it.w/2;it.y=cy-it.h/2
+}
+
+function aabb(it){
+const a=it.rot*Math.PI/180,c=Math.abs(Math.cos(a)),s=Math.abs(Math.sin(a));
+const bw=it.w*c+it.h*s,bh=it.w*s+it.h*c;
+const cx=it.x+it.w/2,cy=it.y+it.h/2;
+return{l:cx-bw/2,t:cy-bh/2,r:cx+bw/2,b:cy+bh/2,w:bw,h:bh,cx,cy}
+}
+
+/* ================= إيجاد مكان فارغ وترتيب ================= */
+function ensurePages(n){while(S.pages.length<=n)S.pages.push({items:[]})}
+
+function isFree(p,x,y,w,h){
+const G=CFG.gap;
+for(const it of S.pages[p].items){
+const a=aabb(it);
+if(x<a.r+G-.01&&x+w>a.l-G+.01&&y<a.b+G-.01&&y+h>a.t-G+.01)return false
+}
+return true
+}
+
+function findSpot(bw,bh,start,next){
+const[W,H]=pd(),M=CFG.margin;
+const maxX=W-M-bw,maxY=H-M-bh;
+for(let p=start;p<start+80;p++){
+ensurePages(p+(next?1:0));
+const xs=new Set([maxX,M]),ys=new Set([M]);
+const lists=[S.pages[p].items];
+if(next)lists.push(S.pages[p+1].items);
+lists.forEach(l=>l.forEach(it=>{
+const a=aabb(it);
+xs.add(a.l-CFG.gap-bw);xs.add(a.r+CFG.gap);
+ys.add(a.b+CFG.gap);ys.add(a.t-CFG.gap-bh)
+}));
+const X=[...xs].filter(v=>v>=M-.01&&v<=maxX+.01).sort((a,b)=>b-a);
+const Y=[...ys].filter(v=>v>=M-.01&&v<=maxY+.01).sort((a,b)=>a-b);
+for(const y of Y)for(const x of X){
+if(isFree(p,x,y,bw,bh)&&(!next||isFree(p+1,x,y,bw,bh)))return{p,x,y}
+}
+}
+ensurePages(start);
+return{p:start,x:M,y:M}
+}
+
+function placeGroup(items,start){
+const[W,H]=pd(),M=CFG.margin;
+let G=CFG.gap;
+const f=items[0],b=items[1],mode=f.mode,two=items.length>1;
+let bw,bh,pos;
+if(!two){bw=f.w;bh=f.h;pos=[[0,0,0]]}
+else if(mode==='stack'){
+G=Math.max(0,Math.min(G,(H-2*M)-(f.h+b.h)));
+bw=Math.max(f.w,b.w);bh=f.h+G+b.h;
+pos=[[(bw-f.w)/2,0,0],[(bw-b.w)/2,f.h+G,0]]
+}else if(mode==='split'){
+bw=Math.max(f.w,b.w);bh=Math.max(f.h,b.h);
+pos=[[(bw-f.w)/2,(bh-f.h)/2,0],[(bw-b.w)/2,(bh-b.h)/2,1]]
+}else{
+G=Math.max(0,Math.min(G,(W-2*M)-(f.w+b.w)));
+bw=f.w+G+b.w;bh=Math.max(f.h,b.h);
+pos=[[b.w+G,(bh-f.h)/2,0],[0,(bh-b.h)/2,0]]
+}
+const spot=findSpot(bw,bh,start,two&&mode==='split');
+items.forEach((it,i)=>{
+it.x=spot.x+pos[i][0];
+it.y=spot.y+pos[i][1];
+S.pages[spot.p+pos[i][2]].items.push(it)
 });
-pages.push({items:fin(s.f,false),back:false,n:n+1});
-if(s.b.length)pages.push({items:fin(s.b,true),back:true,n:n+1})
+return spot
+}
+
+function placeClones(clones,start){
+let l=1e9,t=1e9,r=-1e9,b=-1e9,next=false;
+clones.forEach(c=>{const a=aabb(c);l=Math.min(l,a.l);t=Math.min(t,a.t);r=Math.max(r,a.r);b=Math.max(b,a.b);if(c._pr)next=true});
+const spot=findSpot(r-l,b-t,start,next);
+const dx=spot.x-l,dy=spot.y-t;
+clones.forEach(c=>{
+c.x+=dx;c.y+=dy;
+const pr=c._pr||0;
+delete c._pr;
+S.pages[spot.p+pr].items.push(c)
 });
-if(!pages.length)pages.push({items:[],back:false,n:1});
-return pages
+return spot
+}
+
+function autoArrange(){
+const groups=new Map();
+S.pages.forEach(pg=>pg.items.forEach(it=>{
+if(!groups.has(it.g))groups.set(it.g,[]);
+groups.get(it.g).push(it)
+}));
+S.pages=[{items:[]}];
+groups.forEach(items=>{
+items.sort((a,b)=>(a.side||0)-(b.side||0));
+items.forEach(it=>{it.rot=0;it.auto=true});
+placeGroup(items,0)
+});
+const[W,H]=pd();
+S.pages.forEach(pg=>{
+const its=pg.items.slice().sort((a,b)=>a.y-b.y);
+const rows=[];
+its.forEach(it=>{
+const last=rows[rows.length-1];
+if(last&&Math.abs(last[0].y-it.y)<1.5)last.push(it);else rows.push([it])
+});
+rows.forEach(r=>{
+let l=1e9,rr=-1e9;
+r.forEach(it=>{l=Math.min(l,it.x);rr=Math.max(rr,it.x+it.w)});
+const sh=(W-(rr-l))/2-l;
+r.forEach(it=>{it.x+=sh})
+});
+if(CFG.vcenter&&pg.items.length){
+let t=1e9,b=-1e9;
+pg.items.forEach(it=>{t=Math.min(t,it.y);b=Math.max(b,it.y+it.h)});
+const sy=(H-(b-t))/2-t;
+pg.items.forEach(it=>{it.y+=sy})
+}
+});
+S.pages.forEach((pg,pi)=>pg.items.forEach(it=>{if(it.two&&it.mode==='split'&&it.side===1){
+const fr=groupOf(it).find(x=>x.it.side===0);
+if(fr){it.x=fr.it.x+fr.it.w/2-it.w/2;it.y=fr.it.y+fr.it.h/2-it.h/2}
+}}));
+S.cur=0;
+commit();
+renderAll();
+toast('تم الترتيب التلقائي')
+}
+
+/* ================= إضافة وتكرار ونسخ ================= */
+function addDoc(kind){
+const photo=kind==='photo',two=kind==='two';
+const size=photo?PHOTO:(S.lastSize!=null&&DOCS[S.lastSize][3]!=='صور شخصية'?S.lastSize:0);
+const a4=DOCS[size][3]==='وثائق A4';
+const mode=two&&a4?'split':'side';
+const g=nid();
+const items=(two?[0,1]:[0]).map(s=>mkImgItem(g,s,two,size,mode,photo));
+sizeGroup(items);
+const sp=placeGroup(items,S.cur);
+S.sel=items[0].id;
+S.cur=sp.p;
+commit();
+renderAll();
+goPage(sp.p,false);
+pick(items[0],{copies:photo?5:0})
+}
+
+function addText(){
+const it=mkTextItem();
+const[W,H]=pd();
+const pg=S.pages[S.cur];
+let off=0;
+while(off<30&&pg.items.some(o=>Math.abs(o.x-((W-it.w)/2+off))<1&&Math.abs(o.y-((H-it.h)/2+off))<1))off+=6;
+it.x=(W-it.w)/2+off;it.y=(H-it.h)/2+off;
+pg.items.push(it);
+S.sel=it.id;S.ptab='text';
+commit();
+renderAll();
+openProps()
+}
+
+function dupGroup(it,count){
+const grp=groupOf(it);
+const minPi=Math.min(...grp.map(x=>x.pi));
+let last=null;
+for(let i=0;i<count;i++){
+const g=nid();
+const clones=grp.map(x=>{
+const c=JSON.parse(JSON.stringify(x.it));
+c.id=nid();c.g=g;c._pr=x.pi-minPi;c.auto=true;
+return c
+});
+last=placeClones(clones,minPi)
+}
+commit();
+renderAll();
+if(last)goPage(last.p,false);
+toast(`تم إنشاء ${count} نسخة`)
+}
+
+function copyClip(){
+const it=cs();
+if(!it)return;
+const grp=groupOf(it);
+const minPi=Math.min(...grp.map(x=>x.pi));
+S.clip=grp.map(x=>{const c=JSON.parse(JSON.stringify(x.it));c._pr=x.pi-minPi;return c});
+toast('تم النسخ — اضغط «لصق» لإضافة نسخة')
+}
+
+function pasteClip(){
+if(!S.clip||!S.clip.length){toast('لا يوجد شيء منسوخ');return}
+const g=nid();
+const clones=S.clip.map(x=>{const c=JSON.parse(JSON.stringify(x));c.id=nid();c.g=g;c.auto=true;return c});
+const sp=placeClones(clones,S.cur);
+S.sel=clones[0].id;
+S.cur=sp.p;
+commit();
+renderAll();
+goPage(sp.p,false);
+toast('تم اللصق')
+}
+
+function delGroup(){
+const it=cs();
+if(!it)return;
+const g=it.g;
+S.pages.forEach(p=>{p.items=p.items.filter(x=>x.g!==g)});
+S.sel=null;
+closePropsUI();
+commit();
+renderAll();
+toast('تم الحذف')
+}
+
+/* ================= الأوراق ================= */
+function addPage(){
+S.pages.push({items:[]});
+commit();
+renderAll();
+goPage(S.pages.length-1);
+toast('تمت إضافة ورقة')
+}
+function dupPage(){
+const src=S.pages[S.cur];
+const gm=new Map();
+const clones=src.items.map(x=>{
+const c=JSON.parse(JSON.stringify(x));
+c.id=nid();
+if(!gm.has(x.g))gm.set(x.g,nid());
+c.g=gm.get(x.g);
+return c
+});
+S.pages.splice(S.cur+1,0,{items:clones});
+S.sel=null;
+commit();
+renderAll();
+goPage(S.cur+1);
+toast('تم نسخ الورقة')
+}
+function delPage(){
+const go=()=>{
+if(S.pages.length<=1){S.pages=[{items:[]}]}
+else S.pages.splice(S.cur,1);
+S.cur=clamp(S.cur,0,S.pages.length-1);
+S.sel=null;
+closePropsUI();
+commit();
+renderAll();
+toast('تم حذف الورقة')
+};
+if(S.pages[S.cur].items.length)ask('حذف الورقة الحالية بكل ما فيها؟',go);else go()
 }
 
 /* ================= الرسم على الشاشة ================= */
@@ -884,295 +1383,806 @@ if(b!==1||c!==1||s)return s+'brightness('+b.toFixed(2)+') contrast('+c.toFixed(2
 return 'none'
 }
 
-function mountPage(parent,pg,interactive){
-const[W,H]=pd();
-const d=document.createElement('div');
-d.className='pg';
-d.style.aspectRatio=W+'/'+H;
-parent.appendChild(d);
-d.style.setProperty('--u',(d.clientWidth/W)+'px');
+const QRC=new Map();
+function qrMatrix(text){
+if(QRC.has(text))return QRC.get(text);
+if(typeof qrcode==='undefined')throw new Error('qrlib');
+try{if(qrcode.stringToBytesFuncs&&qrcode.stringToBytesFuncs['UTF-8'])qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8']}catch(_){}
+const q=qrcode(0,'M');
+q.addData(text,'Byte');
+q.make();
+const n=q.getModuleCount(),m=[];
+for(let r=0;r<n;r++){const row=[];for(let c=0;c<n;c++)row.push(q.isDark(r,c));m.push(row)}
+QRC.set(text,m);
+return m
+}
+function drawQR(g,m,x,y,size){
+const n=m.length,u=size/(n+4);
+g.fillStyle='#fff';
+g.fillRect(x,y,size,size);
+g.fillStyle='#000';
+for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(m[r][c])g.fillRect(x+(c+2)*u,y+(r+2)*u,u+.6,u+.6)
+}
 
-pg.items.forEach(it=>{
-const e=it.e,im=e.img[it.i];
-if(!interactive&&!im)return;
-const s=document.createElement('div');
-s.className='slot'+(im?'':' empty')+(interactive&&S.sel===e.id?' sel':'')+(interactive&&S.move?' mv':'');
-s.style.cssText=`left:${it.x/W*100}%;top:${it.y/H*100}%;width:${it.w/W*100}%;height:${it.h/H*100}%`;
+function geoStyle(n,it,W,H){
+n.style.left=it.x/W*100+'%';
+n.style.top=it.y/H*100+'%';
+n.style.width=it.w/W*100+'%';
+n.style.height=it.h/H*100+'%';
+n.style.transform='rotate('+it.rot+'deg)'
+}
+
+function itemNode(it,W,H,interactive){
+const n=document.createElement('div');
+n.className='it';
+n.dataset.id=it.id;
+geoStyle(n,it,W,H);
+if(it.kind==='img'){
+const im=it.imgId&&IM.get(it.imgId);
 if(im){
-s.style.borderRadius=`calc(var(--u)*${e.r})`;
-s.style.boxShadow=SH[e.shadow];
+n.style.borderRadius=`calc(var(--u)*${it.r})`;
+n.style.boxShadow=SHD[it.shadow];
 const g=document.createElement('div');
 g.className='im';
 g.style.backgroundImage=`url(${im.src})`;
-g.style.filter=fcss(im.flt);
+g.style.filter=fcss(it.flt);
 if(CFG.cutLines)g.style.border='1px solid rgba(0,0,0,.4)';
-s.appendChild(g)
+n.appendChild(g)
 }else{
-s.textContent='＋ '+(e.two?(it.i?'الظهر':'الوجه'):'صورة')
+n.classList.add('empty');
+n.textContent='＋ '+(it.two?(it.side?'الظهر':'الوجه'):'صورة')
 }
-if(interactive)bindSlot(s,d,it,W,H);
-d.appendChild(s)
-});
+}else if(it.kind==='text'){
+const t=document.createElement('div');
+t.className='tx';
+t.dir='auto';
+t.textContent=it.text;
+t.style.cssText=`font-size:calc(var(--u)*${(it.fs*0.3528).toFixed(3)});color:${it.color};font-weight:${it.bold?800:400};font-style:${it.it?'italic':'normal'};text-decoration:${it.ul?'underline':'none'};text-align:${it.al}`;
+n.appendChild(t)
+}else if(it.kind==='qr'){
+try{
+const m=qrMatrix(it.data||' ');
+const c=document.createElement('canvas');
+c.className='qr';
+const s=(m.length+4)*6;
+c.width=c.height=s;
+drawQR(c.getContext('2d'),m,0,0,s);
+n.appendChild(c)
+}catch(_){n.classList.add('empty');n.textContent='باركود'}
+}
+return n
+}
 
-if(interactive&&!S.entries.length){
+function pageNode(pi,interactive){
+const[W,H]=pd();
+const pg=S.pages[pi];
+const wrap=document.createElement('div');
+wrap.className='pgw';
+wrap.dataset.pi=pi;
+const d=document.createElement('div');
+d.className='pg';
+d.style.aspectRatio=W+'/'+H;
+wrap.appendChild(d);
+pg.items.forEach(it=>{
+if(!interactive&&it.kind==='img'&&!it.imgId)return;
+d.appendChild(itemNode(it,W,H,interactive))
+});
+if(interactive&&!S.pages.some(p=>p.items.length)){
 const h=document.createElement('div');
 h.className='hint';
-h.innerHTML='ورقة بيضاء جاهزة<br>اضغط على ＋ بالأعلى لإضافة مستند';
+h.innerHTML='ورقة بيضاء جاهزة<br>اضغط على «إضافة» بالأسفل للبدء';
 d.appendChild(h)
 }
-
 if(CFG.wmText.trim()){
 const w=document.createElement('div');
 w.className='wm';
 w.style.opacity=CFG.wmAlpha/100;
-for(let k=0;k<12;k++){
-const sp=document.createElement('span');
-sp.textContent=CFG.wmText;
-w.appendChild(sp)
-}
+for(let k=0;k<12;k++){const sp=document.createElement('span');sp.textContent=CFG.wmText;w.appendChild(sp)}
 d.appendChild(w)
 }
-
 const l=document.createElement('div');
 l.className='pgl';
-const split=S.entries.some(e=>e.two&&e.mode==='split');
-l.textContent=`ورقة ${pg.n}`+(split?(pg.back?' — الظهر':' — الوجه'):'')+` — ${S.page}`;
-parent.appendChild(l)
+const split=S.pages.some(p=>p.items.some(x=>x.two&&x.mode==='split'));
+l.textContent=`ورقة ${pi+1} من ${S.pages.length} — ${S.page}${S.land?' أفقي':''}`;
+wrap.appendChild(l);
+return wrap
 }
 
-function bindSlot(s,d,it,W,H){
-const e=it.e,im=e.img[it.i];
+function setU(w){
+const[W]=pd();
+const d=w.querySelector('.pg');
+d.style.setProperty('--u',(d.clientWidth/W)+'px')
+}
 
-if(!S.move){
-s.onclick=ev=>{
-ev.stopPropagation();
-S.sel=e.id;
-S.side=it.i;
-if(!im)pick(e,it.i);
-render()
-};
+function computePw(){
+const[W,H]=pd(),vp=$('viewport'),pg=$('pages');
+if(CFG.nav==='h'){
+const availH=vp.clientHeight-196,availW=vp.clientWidth-36;
+const pw=Math.max(120,Math.min(560,availW,availH*W/H));
+pg.style.setProperty('--pw',pw+'px')
+}else pg.style.setProperty('--pw','min(100%,560px)');
+pg.className=CFG.nav==='h'?'hz':'vt';
+vp.classList.toggle('hzv',CFG.nav==='h')
+}
+
+function renderAll(){
+const box=$('pages');
+computePw();
+box.innerHTML='';
+PN=[];
+S.pages.forEach((p,i)=>{const w=pageNode(i,true);box.appendChild(w);PN[i]=w});
+PN.forEach(setU);
+drawSel();
+updateUI()
+}
+function renderPage(i){
+const old=PN[i];
+if(!old){renderAll();return}
+const w=pageNode(i,true);
+old.replaceWith(w);
+PN[i]=w;
+setU(w);
+drawSel();
+updateUI()
+}
+
+/* ================= التحديد والمقابض ================= */
+function drawSel(){
+document.querySelectorAll('.sbx').forEach(n=>n.remove());
+const f=findItem(S.sel);
+if(!f||!PN[f.pi])return;
+const[W,H]=pd(),it=f.it;
+const d=PN[f.pi].querySelector('.pg');
+const o=document.createElement('div');
+o.className='sbx'+(it.lock?' lk':'');
+o.dataset.id=it.id;
+o.style.setProperty('--rot',it.rot);
+geoStyle(o,it,W,H);
+o.innerHTML=it.lock?'<span class="lkb">🔒</span>':
+HANDLES.map(h=>`<i class="hd" data-h="${h}">${ARROW[h]}</i>`).join('')+'<i class="hd rt" data-h="rot">↻</i><span class="rl"></span>';
+d.appendChild(o)
+}
+
+function applyGeo(it,pi){
+const[W,H]=pd();
+PN[pi].querySelectorAll('[data-id="'+it.id+'"]').forEach(n=>{geoStyle(n,it,W,H);n.style.setProperty('--rot',it.rot)})
+}
+
+let OP=null,SUP=0;
+
+$('pages').addEventListener('pointerdown',ev=>{
+const hd=ev.target.closest('.hd'),bx=ev.target.closest('.sbx');
+if(hd)startOp(ev,hd.dataset.h==='rot'?'rot':'rs',hd.dataset.h);
+else if(bx)startOp(ev,'mv')
+},{passive:false});
+
+$('pages').addEventListener('click',ev=>{
+if(performance.now()-SUP<350)return;
+const bx=ev.target.closest('.sbx');
+if(bx){
+const f=findItem(+bx.dataset.id);
+if(f&&f.it.kind==='img'&&!f.it.imgId)pick(f.it);
 return
 }
+const n=ev.target.closest('.it');
+if(n){
+const id=+n.dataset.id;
+const wrap=n.closest('.pgw');
+if(wrap)S.cur=+wrap.dataset.pi;
+S.sel=id;
+drawSel();
+updateUI();
+const f=findItem(id);
+if(f&&f.it.kind==='img'&&!f.it.imgId)pick(f.it);
+return
+}
+if(S.sel!=null){S.sel=null;drawSel();updateUI()}
+});
 
-let drag=null;
-s.addEventListener('pointerdown',ev=>{
+function startOp(ev,type,hd){
+const f=findItem(S.sel);
+if(!f)return;
+if(f.it.lock){toast('المستند مقفل — افتح القفل من «ترتيب»');return}
 ev.preventDefault();
-ev.stopPropagation();
-const r=d.getBoundingClientRect();
-drag={sx:ev.clientX,sy:ev.clientY,k:W/r.width,moved:false,nx:it.x,ny:it.y};
-s.setPointerCapture(ev.pointerId)
-});
-s.addEventListener('pointermove',ev=>{
-if(!drag)return;
-const dx=(ev.clientX-drag.sx)*drag.k,dy=(ev.clientY-drag.sy)*drag.k;
-if(!drag.moved&&Math.hypot(dx,dy)<1.2)return;
-drag.moved=true;
-let nx=clamp(it.x+dx,0,W-it.w),ny=clamp(it.y+dy,0,H-it.h);
-if(Math.abs(nx+it.w/2-W/2)<1.5)nx=W/2-it.w/2;
-if(Math.abs(ny+it.h/2-H/2)<1.5)ny=H/2-it.h/2;
-drag.nx=nx;drag.ny=ny;
-s.style.left=(nx/W*100)+'%';
-s.style.top=(ny/H*100)+'%'
-});
-s.addEventListener('pointerup',()=>{
-if(!drag)return;
-const dd=drag;drag=null;
-S.sel=e.id;S.side=it.i;
-if(dd.moved){
-let dx=dd.nx-it.x;
-const dy=dd.ny-it.y;
-if(it.mir)dx=-dx;
-const key=it.i+'_'+it.c;
-const old=e.off[key]||{x:0,y:0};
-const nv={x:old.x+dx,y:old.y+dy};
-e.off[key]=nv;
-if(e.two&&e.mode==='split')e.off[(1-it.i)+'_'+it.c]={x:nv.x,y:nv.y}
-}else if(!im){
-pick(e,it.i)
-}
-render()
-});
-s.addEventListener('pointercancel',()=>{drag=null})
+const d=PN[f.pi].querySelector('.pg');
+const r=d.getBoundingClientRect(),[W]=pd();
+const it=f.it;
+OP={type,hd,it,pi:f.pi,k:W/r.width,r,sx:ev.clientX,sy:ev.clientY,moved:false,
+o:{x:it.x,y:it.y,w:it.w,h:it.h,rot:it.rot}};
+window.addEventListener('pointermove',onMove,{passive:false});
+window.addEventListener('pointerup',onUp);
+window.addEventListener('pointercancel',onUp)
 }
 
-function render(){
-const box=$('pages');
-box.innerHTML='';
-const pgs=layout();
-pgs.forEach(pg=>mountPage(box,pg,true));
-$('hdrT').textContent='المستمسكات'+(S.entries.length?` · ${pgs.length} ورقة`:'');
-sheet();
-$('aAuto').hidden=!S.move;
-$('aMove').classList.toggle('on',S.move);
-$('aWm').classList.toggle('on',!!CFG.wmText.trim());
+function snapTargets(axis,pi,skipId){
+const[W,H]=pd(),M=CFG.margin,G=CFG.gap;
+const out=axis==='x'?[[0],[W/2],[W],[M],[W-M]]:[[0],[H/2],[H],[M],[H-M]];
+const al=[],adj=[];
+out.forEach(t=>al.push(t[0]));
+S.pages[pi].items.forEach(o=>{
+if(o.id===skipId)return;
+const a=aabb(o);
+if(axis==='x'){al.push(a.l,a.cx,a.r);adj.push({edge:'l',t:a.r+G},{edge:'r',t:a.l-G})}
+else{al.push(a.t,a.cy,a.b);adj.push({edge:'l',t:a.b+G},{edge:'r',t:a.t-G})}
+});
+return{al,adj}
+}
+
+function snapBest(axis,a,pi,skipId,thr,edges){
+const T=snapTargets(axis,pi,skipId);
+let best=null;
+const l=axis==='x'?a.l:a.t,c=axis==='x'?a.cx:a.cy,r=axis==='x'?a.r:a.b;
+const tryD=(pos,t)=>{const d=t-pos;if(Math.abs(d)<=thr&&(!best||Math.abs(d)<Math.abs(best.d)))best={d,line:t}};
+T.al.forEach(t=>{
+if(edges.includes('l'))tryD(l,t);
+if(edges.includes('c'))tryD(c,t);
+if(edges.includes('r'))tryD(r,t)
+});
+T.adj.forEach(o=>{
+if(o.edge==='l'&&edges.includes('l'))tryD(l,o.t);
+if(o.edge==='r'&&edges.includes('r'))tryD(r,o.t)
+});
+return best
+}
+
+function showGuides(pi,gx,gy){
+clearGuides();
+const[W,H]=pd(),d=PN[pi].querySelector('.pg');
+if(gx!=null){const g=document.createElement('div');g.className='gl v';g.style.left=(gx/W*100)+'%';d.appendChild(g)}
+if(gy!=null){const g=document.createElement('div');g.className='gl h';g.style.top=(gy/H*100)+'%';d.appendChild(g)}
+}
+function clearGuides(){document.querySelectorAll('.gl').forEach(n=>n.remove())}
+
+function onMove(ev){
+if(!OP)return;
+ev.preventDefault();
+const{it,o,k}=OP;
+const dx=(ev.clientX-OP.sx)*k,dy=(ev.clientY-OP.sy)*k;
+if(!OP.moved&&Math.hypot(dx,dy)<.9)return;
+OP.moved=true;
+const thr=7*k;
+
+if(OP.type==='mv'){
+it.x=o.x+dx;it.y=o.y+dy;
+let gx=null,gy=null;
+if(CFG.snap){
+const a=aabb(it);
+const bx=snapBest('x',a,OP.pi,it.id,thr,['l','c','r']);
+const by=snapBest('y',a,OP.pi,it.id,thr,['l','c','r']);
+if(bx){it.x+=bx.d;gx=bx.line}
+if(by){it.y+=by.d;gy=by.line}
+}
+clampItem(it);
+if(gx!=null||gy!=null)showGuides(OP.pi,gx,gy);else clearGuides()
+}
+else if(OP.type==='rot'){
+const cx=OP.r.left+(o.x+o.w/2)/k,cy=OP.r.top+(o.y+o.h/2)/k;
+let ang=Math.atan2(ev.clientY-cy,ev.clientX-cx)*180/Math.PI+90;
+ang=((ang+540)%360)-180;
+const sn=Math.round(ang/15)*15;
+if(Math.abs(ang-sn)<4)ang=sn;
+it.rot=Math.round(ang*10)/10;
+const bx=document.querySelector('.sbx');
+if(bx){bx.classList.add('rting');bx.querySelector('.rl').textContent=Math.round(it.rot)+'°'}
+}
+else{
+const hd=OP.hd;
+const sx=hd.includes('r')?1:hd.includes('l')?-1:0;
+const sy=hd.includes('b')?1:hd.includes('t')?-1:0;
+const[ldx,ldy]=rotv(dx,dy,-o.rot);
+let w=o.w,h=o.h;
+if(sx)w=o.w+sx*ldx;
+if(sy)h=o.h+sy*ldy;
+const lock=(sx&&sy)||it.kind==='qr';
+if(lock){
+const sw=sx?w/o.w:1,sh=sy?h/o.h:1;
+let s=(sx&&sy)?Math.max(sw,sh):(sx?sw:sh);
+s=Math.max(s,4/Math.min(o.w,o.h));
+w=o.w*s;h=o.h*s
+}else{w=Math.max(w,4);h=Math.max(h,4)}
+const ocx=o.x+o.w/2,ocy=o.y+o.h/2;
+const[awx,awy]=rotv(-sx*o.w/2,-sy*o.h/2,o.rot);
+const[nax,nay]=rotv(-sx*w/2,-sy*h/2,o.rot);
+let cx=ocx+awx-nax,cy=ocy+awy-nay;
+it.w=w;it.h=h;it.x=cx-w/2;it.y=cy-h/2;
+let gx=null,gy=null;
+if(CFG.snap&&!lock&&Math.abs(o.rot)<.01){
+if(sx){
+const a=aabb(it),b=snapBest('x',a,OP.pi,it.id,thr,[sx===1?'r':'l']);
+if(b){if(sx===1)it.w+=b.d;else{it.x+=b.d;it.w-=b.d}gx=b.line}
+}
+if(sy){
+const a=aabb(it),b=snapBest('y',a,OP.pi,it.id,thr,[sy===1?'r':'l']);
+if(b){if(sy===1)it.h+=b.d;else{it.y+=b.d;it.h-=b.d}gy=b.line}
+}
+it.w=Math.max(it.w,4);it.h=Math.max(it.h,4)
+}
+if(gx!=null||gy!=null)showGuides(OP.pi,gx,gy);else clearGuides();
+it.autoFit=false
+}
+applyGeo(it,OP.pi)
+}
+
+function onUp(){
+window.removeEventListener('pointermove',onMove);
+window.removeEventListener('pointerup',onUp);
+window.removeEventListener('pointercancel',onUp);
+clearGuides();
+const op=OP;OP=null;
+if(!op)return;
+if(op.moved){
+SUP=performance.now();
+op.it.auto=false;
+syncPartner(op.it,op.pi);
+commit();
+renderPage(op.pi)
+}
+}
+
+function syncPartner(it,pi){
+if(!(it.two&&it.mode==='split'))return;
+const p=groupOf(it).find(x=>x.it!==it);
+if(!p)return;
+p.it.x=it.x+it.w/2-p.it.w/2;
+p.it.y=it.y+it.h/2-p.it.h/2;
+p.it.rot=it.rot;
+p.it.auto=false;
+clampItem(p.it);
+if(p.pi!==pi)renderPage(p.pi)
+}
+
+/* ================= واجهة المحرر ================= */
+function updNav(){
+const h=CFG.nav==='h';
+$('nCount').textContent=`${S.cur+1} / ${S.pages.length}`;
+$('nPrev').textContent=h?'▶':'▲';
+$('nNext').textContent=h?'◀':'▼';
+$('nMode').textContent=h?'↔':'↕';
+$('nPrev').disabled=S.cur<=0;
+$('nNext').disabled=S.cur>=S.pages.length-1
+}
+
+function updateUI(){
+$('pname').textContent=S.name;
+updUndo();
+const it=cs();
+$('seltb').hidden=!it;
+updNav();
+if(S.props){if(it)refreshProps();else closePropsUI()}
 requestAnimationFrame(()=>{
-$('pages').style.paddingBottom=$('dock').offsetHeight+20+'px'
-});
-queueSave()
+if(CFG.nav!=='h')$('pages').style.paddingBottom=(S.props?Math.round(innerHeight*.52):$('dock').offsetHeight+24)+'px';
+else $('pages').style.paddingBottom='0px'
+})
 }
 
-let lw=innerWidth,rt;
+function goPage(i,smooth=true){
+i=clamp(i,0,S.pages.length-1);
+S.cur=i;
+const w=PN[i];
+if(w)w.scrollIntoView({behavior:smooth?'smooth':'auto',block:CFG.nav==='h'?'nearest':'start',inline:'center'});
+updNav()
+}
+
+let scT=0;
+function onScroll(){
+cancelAnimationFrame(scT);
+scT=requestAnimationFrame(()=>{
+let i=S.cur;
+if(CFG.nav==='h'){const p=$('pages');i=Math.round(Math.abs(p.scrollLeft)/Math.max(1,p.clientWidth))}
+else{
+const vp=$('viewport'),top=vp.getBoundingClientRect().top;
+let best=0;
+PN.forEach((w,k)=>{if(w.getBoundingClientRect().top<=top+vp.clientHeight*.45)best=k});
+i=best
+}
+i=clamp(i,0,S.pages.length-1);
+if(i!==S.cur){S.cur=i;updNav()}
+})
+}
+$('viewport').addEventListener('scroll',onScroll,{passive:true});
+$('pages').addEventListener('scroll',onScroll,{passive:true});
+
+$('nPrev').onclick=()=>goPage(S.cur-1);
+$('nNext').onclick=()=>goPage(S.cur+1);
+$('nAdd').onclick=addPage;
+$('nMode').onclick=()=>{
+CFG.nav=CFG.nav==='h'?'v':'h';
+saveCfg();
+renderAll();
+goPage(S.cur,false);
+toast(CFG.nav==='h'?'التنقل: يمين ويسار':'التنقل: للأعلى والأسفل',1600)
+};
+
+let lw=innerWidth,lh=innerHeight,rt;
 addEventListener('resize',()=>{
 clearTimeout(rt);
 rt=setTimeout(()=>{
-if(innerWidth!==lw){
-lw=innerWidth;
-if($('ed').classList.contains('on'))render()
+if(innerWidth!==lw||innerHeight!==lh){
+lw=innerWidth;lh=innerHeight;
+if($('ed').classList.contains('on'))renderAll()
 }
 },150)
 });
 
-/* ================= لوحة المستند ================= */
+$('pname').onclick=()=>{$('rnT').value=S.name;$('rnM').hidden=false};
+$('rnOk').onclick=()=>{S.name=$('rnT').value.trim()||'مشروع جديد';$('rnM').hidden=true;commit();updateUI()};
+$('rnX').onclick=()=>$('rnM').hidden=true;
+$('bSave').onclick=saveProject;
+
+/* شريط أدوات العنصر */
+$('tbProps').onclick=()=>{S.props?closePropsUI():openProps()};
+$('tbDup').onclick=()=>{if(!cs())return;$('dupN').value=2;markDup(2);$('dupM').hidden=false};
+$('tbCopy').onclick=copyClip;
+$('tbPaste').onclick=pasteClip;
+$('tbRot').onclick=()=>mut(it=>{it.rot=((Math.round(it.rot/90)*90+90+180)%360)-180;it.auto=false;syncPartner(it,findItem(it.id).pi)});
+$('tbDel').onclick=()=>{
+const it=cs();if(!it)return;
+const n=groupOf(it).length;
+ask(n>1?'حذف هذا المستند (الوجه والظهر)؟':'حذف العنصر؟',delGroup)
+};
+$('tbX').onclick=()=>{S.sel=null;drawSel();updateUI()};
+
+function markDup(n){document.querySelectorAll('#dupChips button').forEach(b=>b.classList.toggle('on',+b.dataset.n===+n))}
+$('dupChips').onclick=e=>{const n=e.target.dataset.n;if(n){$('dupN').value=n;markDup(n)}};
+$('dupN').oninput=e=>markDup(e.target.value);
+$('dupX').onclick=()=>$('dupM').hidden=true;
+$('dupOk').onclick=()=>{
+const n=clamp(parseInt($('dupN').value)||1,1,60);
+$('dupM').hidden=true;
+const it=cs();
+if(it)dupGroup(it,n)
+};
+
+/* ================= الخصائص ================= */
+const TABS={
+img:[['img','الصورة'],['size','الحجم'],['shape','الشكل'],['arr','ترتيب']],
+text:[['text','النص'],['size','الحجم'],['arr','ترتيب']],
+qr:[['qr','الباركود'],['size','الحجم'],['arr','ترتيب']]
+};
+
+function openProps(tab){
+if(!cs())return;
+if(tab)S.ptab=tab;
+S.props=true;
+$('props').hidden=false;
+document.body.classList.add('pOpen');
+refreshProps();
+updateUI()
+}
+function closePropsUI(){
+S.props=false;
+$('props').hidden=true;
+document.body.classList.remove('pOpen')
+}
+$('prX').onclick=()=>{closePropsUI();updateUI()};
+$('ptabs').onclick=e=>{const t=e.target.dataset.t;if(t){S.ptab=t;refreshProps()}};
+
+function refreshProps(){
+const it=cs();
+if(!it){closePropsUI();return}
+const tabs=TABS[it.kind];
+if(!tabs.some(t=>t[0]===S.ptab))S.ptab=tabs[0][0];
+$('ptabs').innerHTML=tabs.map(t=>`<button data-t="${t[0]}" class="${t[0]===S.ptab?'on':''}">${t[1]}</button>`).join('');
+document.querySelectorAll('.pp').forEach(p=>p.hidden=p.id!=='pp-'+S.ptab);
+$('prT').textContent=it.kind==='img'?DOCS[it.size][0]:it.kind==='text'?'مربع نص':'باركود';
+$('prSides').hidden=!(it.kind==='img'&&it.two);
+$('sd0').classList.toggle('on',it.side===0);
+$('sd1').classList.toggle('on',it.side===1);
+
+$('szWrap').hidden=it.kind!=='img';
+$('twoRow').hidden=!(it.kind==='img'&&it.two);
+$('bFitImg').hidden=it.kind!=='img';
+$('szS').value=it.size;
+$('cuRow').hidden=!(it.kind==='img'&&it.size===CUS);
+$('cuW').value=it.cu?it.cu[0]:85;
+$('cuH').value=it.cu?it.cu[1]:55;
+$('rRot').value=Math.round(it.rot);$('vRot').textContent=Math.round(it.rot)+'°';
+$('bMode').textContent='الترتيب: '+MODE_LBL[it.mode||'side'];
+$('bFitImg').classList.toggle('on',!!it.autoFit);
+$('bLock').textContent=it.lock?'🔒 مقفل':'🔓 قفل';
+$('bLock').classList.toggle('on',!!it.lock);
+
+if(it.kind==='img'){
+document.querySelectorAll('#fltRow .sb').forEach(b=>b.classList.toggle('on',b.dataset.flt===it.flt.f));
+$('rBr').value=it.flt.b;$('rCt').value=it.flt.c;
+$('rg').value=it.r;$('shS').value=it.shadow
+}
+if(it.kind==='text'&&document.activeElement!==$('tTxt')){
+$('tTxt').value=it.text;
+$('tColor').value=it.color;
+$('tSize').value=it.fs;$('vTs').textContent=it.fs;
+$('tBold').classList.toggle('on',it.bold);
+$('tIt').classList.toggle('on',it.it);
+$('tUl').classList.toggle('on',it.ul);
+$('tAlR').classList.toggle('on',it.al==='right');
+$('tAlC').classList.toggle('on',it.al==='center');
+$('tAlL').classList.toggle('on',it.al==='left')
+}
+if(it.kind==='qr'&&document.activeElement!==$('qData'))$('qData').value=it.data
+}
+
+function mut(fn){
+const f=findItem(S.sel);
+if(!f)return;
+fn(f.it,f.pi);
+commit();
+renderPage(findItem(S.sel)?findItem(S.sel).pi:f.pi)
+}
+function live(fn){
+const f=findItem(S.sel);
+if(!f)return;
+fn(f.it,f.pi);
+commitSoon();
+renderPage(f.pi)
+}
+
+$('sd0').onclick=()=>switchSide(0);
+$('sd1').onclick=()=>switchSide(1);
+function switchSide(s){
+const it=cs();if(!it)return;
+const t=groupOf(it).find(x=>x.it.side===s);
+if(!t)return;
+S.sel=t.it.id;
+goPage(t.pi);
+drawSel();
+updateUI()
+}
+
+/* الصورة */
+$('bRep').onclick=()=>{const it=cs();if(it)pick(it)};
+$('bCrop').onclick=()=>openCrop();
+$('bAuto').onclick=async()=>{
+const it=cs();if(!it||!it.imgId){toast('أضف صورة أولاً');return}
+toast('جارٍ القص التلقائي…',0);
+const r=await autoCropImg(IM.get(it.imgId));
+$('toast').hidden=true;
+if(!r.done){toast('لم تُكتشف حواف واضحة، جرّب القص اليدوي');return}
+mut(x=>setImg(x,r.im));
+toast('تم قص المستند تلقائياً')
+};
+$('bRotI').onclick=async()=>{
+const it=cs();if(!it||!it.imgId){toast('أضف صورة أولاً');return}
+toast('جارٍ التدوير…',0);
+try{
+const el=IM.get(it.imgId).el;
+const c=document.createElement('canvas');
+c.width=el.naturalHeight;c.height=el.naturalWidth;
+const g=c.getContext('2d');
+g.translate(c.width/2,c.height/2);g.rotate(Math.PI/2);
+g.drawImage(el,-el.naturalWidth/2,-el.naturalHeight/2);
+const b=await toB(c,.96);c.width=c.height=0;
+const n=await loadImage(URL.createObjectURL(b));
+$('toast').hidden=true;
+mut(x=>{x.autoFit=true;setImg(x,n)})
+}catch(_){toast('تعذّر تدوير الصورة')}
+};
+document.querySelectorAll('#fltRow .sb').forEach(b=>{b.onclick=()=>mut(it=>{it.flt.f=b.dataset.flt})});
+$('rBr').oninput=e=>live(it=>{it.flt.b=+e.target.value});
+$('rCt').oninput=e=>live(it=>{it.flt.c=+e.target.value});
+
+/* النص */
+$('tTxt').oninput=e=>live(it=>{it.text=e.target.value});
+$('tColor').oninput=e=>live(it=>{it.color=e.target.value});
+$('tSize').oninput=e=>{$('vTs').textContent=e.target.value;live(it=>{it.fs=+e.target.value})};
+$('tBold').onclick=()=>mut(it=>{it.bold=!it.bold});
+$('tIt').onclick=()=>mut(it=>{it.it=!it.it});
+$('tUl').onclick=()=>mut(it=>{it.ul=!it.ul});
+$('tAlR').onclick=()=>mut(it=>{it.al='right'});
+$('tAlC').onclick=()=>mut(it=>{it.al='center'});
+$('tAlL').onclick=()=>mut(it=>{it.al='left'});
+
+/* الباركود */
+$('qApply').onclick=()=>{
+const v=$('qData').value;
+if(!v.trim()){toast('اكتب النص أو الرابط');return}
+try{qrMatrix(v)}catch(e){toast(e.message==='qrlib'?'مكتبة الباركود غير متوفرة':'النص أطول من سعة الباركود');return}
+mut(it=>{it.data=v})
+};
+
+/* الحجم */
 $('szS').innerHTML=GROUPS.map(g=>
-`<optgroup label="${g}">${DOCS.map((d,i)=>
-d[3]===g?`<option value="${i}">${d[0]} — ${d[1]}×${d[2]} مم</option>`:''
-).join('')}</optgroup>`
+`<optgroup label="${g}">${DOCS.map((d,i)=>d[3]===g?`<option value="${i}">${d[0]}</option>`:'').join('')}</optgroup>`
 ).join('');
 
-function sheet(){
-const e=cur(),sh=$('sheet');
-if(!e){sh.hidden=true;return}
-sh.hidden=false;
-$('shT').textContent=DOCS[e.size][0];
-$('szS').value=e.size;
-$('cuRow').hidden=e.size!==CUS;
-$('cuW').value=e.cu[0];
-$('cuH').value=e.cu[1];
-$('sides').style.display=e.two?'flex':'none';
-$('sd0').classList.toggle('on',S.side===0);
-$('sd1').classList.toggle('on',S.side===1);
-$('bSwap').style.display=e.two?'':'none';
-$('bMode').style.display=e.two?'':'none';
-$('bMode').textContent='الترتيب: '+MODE_LBL[e.mode];
-$('bFit').textContent='العرض: '+(e.fit==='fit'?'كامل الصورة':'ملء الإطار');
-const im=sideIm(),f=im?im.flt:NOFLT();
-document.querySelectorAll('#fltRow .sb').forEach(b=>b.classList.toggle('on',b.dataset.flt===f.f));
-$('rBr').value=f.b;
-$('rCt').value=f.c;
-$('rSc').value=e.sc;$('vSc').textContent=e.sc+'%';
-$('rCop').value=e.copies;$('vCop').textContent=e.copies;
-$('rg').value=e.r;
-$('shS').value=e.shadow
+function retype(it,size){
+const grp=groupOf(it).map(x=>x.it);
+const old=DOCS[it.size][3];
+grp.forEach(x=>{x.size=size});
+S.lastSize=size;
+const g=DOCS[size][3];
+const[W,H]=pd();
+if(it.two){
+if(g==='وثائق A4')grp.forEach(x=>{x.mode='split'});
+else if(old==='وثائق A4'&&it.mode==='split')grp.forEach(x=>{x.mode='side'})
 }
-
-$('shX').onclick=()=>{S.sel=null;render()};
-$('pages').onclick=()=>{if(S.sel){S.sel=null;render()}};
-
-$('szS').onchange=ev=>{
-const e=cur(),old=DOCS[e.size][3];
-e.size=+ev.target.value;
-S.lastSize=e.size;
-const g=DOCS[e.size][3];
-if(g!==old){
-if(g==='وثائق A4'&&e.two)e.mode='split';
-else if(old==='وثائق A4'&&e.mode==='split')e.mode='side';
-e.fit=g==='صور شخصية'?'fill':'fit';
-if(g==='صور شخصية'&&e.copies===1)e.copies=6
-}
-e.off={};
-render()
-};
-$('cuW').oninput=ev=>{cur().cu[0]=clamp(+ev.target.value||85,10,420);cur().off={};render()};
-$('cuH').oninput=ev=>{cur().cu[1]=clamp(+ev.target.value||55,10,420);cur().off={};render()};
-$('sd0').onclick=()=>{S.side=0;sheet()};
-$('sd1').onclick=()=>{S.side=1;sheet()};
-$('bRot').onclick=()=>{const e=cur();e.rot=!e.rot;e.off={};render()};
-$('bSwap').onclick=()=>{cur().img.reverse();render()};
-$('bMode').onclick=()=>{
-const e=cur();
-e.mode=e.mode==='side'?'stack':e.mode==='stack'?'split':'side';
-e.off={};
-render()
-};
-$('bFit').onclick=()=>{const e=cur();e.fit=e.fit==='fit'?'fill':'fit';render()};
-$('bRotI').onclick=()=>{const e=cur();rotateImg(e,e.two?S.side:0)};
-$('bResetPos').onclick=()=>{cur().off={};render()};
-$('bRep').onclick=()=>{const e=cur();pick(e,e.two?S.side:0)};
-$('bDup').onclick=()=>{
-const e=cur();
-const c=Object.assign({},e,{id:++uid,cu:e.cu.slice(),off:{},img:e.img.slice()});
-S.entries.push(c);
-S.sel=c.id;
-render();
-toast('تم تكرار المستند')
-};
-
-document.querySelectorAll('#fltRow .sb').forEach(b=>{
-b.onclick=()=>{
-const im=sideIm();
-if(!im){toast('أضف صورة أولاً');return}
-im.flt.f=b.dataset.flt;
-render()
-}
+grp.forEach(x=>{
+const cx=x.x+x.w/2,cy=x.y+x.h/2;
+x.autoFit=g!=='صور شخصية';
 });
-
-let rq=0;
-const later=fn=>{if(!rq)rq=requestAnimationFrame(()=>{rq=0;fn()})};
-$('rBr').oninput=ev=>{const im=sideIm();if(im){im.flt.b=+ev.target.value;later(render)}};
-$('rCt').oninput=ev=>{const im=sideIm();if(im){im.flt.c=+ev.target.value;later(render)}};
-$('rSc').oninput=ev=>{cur().sc=+ev.target.value;cur().off={};later(render)};
-$('rCop').oninput=ev=>{cur().copies=+ev.target.value;cur().off={};later(render)};
-$('rg').oninput=ev=>{cur().r=+ev.target.value;later(render)};
-$('shS').onchange=ev=>{cur().shadow=ev.target.value;render()};
-
-function delEntry(){
-S.entries=S.entries.filter(e=>e.id!==S.sel);
-S.sel=null;
-render();
-toast('تم حذف المستند')
+sizeGroup(grp);
+grp.forEach(x=>{
+x.rot=0;
+fitItem(x)
+});
+if(grp.some(x=>x.auto)){
+S.pages.forEach(p=>{p.items=p.items.filter(x=>x.g!==it.g)});
+grp.forEach(x=>{x.auto=true});
+placeGroup(grp,S.cur)
 }
-$('bDel2').onclick=delEntry;
-$('aDel').onclick=()=>{
-if(S.sel)return ask('حذف هذا المستند؟',delEntry);
-if(!S.entries.length)return toast('لا توجد مستندات');
-ask('حذف كل المستندات من الورقة؟',()=>{S.entries=[];S.sel=null;render()})
+}
+$('szS').onchange=e=>{
+const it=cs();if(!it)return;
+const keep=S.sel;
+retype(it,+e.target.value);
+S.sel=keep;
+commit();
+renderAll();
+refreshProps()
+};
+$('cuW').oninput=e=>{const it=cs();if(!it)return;groupOf(it).forEach(x=>{x.it.cu=[clamp(+e.target.value||85,10,420),x.it.cu[1]]});retypeSoft(it)};
+$('cuH').oninput=e=>{const it=cs();if(!it)return;groupOf(it).forEach(x=>{x.it.cu=[x.it.cu[0],clamp(+e.target.value||55,10,420)]});retypeSoft(it)};
+function retypeSoft(it){
+const grp=groupOf(it).map(x=>x.it);
+sizeGroup(grp);
+grp.forEach(x=>fitItem(x));
+commitSoon();
+renderAll()
+}
+function scaleBy(f){
+mut((it,pi)=>{
+const cx=it.x+it.w/2,cy=it.y+it.h/2;
+it.w=clamp(it.w*f,4,600);it.h=clamp(it.h*f,4,600);
+it.x=cx-it.w/2;it.y=cy-it.h/2;
+it.autoFit=false;it.auto=false;
+clampItem(it);
+syncPartner(it,pi)
+})
+}
+$('zIn').onclick=()=>scaleBy(1.1);
+$('zOut').onclick=()=>scaleBy(1/1.1);
+$('bRot90').onclick=()=>$('tbRot').onclick();
+$('rRot').oninput=e=>{
+const f=findItem(S.sel);if(!f)return;
+f.it.rot=+e.target.value;f.it.auto=false;
+$('vRot').textContent=Math.round(f.it.rot)+'°';
+applyGeo(f.it,f.pi);
+commitSoon()
+};
+$('bFill').onclick=()=>mut((it,pi)=>{
+const[W]=pd();
+const ar=it.w/it.h;
+const cx=it.x+it.w/2,cy=it.y+it.h/2;
+it.w=W-2*CFG.margin;it.h=it.w/ar;
+it.x=cx-it.w/2;it.y=cy-it.h/2;
+it.autoFit=false;it.auto=false;clampItem(it);
+syncPartner(it,pi)
+});
+$('bFitImg').onclick=()=>mut(it=>{it.autoFit=!it.autoFit;if(it.autoFit)fitItem(it)});
+$('bMode').onclick=()=>{
+const it=cs();if(!it||!it.two)return;
+const m=it.mode==='side'?'stack':it.mode==='stack'?'split':'side';
+const grp=groupOf(it).map(x=>x.it);
+const keep=S.sel;
+S.pages.forEach(p=>{p.items=p.items.filter(x=>x.g!==it.g)});
+grp.forEach(x=>{x.mode=m;x.auto=true;x.rot=0});
+placeGroup(grp,S.cur);
+S.sel=keep;
+commit();
+renderAll();
+refreshProps()
+};
+$('bSwap').onclick=()=>{
+const it=cs();if(!it||!it.two)return;
+const g=groupOf(it);
+if(g.length<2)return;
+const a=g[0].it,b=g[1].it;
+const t=[a.imgId,a.flt];a.imgId=b.imgId;a.flt=b.flt;b.imgId=t[0];b.flt=t[1];
+if(a.autoFit)fitItem(a);
+if(b.autoFit)fitItem(b);
+commit();
+renderAll()
 };
 
-$('aMove').onclick=()=>{
-S.move=!S.move;
-render();
-toast(S.move?'اسحب أي مستند لتحريكه — اضغط «تحريك» مرة أخرى للإيقاف':'تم إيقاف التحريك')
+/* الشكل */
+$('rg').oninput=e=>live(it=>{it.r=+e.target.value});
+$('shS').onchange=e=>mut(it=>{it.shadow=e.target.value});
+
+/* الترتيب */
+const alignTo=(fn)=>mut((it,pi)=>{
+const[W,H]=pd(),a=aabb(it);
+const d=fn(a,W,H);
+it.x+=d[0];it.y+=d[1];it.auto=false;
+clampItem(it);
+syncPartner(it,pi)
+});
+$('aR').onclick=()=>alignTo((a,W)=>[W-CFG.margin-a.r,0]);
+$('aC').onclick=()=>alignTo((a,W)=>[W/2-a.cx,0]);
+$('aL').onclick=()=>alignTo((a)=>[CFG.margin-a.l,0]);
+$('aT').onclick=()=>alignTo((a)=>[0,CFG.margin-a.t]);
+$('aM').onclick=()=>alignTo((a,W,H)=>[0,H/2-a.cy]);
+$('aB').onclick=()=>alignTo((a,W,H)=>[0,H-CFG.margin-a.b]);
+$('zFront').onclick=()=>mut((it,pi)=>{const l=S.pages[pi].items;l.splice(l.indexOf(it),1);l.push(it)});
+$('zBack').onclick=()=>mut((it,pi)=>{const l=S.pages[pi].items;l.splice(l.indexOf(it),1);l.unshift(it)});
+$('bLock').onclick=()=>mut(it=>{it.lock=!it.lock});
+$('bResetPos').onclick=()=>{
+const it=cs();if(!it)return;
+const grp=groupOf(it).map(x=>x.it);
+const keep=S.sel;
+S.pages.forEach(p=>{p.items=p.items.filter(x=>x.g!==it.g)});
+grp.forEach(x=>{x.auto=true;x.rot=0});
+placeGroup(grp,S.cur);
+S.sel=keep;
+commit();renderAll()
 };
-$('aAuto').onclick=()=>{S.entries.forEach(e=>e.off={});render();toast('تمت إعادة الترتيب التلقائي')};
+function movePage(d){
+const f=findItem(S.sel);if(!f)return;
+const to=f.pi+d;
+if(to<0){toast('هذه أول ورقة');return}
+ensurePages(to);
+const it=f.it;
+S.pages[f.pi].items=S.pages[f.pi].items.filter(x=>x!==it);
+S.pages[to].items.push(it);
+it.auto=false;
+S.cur=to;
+commit();
+renderAll();
+goPage(to)
+}
+$('mvPrev').onclick=()=>movePage(-1);
+$('mvNext').onclick=()=>movePage(1);
+
+/* ================= الباركود (إضافة) ================= */
+function drawQrPrev(){
+const v=$('qrT').value;
+const c=$('qrPrev'),g=c.getContext('2d');
+if(!v.trim()){c.width=c.height=10;g.fillStyle='#fff';g.fillRect(0,0,10,10);return true}
+try{
+const m=qrMatrix(v);
+const s=(m.length+4)*6;
+c.width=c.height=s;
+drawQR(g,m,0,0,s);
+return true
+}catch(e){
+c.width=c.height=10;g.fillStyle='#fff';g.fillRect(0,0,10,10);
+return e.message==='qrlib'?'lib':'long'
+}
+}
+function openQr(){$('qrT').value='';drawQrPrev();$('qrM').hidden=false}
+$('qrT').oninput=drawQrPrev;
+$('qrX').onclick=()=>$('qrM').hidden=true;
+$('qrOk').onclick=()=>{
+const v=$('qrT').value.trim();
+if(!v){toast('اكتب النص أو الرابط أولاً');return}
+const r=drawQrPrev();
+if(r==='lib'){toast('مكتبة الباركود غير متوفرة');return}
+if(r==='long'){toast('النص أطول من سعة الباركود');return}
+const it=mkQrItem(v);
+const sp=placeGroup([it],S.cur);
+S.sel=it.id;S.cur=sp.p;S.ptab='qr';
+$('qrM').hidden=true;
+commit();
+renderAll();
+goPage(sp.p,false)
+};
 
 /* ================= العلامة المائية ================= */
-$('aWm').onclick=()=>{
+function openWm(){
 $('wmT').value=CFG.wmText;
 $('wmA').value=CFG.wmAlpha;
 $('vWmA').textContent=CFG.wmAlpha+'%';
 $('wmM').hidden=false
-};
+}
 $('wmA').oninput=e=>{$('vWmA').textContent=e.target.value+'%'};
 $('wmOk').onclick=()=>{
 CFG.wmText=$('wmT').value.trim();
 CFG.wmAlpha=+$('wmA').value;
 saveCfg();
 $('wmM').hidden=true;
-render();
+renderAll();
 toast(CFG.wmText?'تم تطبيق الحماية':'تمت إزالة العلامة')
 };
-$('wmClr').onclick=()=>{CFG.wmText='';saveCfg();$('wmM').hidden=true;render();toast('تمت إزالة العلامة')};
+$('wmClr').onclick=()=>{CFG.wmText='';saveCfg();$('wmM').hidden=true;renderAll();toast('تمت إزالة العلامة')};
 $('wmX').onclick=()=>$('wmM').hidden=true;
-
-function wmCanvas(W,H,px){
-const c=document.createElement('canvas');
-c.width=Math.round(W*px);
-c.height=Math.round(H*px);
-const g=c.getContext('2d');
-g.globalAlpha=CFG.wmAlpha/100;
-g.fillStyle='#000';
-g.font=`800 ${5*px}px Cairo, Tahoma, sans-serif`;
-g.textAlign='center';
-const sx=c.width/2,sy=c.height/4.2;
-for(let y=sy*.5;y<c.height;y+=sy)for(let x=sx*.5;x<c.width;x+=sx){
-g.save();
-g.translate(x,y);
-g.rotate(-28*Math.PI/180);
-g.fillText(CFG.wmText,0,0);
-g.restore()
-}
-return c
-}
 
 /* ================= القص ================= */
 let C=null;
@@ -1186,13 +2196,11 @@ c.width=w;c.height=h;
 const g=c.getContext('2d',{willReadFrequently:true});
 g.drawImage(img,0,0,w,h);
 const d=g.getImageData(0,0,w,h).data;
-
 let r=0,gg=0,b=0,n=0;
 const addPx=(x,y)=>{const i=(y*w+x)*4;r+=d[i];gg+=d[i+1];b+=d[i+2];n++};
 for(let x=0;x<w;x++){addPx(x,0);addPx(x,h-1)}
 for(let y=0;y<h;y++){addPx(0,y);addPx(w-1,y)}
 r/=n;gg/=n;b/=n;
-
 const rows=new Uint16Array(h),cols=new Uint16Array(w);
 for(let y=0;y<h;y++)for(let x=0;x<w;x++){
 const i=(y*w+x)*4;
@@ -1215,31 +2223,20 @@ return{x,y,w:X-x,h:Y-y}
 
 function drawC(){
 const r=C.r,s=$('cr').style;
-s.left=r.x*100+'%';
-s.top=r.y*100+'%';
-s.width=r.w*100+'%';
-s.height=r.h*100+'%'
+s.left=r.x*100+'%';s.top=r.y*100+'%';
+s.width=r.w*100+'%';s.height=r.h*100+'%'
 }
-
-function openCrop(auto){
-const e=cur(),i=e.two?S.side:0,im=e.img[i];
-if(!im){toast('أضف صورة أولاً');return}
-C={e,i,im,r:{x:.06,y:.06,w:.88,h:.88}};
+function openCrop(){
+const it=cs();
+if(!it||!it.imgId){toast('أضف صورة أولاً');return}
+const im=IM.get(it.imgId);
+C={it,im,r:{x:.06,y:.06,w:.88,h:.88}};
 const ci=$('cimg');
-const go=()=>{
-if(auto){
-C.r=detect(ci);
-if(C.r.w>.97&&C.r.h>.97)toast('لم تُكتشف حواف واضحة، عدّلها يدوياً')
-}
-drawC()
-};
-ci.onload=go;
+ci.onload=drawC;
 ci.src=im.src;
 $('crop').hidden=false;
-if(ci.complete&&ci.naturalWidth)go()
+if(ci.complete&&ci.naturalWidth)drawC()
 }
-$('bCrop').onclick=()=>openCrop(false);
-$('bAuto').onclick=()=>openCrop(true);
 $('cNo').onclick=()=>$('crop').hidden=true;
 
 let dr=null;
@@ -1252,14 +2249,11 @@ cr.setPointerCapture(ev.pointerId)
 cr.addEventListener('pointermove',ev=>{
 if(!dr)return;
 const b=$('cimg').getBoundingClientRect();
-const dx=(ev.clientX-dr.x)/b.width;
-const dy=(ev.clientY-dr.y)/b.height;
+const dx=(ev.clientX-dr.x)/b.width,dy=(ev.clientY-dr.y)/b.height;
 let{x,y,w,h}=dr.r;
 const k=dr.k;
-if(k==='m'){
-x=clamp(x+dx,0,1-w);
-y=clamp(y+dy,0,1-h)
-}else{
+if(k==='m'){x=clamp(x+dx,0,1-w);y=clamp(y+dy,0,1-h)}
+else{
 let X=x+w,Y=y+h;
 if(k.includes('l'))x=clamp(x+dx,0,X-.06);
 if(k.includes('r'))X=clamp(X+dx,x+.06,1);
@@ -1274,19 +2268,23 @@ cr.addEventListener('pointerup',()=>dr=null);
 cr.addEventListener('pointercancel',()=>dr=null);
 
 $('cOk').onclick=async()=>{
-const{im,r,e,i}=C;
+const{im,r,it}=C;
 $('crop').hidden=true;
 toast('جارٍ القص…',0);
 try{
-e.img[i]=await applyCrop(im,r);
-$('toast').hidden=true
+const n=await applyCrop(im,r);
+$('toast').hidden=true;
+const keep=S.sel;
+setImg(it,n);
+S.sel=keep;
+commit();
+renderAll()
 }catch(_){toast('تعذّر القص')}
-render()
 };
 
-/* ================= التصدير ================= */
+/* ================= الرسم للتصدير ================= */
 function rr(g,x,y,w,h,r){
-r=Math.min(r,w/2,h/2);
+r=Math.max(0,Math.min(r,w/2,h/2));
 g.beginPath();
 g.moveTo(x+r,y);
 g.arcTo(x+w,y,x+w,y+h,r);
@@ -1296,52 +2294,114 @@ g.arcTo(x,y,x+w,y,r);
 g.closePath()
 }
 
-function renderDoc(it,px,pad,opaque){
-const e=it.e,im=e.img[it.i],el=im.el;
-const c=document.createElement('canvas');
-c.width=Math.max(1,Math.round((it.w+2*pad)*px));
-c.height=Math.max(1,Math.round((it.h+2*pad)*px));
-const g=c.getContext('2d');
-if(opaque){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height)}
-
-const x=pad*px,y=pad*px,w=it.w*px,h=it.h*px,r=e.r*px;
-
-if(e.shadow!=='none'&&pad>0){
+function drawText(g,it,px){
+const w=it.w*px,h=it.h*px,pad=1.2*px;
+const fpx=it.fs*0.3528*px;
 g.save();
-g.shadowColor=e.shadow==='black'?'rgba(0,0,0,.62)':'rgba(0,0,0,.3)';
-g.shadowBlur=1.6*px;
-g.shadowOffsetY=.5*px;
-g.fillStyle='#fff';
-rr(g,x,y,w,h,r);
-g.fill();
+g.beginPath();g.rect(-w/2,-h/2,w,h);g.clip();
+g.font=`${it.it?'italic ':''}${it.bold?'800':'400'} ${fpx}px Cairo, Tahoma, sans-serif`;
+g.fillStyle=it.color;
+g.direction=/[\u0590-\u08FF]/.test(it.text)?'rtl':'ltr';
+g.textBaseline='top';
+g.textAlign='left';
+const maxW=w-2*pad,lines=[];
+for(const para of String(it.text).split('\n')){
+const words=para.split(/\s+/);
+let line='';
+for(const wd of words){
+const t=line?line+' '+wd:wd;
+if(!line||g.measureText(t).width<=maxW)line=t;else{lines.push(line);line=wd}
+}
+lines.push(line)
+}
+const lh=fpx*1.35;
+let y=-h/2+pad;
+for(const ln of lines){
+const tw=g.measureText(ln).width;
+let x;
+if(it.al==='center')x=-tw/2;else if(it.al==='right')x=w/2-pad-tw;else x=-w/2+pad;
+g.fillText(ln,x,y);
+if(it.ul)g.fillRect(x,y+fpx*1.08,tw,Math.max(1,fpx*.06));
+y+=lh
+}
 g.restore()
 }
 
+function drawItem(g,it,px){
+const cx=(it.x+it.w/2)*px,cy=(it.y+it.h/2)*px,w=it.w*px,h=it.h*px;
+if(it.kind==='img'&&!it.imgId)return;
 g.save();
-rr(g,x,y,w,h,r);
-g.clip();
+g.translate(cx,cy);
+g.rotate(it.rot*Math.PI/180);
+if(it.kind==='img'){
+const im=IM.get(it.imgId);
+if(im){
+const r=it.r*px,el=im.el;
+if(it.shadow!=='none'){
+g.save();
+g.shadowColor=it.shadow==='black'?'rgba(0,0,0,.62)':'rgba(0,0,0,.3)';
+g.shadowBlur=1.6*px;g.shadowOffsetY=.5*px;
+g.fillStyle='#fff';
+rr(g,-w/2,-h/2,w,h,r);g.fill();
+g.restore()
+}
+g.save();
+rr(g,-w/2,-h/2,w,h,r);g.clip();
 const iw=el.naturalWidth,ih=el.naturalHeight;
-const sc=Math.max(w/iw,h/ih);
-const sw=w/sc,sh=h/sc;
-const ff=fcss(im.flt);
+const sc=Math.max(w/iw,h/ih),sw=w/sc,sh=h/sc;
+const ff=fcss(it.flt);
 if(ff!=='none')g.filter=ff;
-g.drawImage(el,(iw-sw)/2,(ih-sh)/2,sw,sh,x,y,w,h);
+g.drawImage(el,(iw-sw)/2,(ih-sh)/2,sw,sh,-w/2,-h/2,w,h);
 g.filter='none';
 g.restore();
-
 if(CFG.cutLines){
 g.save();
 g.strokeStyle='rgba(0,0,0,.45)';
 g.lineWidth=Math.max(1,.15*px);
-rr(g,x,y,w,h,r);
-g.stroke();
+rr(g,-w/2,-h/2,w,h,r);g.stroke();
 g.restore()
 }
+}
+}else if(it.kind==='text')drawText(g,it,px);
+else if(it.kind==='qr'){
+try{drawQR(g,qrMatrix(it.data||' '),-w/2,-h/2,w)}catch(_){}
+}
+g.restore()
+}
+
+function drawWm(g,W,H,px){
+g.save();
+g.globalAlpha=CFG.wmAlpha/100;
+g.fillStyle='#000';
+g.font=`800 ${5*px}px Cairo, Tahoma, sans-serif`;
+g.textAlign='center';
+g.direction=/[\u0590-\u08FF]/.test(CFG.wmText)?'rtl':'ltr';
+const sx=W*px/2,sy=H*px/4.2;
+for(let y=sy*.5;y<H*px;y+=sy)for(let x=sx*.5;x<W*px;x+=sx){
+g.save();g.translate(x,y);g.rotate(-28*Math.PI/180);g.fillText(CFG.wmText,0,0);g.restore()
+}
+g.restore()
+}
+
+function drawContent(g,pg,px){
+const[W,H]=pd();
+for(const it of pg.items)drawItem(g,it,px);
+if(CFG.wmText.trim())drawWm(g,W,H,px)
+}
+
+function pageCanvas(pg,px){
+const[W,H]=pd();
+const c=document.createElement('canvas');
+c.width=Math.max(1,Math.round(W*px));
+c.height=Math.max(1,Math.round(H*px));
+const g=c.getContext('2d');
+g.fillStyle='#fff';
+g.fillRect(0,0,c.width,c.height);
+drawContent(g,pg,px);
 return c
 }
 
-const blobOf=(c,t,q)=>new Promise(o=>c.toBlob(o,t,q));
-
+/* ================= الملفات ================= */
 function blobToBase64(blob){
 return new Promise((res,rej)=>{
 const fr=new FileReader();
@@ -1362,8 +2422,8 @@ let _nt=null;
 function NT(){
 if(_nt)return _nt;
 try{
-const C=window.Capacitor;
-_nt=C.registerPlugin?C.registerPlugin('NativeTools'):C.Plugins.NativeTools
+const C0=window.Capacitor;
+_nt=C0.registerPlugin?C0.registerPlugin('NativeTools'):C0.Plugins.NativeTools
 }catch(_){_nt=null}
 return _nt
 }
@@ -1390,7 +2450,37 @@ return true
 }catch(_){return false}
 }
 
-async function deliver(files,how,opt){
+async function shareFiles(files,print){
+if(isNative()){
+try{
+const uris=[];
+for(const f of files)uris.push(await cacheWrite(f));
+if(print)toast('اختر «طباعة» من القائمة التي ستظهر',3200);
+await window.Capacitor.Plugins.Share.share({title:files[0].name,files:uris,dialogTitle:print?'طباعة':'مشاركة / حفظ'});
+return true
+}catch(err){
+const m=String(err&&err.message||err);
+if(/cancel/i.test(m))return true;
+console.error(err);
+toast('تعذّرت المشاركة: '+m.slice(0,60));
+return false
+}
+}
+try{
+const fl=files.map(f=>new File([f.blob],f.name,{type:f.blob.type}));
+if(navigator.canShare&&navigator.canShare({files:fl})){await navigator.share({files:fl,title:files[0].name});return true}
+}catch(_){}
+for(const f of files){
+const a=document.createElement('a');
+a.href=URL.createObjectURL(f.blob);
+a.download=f.name;
+document.body.appendChild(a);a.click();a.remove();
+await tick()
+}
+return true
+}
+
+async function deliver(files,how){
 if(isNative()){
 const P=window.Capacitor.Plugins,nt=NT();
 
@@ -1399,31 +2489,27 @@ if(nt&&nt.printPdf){
 try{
 const uri=await cacheWrite(files[0]);
 await nt.printPdf({uri,name:files[0].name});
-return
-}catch(err){
-console.error(err);
-toast('تعذّر فتح الطباعة، سيتم استخدام المشاركة',2500)
+return true
+}catch(err){console.error(err);toast('تعذّر فتح الطباعة، سيتم استخدام المشاركة',2500)}
 }
-}
-how='share';
-opt={print:true}
+return shareFiles(files,true)
 }
 
 if(how==='save'){
 if(CFG.saveMode==='folder'&&nt&&nt.saveToFolder){
-if(!CFG.treeUri&&!(await chooseFolder())){toast('لم يتم اختيار مجلد');return}
+if(!CFG.treeUri&&!(await chooseFolder())){toast('لم يتم اختيار مجلد');return false}
 try{
 for(const f of files){
 const uri=await cacheWrite(f);
 await nt.saveToFolder({tree:CFG.treeUri,src:uri,name:f.name,mime:f.blob.type||'application/octet-stream'})
 }
 toast('تم الحفظ في: '+(CFG.treeName||'المجلد المختار'),4000);
-return
+return true
 }catch(err){
 console.error(err);
 CFG.treeUri='';saveCfg();
 toast('تعذّر الحفظ في هذا المجلد، اختر مجلداً من الإعدادات',4200);
-return
+return false
 }
 }
 if(CFG.saveMode==='documents'){
@@ -1433,7 +2519,7 @@ for(const f of files){
 await P.Filesystem.writeFile({path:'Mustamsakat/'+f.name,data:await blobToBase64(f.blob),directory:'DOCUMENTS',recursive:true})
 }
 toast('تم الحفظ في: Documents/Mustamsakat',4200);
-return
+return true
 }catch(err){
 console.error(err);
 toast('تعذّر الحفظ المباشر، اختر المكان من نافذة المشاركة',3000);
@@ -1441,44 +2527,58 @@ await new Promise(r=>setTimeout(r,900))
 }
 }
 }
-
-try{
-const uris=[];
-for(const f of files)uris.push(await cacheWrite(f));
-if(opt&&opt.print)toast('اختر «طباعة» من القائمة التي ستظهر',3200);
-await P.Share.share({title:files[0].name,files:uris,dialogTitle:(opt&&opt.print)?'طباعة':'مشاركة / حفظ'})
-}catch(err){
-const m=String(err&&err.message||err);
-if(/cancel/i.test(m))return;
-console.error(err);
-toast('تعذّرت المشاركة: '+m.slice(0,60))
-}
-return
+return shareFiles(files,false)
 }
 
-/* المتصفح */
 if(how==='print'){
 window.open(URL.createObjectURL(files[0].blob),'_blank');
-return
+return true
 }
-if(how==='share'){
-try{
-const fl=files.map(f=>new File([f.blob],f.name,{type:f.blob.type}));
-if(navigator.canShare&&navigator.canShare({files:fl})){
-await navigator.share({files:fl,title:files[0].name});
-return
-}
-}catch(_){}
-}
+if(how==='share')return shareFiles(files,false);
 for(const f of files){
 const a=document.createElement('a');
 a.href=URL.createObjectURL(f.blob);
 a.download=f.name;
-document.body.appendChild(a);
-a.click();
-a.remove();
+document.body.appendChild(a);a.click();a.remove();
 await tick()
 }
+return true
+}
+
+async function recordFiles(files){
+try{
+for(const f of files){
+const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+await IDB.set('data','f:'+id,{blob:f.blob});
+await IDB.set('meta','f:'+id,{t:'f',id,name:f.name,date:Date.now(),size:f.blob.size,mime:f.blob.type})
+}
+}catch(err){console.warn(err)}
+}
+
+/* ================= التصدير ================= */
+async function buildDocx(pgs,W,H){
+if(typeof JSZip==='undefined')throw new Error('zip');
+const z=new JSZip();
+const E=36000,tw=56.6929;
+const cx=Math.round(W*E),cy=Math.round(H*E),pw=Math.round(W*tw),ph=Math.round(H*tw);
+const land=W>H;
+const hdr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+const sect=`<w:sectPr><w:pgSz w:w="${pw}" w:h="${ph}"${land?' w:orient="landscape"':''}/><w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>`;
+let rels='',body='';
+for(let i=0;i<pgs.length;i++){
+const c=pageCanvas(pgs[i],200/25.4);
+const b=await blobOf(c,'image/jpeg',CFG.q/100);
+c.width=c.height=0;
+z.file('word/media/p'+(i+1)+'.jpeg',await b.arrayBuffer());
+rels+=`<Relationship Id="rId${i+10}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/p${i+1}.jpeg"/>`;
+const drawing=`<w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="${251658240+i}" behindDoc="1" locked="0" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionV><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/><wp:docPr id="${i+1}" name="Page ${i+1}"/><wp:cNvGraphicFramePr/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${i+1}" name="p${i+1}.jpeg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${i+10}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>`;
+body+=`<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>${i<pgs.length-1?sect:''}</w:pPr><w:r>${drawing}</w:r></w:p>`
+}
+z.file('[Content_Types].xml',hdr+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+z.file('_rels/.rels',hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+z.file('word/_rels/document.xml.rels',hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels+'</Relationships>');
+z.file('word/document.xml',hdr+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>'+body+sect+'</w:body></w:document>');
+return await z.generateAsync({type:'blob',mimeType:MIME.docx,compression:'DEFLATE'})
 }
 
 let busy=false;
@@ -1486,8 +2586,8 @@ let busy=false;
 async function exportAs(k,how){
 if(busy)return;
 const[t,dpi]=FMT[k];
-const pages=layout().filter(p=>p.items.some(it=>it.e.img[it.i]));
-if(!pages.length){toast('أضف صورة مستند أولاً');return}
+const pgs=S.pages.filter(hasContent);
+if(!pgs.length){toast('أضف مستنداً أو نصاً أولاً');return}
 if(t==='pdf'&&!(window.jspdf&&window.jspdf.jsPDF)){toast('مكتبة PDF غير متوفرة');return}
 
 busy=true;
@@ -1497,58 +2597,43 @@ await tick();
 try{
 const[W,H]=pd();
 const files=[],base=baseName(),q=CFG.q/100;
-const wm=CFG.wmText.trim();
 let low=1;
 
 if(t==='pdf'){
-const manual=S.entries.some(e=>Object.keys(e.off).length);
-const pad=manual?0:Math.max(0,Math.min(PAD,CFG.gap/2-.01));
 const ori=W>H?'l':'p';
 const pdf=new window.jspdf.jsPDF({unit:'mm',format:[W,H],orientation:ori,compress:true});
-
-for(let n=0;n<pages.length;n++){
+let px=dpi/25.4;
+const maxSide=15000;
+px=Math.min(px,maxSide/Math.max(W,H));
+low=px/(dpi/25.4);
+const wpx=Math.round(W*px),hpx=Math.round(H*px);
+const rows=Math.max(64,Math.floor(16e6/wpx));
+for(let n=0;n<pgs.length;n++){
 if(n)pdf.addPage([W,H],ori);
-for(const it of pages[n].items){
-if(!it.e.img[it.i])continue;
-const px=Math.min(dpi/25.4,Math.sqrt(36e6/((it.w+2*pad)*(it.h+2*pad))));
-low=Math.min(low,px/(dpi/25.4));
-const c=renderDoc(it,px,pad,true);
-pdf.addImage(c.toDataURL('image/jpeg',q),'JPEG',it.x-pad,it.y-pad,it.w+2*pad,it.h+2*pad,undefined,'FAST');
+for(let y0=0;y0<hpx;y0+=rows){
+const sh=Math.min(rows+2,hpx-y0);
+const c=document.createElement('canvas');
+c.width=wpx;c.height=sh;
+const g=c.getContext('2d');
+g.fillStyle='#fff';g.fillRect(0,0,wpx,sh);
+g.translate(0,-y0);
+drawContent(g,pgs[n],px);
+pdf.addImage(c.toDataURL('image/jpeg',q),'JPEG',0,y0/px,W,sh/px,undefined,'FAST');
 c.width=c.height=0;
 await tick()
 }
-if(wm){
-const wc=wmCanvas(W,H,200/25.4);
-pdf.addImage(wc.toDataURL('image/png'),'PNG',0,0,W,H,undefined,'FAST');
-wc.width=wc.height=0
-}
 }
 files.push({name:base+'.pdf',blob:pdf.output('blob')})
-
-}else{
-const px=Math.min(dpi/25.4,Math.sqrt(50e6/(W*H)));
+}
+else if(t==='docx'){
+files.push({name:base+'.docx',blob:await buildDocx(pgs,W,H)})
+}
+else{
+const px=Math.min(dpi/25.4,Math.sqrt(50e6/(W*H)),15000/Math.max(W,H));
 low=px/(dpi/25.4);
 const isJ=t==='jpg';
-
-for(let n=0;n<pages.length;n++){
-const c=document.createElement('canvas');
-c.width=Math.round(W*px);
-c.height=Math.round(H*px);
-const g=c.getContext('2d');
-g.fillStyle='#fff';
-g.fillRect(0,0,c.width,c.height);
-
-for(const it of pages[n].items){
-if(!it.e.img[it.i])continue;
-const d=renderDoc(it,px,PAD,false);
-g.drawImage(d,Math.round((it.x-PAD)*px),Math.round((it.y-PAD)*px));
-d.width=d.height=0
-}
-if(wm){
-const wc=wmCanvas(W,H,px);
-g.drawImage(wc,0,0);
-wc.width=wc.height=0
-}
+for(let n=0;n<pgs.length;n++){
+const c=pageCanvas(pgs[n],px);
 const b=await blobOf(c,isJ?'image/jpeg':'image/png',q);
 files.push({name:`${base}-${n+1}.${isJ?'jpg':'png'}`,blob:b});
 c.width=c.height=0;
@@ -1557,19 +2642,19 @@ await tick()
 }
 
 $('toast').hidden=true;
-await deliver(files,how);
+const ok=await deliver(files,how);
+if(ok&&how==='save')recordFiles(files);
 if(low<.97)toast(`الدقة الفعلية ${Math.round(dpi*low)} DPI (حدّ ذاكرة الجهاز)`,3500)
 
 }catch(err){
 console.error(err);
-toast('تعذّر التصدير، جرّب دقة أقل')
+toast(String(err&&err.message)==='zip'?'مكتبة Word غير متوفرة':'تعذّر التصدير، جرّب دقة أقل')
 }
 busy=false
 }
 
-/* أزرار الإجراءات */
-$('aPrint').onclick=()=>exportAs('pdf300','print');
-$('aShare').onclick=()=>exportAs(CFG.fmt,'share');
+$('nbPrint').onclick=()=>exportAs('pdf300','print');
+$('nbShare').onclick=()=>exportAs(CFG.fmt,'share');
 
 let pickFmt=CFG.fmt;
 function buildFmt(){
@@ -1577,30 +2662,115 @@ $('fmtList').innerHTML=Object.keys(FMT).map(k=>
 `<button data-f="${k}" class="${k===pickFmt?'on':''}">${FMT[k][2]}</button>`
 ).join('')
 }
-$('aSave').onclick=()=>{pickFmt=CFG.fmt;buildFmt();$('exportM').hidden=false};
-$('fmtList').onclick=e=>{
-const f=e.target.dataset.f;
-if(!f)return;
-pickFmt=f;buildFmt()
-};
+$('nbSave').onclick=()=>{pickFmt=CFG.fmt;buildFmt();$('exportM').hidden=false};
+$('fmtList').onclick=e=>{const f=e.target.dataset.f;if(f){pickFmt=f;buildFmt()}};
 $('exX').onclick=()=>$('exportM').hidden=true;
 $('exSave').onclick=()=>{$('exportM').hidden=true;exportAs(pickFmt,'save')};
 $('exShare').onclick=()=>{$('exportM').hidden=true;exportAs(pickFmt,'share')};
 
 /* المعاينة */
-$('aPrev').onclick=()=>{
-if(!S.entries.some(e=>e.img[0]||e.img[1])){toast('أضف صورة مستند أولاً');return}
+$('nbPrev').onclick=()=>{
+const pgs=S.pages.map((p,i)=>i).filter(i=>hasContent(S.pages[i]));
+if(!pgs.length){toast('أضف مستنداً أو نصاً أولاً');return}
 const box=$('pvPages');
 box.innerHTML='';
+box.className=CFG.nav==='h'?'vt':'vt';
+box.style.setProperty('--pw','min(100%,560px)');
 $('preview').hidden=false;
-layout().filter(p=>p.items.some(it=>it.e.img[it.i])).forEach(pg=>mountPage(box,pg,false))
+pgs.forEach(i=>{const w=pageNode(i,false);box.appendChild(w);setU(w)})
 };
 $('pvX').onclick=()=>$('preview').hidden=true;
 $('pvPrint').onclick=()=>{$('preview').hidden=true;exportAs('pdf300','print')};
 
+/* ================= المحفوظات ================= */
+const fmtDate=ts=>new Date(ts).toLocaleString('ar-IQ',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+const fmtSize=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function openLib(tab){
+if(tab)S.libTab=tab;
+$('libM').hidden=false;
+await refreshLib()
+}
+async function refreshLib(){
+[...$('libTabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===S.libTab));
+let all=[];
+try{all=await IDB.all('meta')}catch(_){}
+const list=all.filter(x=>x.t===S.libTab).sort((a,b)=>b.date-a.date);
+if(!list.length){$('libList').innerHTML='<div class="emp">لا يوجد شيء محفوظ بعد</div>';return}
+$('libList').innerHTML=list.map(m=>{
+if(m.t==='p')return `<div class="lrow"><div class="th" style="background-image:url(${m.thumb})"></div><div class="nf"><b>${esc(m.name)}</b><small>${fmtDate(m.date)} · ${m.n} ورقة</small></div><div class="ac"><button data-a="open" data-id="${m.id}">فتح للتعديل</button><button data-a="dup" data-id="${m.id}">نسخ</button><button class="red" data-a="del" data-id="${m.id}">حذف</button></div></div>`;
+const ic=/pdf/.test(m.mime)?'📕':/word/.test(m.mime)?'📘':'🖼';
+return `<div class="lrow"><div class="th">${ic}</div><div class="nf"><b dir="ltr" style="text-align:right">${esc(m.name)}</b><small>${fmtDate(m.date)} · ${fmtSize(m.size)}</small></div><div class="ac"><button data-a="open" data-id="${m.id}">فتح</button><button data-a="share" data-id="${m.id}">مشاركة</button><button class="red" data-a="del" data-id="${m.id}">حذف</button></div></div>`
+}).join('')
+}
+$('libTabs').onclick=e=>{const t=e.target.dataset.t;if(t){S.libTab=t;refreshLib()}};
+$('libX').onclick=()=>$('libM').hidden=true;
+
+async function openBlob(name,blob){
+if(isNative()){
+const nt=NT();
+if(nt&&nt.openFile){
+try{const uri=await cacheWrite({name,blob});await nt.openFile({uri,mime:blob.type||'*/*'});return}catch(err){console.warn(err)}
+}
+await shareFiles([{name,blob}],false)
+}else window.open(URL.createObjectURL(blob),'_blank')
+}
+
+$('libList').onclick=async e=>{
+const b=e.target.closest('button');
+if(!b)return;
+const a=b.dataset.a,id=b.dataset.id;
+const key=S.libTab+':'+id;
+try{
+if(S.libTab==='p'){
+if(a==='open'){
+toast('جارٍ فتح المشروع…',0);
+const p=await IDB.get('data',key);
+if(!p){toast('تعذّر العثور على المشروع');return}
+await importProject(p);
+S.libId=id;
+HI.st=[];HI.i=-1;
+closePropsUI();
+commit();
+$('libM').hidden=true;
+$('toast').hidden=true;
+showEditor();
+toast('تم فتح المشروع')
+}else if(a==='dup'){
+const p=await IDB.get('data',key),m=(await IDB.all('meta')).find(x=>x.t==='p'&&x.id===id);
+if(!p||!m)return;
+const nid2=Date.now().toString(36);
+p.libId=nid2;p.name=m.name+' (نسخة)';
+await IDB.set('data','p:'+nid2,p);
+await IDB.set('meta','p:'+nid2,Object.assign({},m,{id:nid2,name:p.name,date:Date.now()}));
+refreshLib();
+toast('تم نسخ المشروع')
+}else if(a==='del'){
+ask('حذف هذا المشروع نهائياً؟',async()=>{
+await IDB.del('data',key);await IDB.del('meta',key);
+if(S.libId===id)S.libId=null;
+refreshLib()
+})
+}
+}else{
+const m=(await IDB.all('meta')).find(x=>x.t==='f'&&x.id===id);
+if(a==='del'){
+ask('حذف هذا الملف من القائمة؟',async()=>{await IDB.del('data',key);await IDB.del('meta',key);refreshLib()});
+return
+}
+const d=await IDB.get('data',key);
+if(!d||!m){toast('تعذّر العثور على الملف');return}
+if(a==='open')await openBlob(m.name,d.blob);
+else if(a==='share')await shareFiles([{name:m.name,blob:d.blob}],false)
+}
+}catch(err){console.error(err);$('toast').hidden=true;toast('تعذّرت العملية')}
+};
+
 /* ================= الإعدادات (الواجهة) ================= */
 function syncSettings(){
 [...$('segTheme').children].forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.theme));
+[...$('segNav').children].forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.nav));
 $('swAcc').innerHTML=ACCS.map(c=>`<button class="dot${CFG.accent===c?' on':''}" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('');
 $('cAcc').value=CFG.accent;
 $('swBg').innerHTML=Object.keys(BGS).map(k=>
@@ -1613,6 +2783,7 @@ $('rFont').value=CFG.font;$('vFont').textContent=CFG.font+'%';
 $('sPage').value=CFG.page;
 $('nMargin').value=CFG.margin;
 $('nGap').value=CFG.gap;
+$('kSnap').checked=CFG.snap;
 $('kVc').checked=CFG.vcenter;
 $('kCut').checked=CFG.cutLines;
 $('kMirror').checked=CFG.mirror;
@@ -1626,13 +2797,14 @@ $('rQ').value=CFG.q;$('vQ').textContent=CFG.q+'%'
 function openSettings(){syncSettings();$('settings').hidden=false}
 const upd=()=>{saveCfg();applyTheme();syncSettings()};
 
-$('sPage').innerHTML=Object.keys(PG).map(k=>`<option value="${k}">${k} — ${PG[k][0]}×${PG[k][1]} مم</option>`).join('');
+$('sPage').innerHTML=Object.keys(PG).map(k=>`<option value="${k}">${k}</option>`).join('');
 $('sFmt').innerHTML=Object.keys(FMT).map(k=>`<option value="${k}">${FMT[k][2]}</option>`).join('');
 
 $('setX').onclick=()=>$('settings').hidden=true;
 $('settings').onclick=e=>{if(e.target.id==='settings')$('settings').hidden=true};
 
 $('segTheme').onclick=e=>{const v=e.target.dataset.v;if(v){CFG.theme=v;upd()}};
+$('segNav').onclick=e=>{const v=e.target.dataset.v;if(v){CFG.nav=v;saveCfg();syncSettings();if($('ed').classList.contains('on'))renderAll()}};
 $('swAcc').onclick=e=>{const c=e.target.dataset.c;if(c){CFG.accent=c;upd()}};
 $('cAcc').oninput=e=>{CFG.accent=e.target.value;saveCfg();applyTheme()};
 $('swBg').onclick=e=>{const b=e.target.dataset.b;if(b){CFG.bg=b;CFG.bgCustom='';upd()}};
@@ -1643,12 +2815,13 @@ $('rPanel').onclick=()=>{CFG.panel='';upd()};
 $('rInk').onclick=()=>{CFG.ink='';upd()};
 $('rFont').oninput=e=>{CFG.font=+e.target.value;$('vFont').textContent=CFG.font+'%';saveCfg();applyTheme()};
 
-$('sPage').onchange=e=>{CFG.page=e.target.value;S.page=CFG.page;saveCfg();buildSizeMenu();render()};
-$('nMargin').oninput=e=>{CFG.margin=clamp(+e.target.value||0,0,25);saveCfg();render()};
-$('nGap').oninput=e=>{CFG.gap=clamp(+e.target.value||0,0,20);saveCfg();render()};
-$('kVc').onchange=e=>{CFG.vcenter=e.target.checked;saveCfg();render()};
-$('kCut').onchange=e=>{CFG.cutLines=e.target.checked;saveCfg();render()};
-$('kMirror').onchange=e=>{CFG.mirror=e.target.checked;saveCfg();render()};
+$('sPage').onchange=e=>{CFG.page=e.target.value;S.page=CFG.page;saveCfg();buildSizeMenu();commit();renderAll()};
+$('nMargin').oninput=e=>{CFG.margin=clamp(+e.target.value||0,0,25);saveCfg()};
+$('nGap').oninput=e=>{CFG.gap=clamp(+e.target.value||0,0,20);saveCfg()};
+$('kSnap').onchange=e=>{CFG.snap=e.target.checked;saveCfg()};
+$('kVc').onchange=e=>{CFG.vcenter=e.target.checked;saveCfg()};
+$('kCut').onchange=e=>{CFG.cutLines=e.target.checked;saveCfg();renderAll()};
+$('kMirror').onchange=e=>{CFG.mirror=e.target.checked;saveCfg()};
 $('kAuto').onchange=e=>{CFG.autoCrop=e.target.checked;saveCfg()};
 $('sSave').onchange=e=>{CFG.saveMode=e.target.value;saveCfg()};
 $('bPickFolder').onclick=chooseFolder;
@@ -1658,20 +2831,16 @@ $('rQ').oninput=e=>{CFG.q=+e.target.value;$('vQ').textContent=CFG.q+'%';saveCfg(
 $('setReset').onclick=()=>ask('إعادة كل الإعدادات إلى الوضع الافتراضي؟',()=>{
 CFG=Object.assign({},DEF);
 S.page=CFG.page;
-saveCfg();applyTheme();syncSettings();buildSizeMenu();render()
+saveCfg();applyTheme();syncSettings();buildSizeMenu();renderAll()
 });
 
 /* ================= زر الرجوع (أندرويد) ================= */
 function handleBack(){
-if(!$('confirmM').hidden){$('confirmM').hidden=true;return true}
-if(!$('exportM').hidden){$('exportM').hidden=true;return true}
-if(!$('wmM').hidden){$('wmM').hidden=true;return true}
-if(!$('preview').hidden){$('preview').hidden=true;return true}
-if(!$('settings').hidden){$('settings').hidden=true;return true}
-if(!$('crop').hidden){$('crop').hidden=true;return true}
-if(!$('pSize').hidden||!$('pAdd').hidden){pop('');return true}
-if(S.sel){S.sel=null;render();return true}
-if(S.move){S.move=false;render();return true}
+const hide=id=>{if(!$(id).hidden){$(id).hidden=true;return true}return false};
+if(['confirmM','dupM','qrM','rnM','libM','exportM','wmM','preview','settings','crop'].some(hide))return true;
+if(['pSize','pAdd','pMenu'].some(id=>!$(id).hidden)){closePops();return true}
+if(S.props){closePropsUI();updateUI();return true}
+if(S.sel!=null){S.sel=null;drawSel();updateUI();return true}
 if($('ed').classList.contains('on')){showHome();return true}
 return false
 }
@@ -1683,10 +2852,16 @@ App.addListener('backButton',()=>{if(!handleBack())App.exitApp()})
 })();
 
 /* ================= بدء التشغيل ================= */
+(async function init(){
 applyTheme();
 buildSizeMenu();
-render();
-restoreSession();
+await restoreSession();
+HI.st=[];HI.i=-1;
+READY=true;
+commit();
+updateHome();
+renderAll()
+})();
 </script>
 </body>
 </html>
