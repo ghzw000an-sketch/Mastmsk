@@ -43,6 +43,22 @@ jobs:
           sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js#jspdf.umd.min.js#g' www/index.html
           grep -n "jspdf" www/index.html | head -3
 
+      - name: Make zip and QR libraries local
+        run: |
+          curl -fL https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js -o www/jszip.min.js \
+            && sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js#jszip.min.js#g' www/index.html \
+            || echo "WARNING: jszip not downloaded, Word export needs internet"
+          curl -fL https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js -o www/qrcode.min.js \
+            && sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js#qrcode.min.js#g' www/index.html \
+            || echo "WARNING: qrcode not downloaded, barcode needs internet"
+          curl -fL https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js -o www/jsQR.min.js \
+            && sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js#jsQR.min.js#g' www/index.html \
+            || echo "WARNING: jsQR not downloaded"
+          curl -fL https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js -o www/crypto-js.min.js \
+            && sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js#crypto-js.min.js#g' www/index.html \
+            || echo "WARNING: crypto-js not downloaded"
+          grep -n "script src" www/index.html | head
+
       - name: Install Capacitor and plugins
         run: |
           npm init -y
@@ -90,6 +106,14 @@ jobs:
           import android.print.PrintDocumentInfo;
           import android.print.PrintManager;
           import android.provider.DocumentsContract;
+          import android.nfc.NdefMessage;
+          import android.nfc.NdefRecord;
+          import android.nfc.NfcAdapter;
+          import android.nfc.Tag;
+          import android.nfc.tech.IsoDep;
+          import android.nfc.tech.Ndef;
+          import android.nfc.tech.NfcA;
+          import com.getcapacitor.JSArray;
 
           import androidx.activity.result.ActivityResult;
 
@@ -100,6 +124,9 @@ jobs:
           import com.getcapacitor.annotation.ActivityCallback;
           import com.getcapacitor.annotation.CapacitorPlugin;
 
+          import androidx.core.content.FileProvider;
+
+          import java.io.File;
           import java.io.FileOutputStream;
           import java.io.InputStream;
           import java.io.OutputStream;
@@ -164,6 +191,30 @@ jobs:
               }
 
               @PluginMethod
+              public void openFile(PluginCall call) {
+                  String uriStr = call.getString("uri");
+                  String mime = call.getString("mime", "*/*");
+                  if (uriStr == null) {
+                      call.reject("missing uri");
+                      return;
+                  }
+                  try {
+                      String path = Uri.parse(uriStr).getPath();
+                      File f = new File(path);
+                      Uri u = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", f);
+                      Intent i = new Intent(Intent.ACTION_VIEW);
+                      i.setDataAndType(u, mime);
+                      i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                      Intent chooser = Intent.createChooser(i, "Open");
+                      chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                      getActivity().startActivity(chooser);
+                      call.resolve();
+                  } catch (Exception e) {
+                      call.reject(String.valueOf(e));
+                  }
+              }
+
+              @PluginMethod
               public void saveToFolder(PluginCall call) {
                   String tree = call.getString("tree");
                   String src = call.getString("src");
@@ -207,6 +258,204 @@ jobs:
                           if (out != null) out.close();
                       } catch (Exception ignored) {
                       }
+                  }
+              }
+
+              private NfcAdapter nfcAd;
+              private IsoDep nfcIso;
+              private volatile JSObject nfcInfo;
+              private int nfcSeq = 0;
+
+              private static String hex(byte[] b) {
+                  if (b == null) return "";
+                  StringBuilder s = new StringBuilder();
+                  for (byte x : b) s.append(String.format("%02X", x));
+                  return s.toString();
+              }
+
+              private static byte[] unhex(String s) {
+                  int n = s.length() / 2;
+                  byte[] b = new byte[n];
+                  for (int i = 0; i < n; i++) {
+                      b[i] = (byte) Integer.parseInt(s.substring(i * 2, i * 2 + 2), 16);
+                  }
+                  return b;
+              }
+
+              @PluginMethod
+              public void nfcStart(final PluginCall call) {
+                  try {
+                      final Activity act = getActivity();
+                      nfcAd = NfcAdapter.getDefaultAdapter(act);
+                      if (nfcAd == null) {
+                          call.reject("no_nfc");
+                          return;
+                      }
+                      if (!nfcAd.isEnabled()) {
+                          call.reject("nfc_off");
+                          return;
+                      }
+                      nfcInfo = null;
+                      final NfcAdapter.ReaderCallback cb = new NfcAdapter.ReaderCallback() {
+                          @Override
+                          public void onTagDiscovered(Tag tag) {
+                              onNfcTag(tag);
+                          }
+                      };
+                      final int flags = NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_NFC_B
+                              | NfcAdapter.FLAG_READER_NFC_F | NfcAdapter.FLAG_READER_NFC_V;
+                      final Bundle ex = new Bundle();
+                      ex.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 500);
+                      act.runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              try {
+                                  nfcAd.enableReaderMode(act, cb, flags, ex);
+                              } catch (Exception ignored) {
+                              }
+                          }
+                      });
+                      call.resolve();
+                  } catch (Exception e) {
+                      call.reject(String.valueOf(e));
+                  }
+              }
+
+              private void onNfcTag(Tag tag) {
+                  JSObject o = new JSObject();
+                  try {
+                      try {
+                          if (nfcIso != null) nfcIso.close();
+                      } catch (Exception ignored) {
+                      }
+                      nfcIso = null;
+                      o.put("uid", hex(tag.getId()));
+                      JSArray techs = new JSArray();
+                      for (String t : tag.getTechList()) {
+                          techs.put(t.substring(t.lastIndexOf('.') + 1));
+                      }
+                      o.put("techs", techs);
+                      NfcA a = NfcA.get(tag);
+                      if (a != null) {
+                          o.put("atqa", hex(a.getAtqa()));
+                          o.put("sak", (int) a.getSak());
+                      }
+                      Ndef n = Ndef.get(tag);
+                      if (n != null) {
+                          try {
+                              n.connect();
+                              NdefMessage m = n.getNdefMessage();
+                              JSArray recs = new JSArray();
+                              if (m != null) {
+                                  for (NdefRecord r : m.getRecords()) {
+                                      JSObject ro = new JSObject();
+                                      byte[] p = r.getPayload();
+                                      ro.put("tnf", (int) r.getTnf());
+                                      ro.put("type", new String(r.getType(), java.nio.charset.StandardCharsets.UTF_8));
+                                      ro.put("hex", hex(p));
+                                      String txt = null;
+                                      if (r.getTnf() == NdefRecord.TNF_WELL_KNOWN
+                                              && java.util.Arrays.equals(r.getType(), NdefRecord.RTD_TEXT)
+                                              && p.length > 0) {
+                                          int ll = p[0] & 0x3F;
+                                          java.nio.charset.Charset cs = (p[0] & 0x80) != 0
+                                                  ? java.nio.charset.StandardCharsets.UTF_16
+                                                  : java.nio.charset.StandardCharsets.UTF_8;
+                                          txt = new String(p, 1 + ll, p.length - 1 - ll, cs);
+                                      } else if (r.getTnf() == NdefRecord.TNF_WELL_KNOWN
+                                              && java.util.Arrays.equals(r.getType(), NdefRecord.RTD_URI)) {
+                                          Uri u = r.toUri();
+                                          if (u != null) txt = u.toString();
+                                      } else if (r.getTnf() == NdefRecord.TNF_MIME_MEDIA) {
+                                          txt = new String(p, java.nio.charset.StandardCharsets.UTF_8);
+                                      }
+                                      if (txt != null) ro.put("text", txt);
+                                      recs.put(ro);
+                                  }
+                              }
+                              o.put("ndef", recs);
+                          } catch (Exception ignored) {
+                          } finally {
+                              try {
+                                  n.close();
+                              } catch (Exception ignored) {
+                              }
+                          }
+                      }
+                      IsoDep d = IsoDep.get(tag);
+                      if (d != null) {
+                          try {
+                              d.connect();
+                              d.setTimeout(5000);
+                              nfcIso = d;
+                              o.put("iso", true);
+                              o.put("hist", hex(d.getHistoricalBytes()));
+                              o.put("hi", hex(d.getHiLayerResponse()));
+                          } catch (Exception e) {
+                              o.put("iso", false);
+                          }
+                      }
+                  } catch (Exception e) {
+                      o.put("err", String.valueOf(e));
+                  }
+                  nfcSeq++;
+                  o.put("seq", nfcSeq);
+                  nfcInfo = o;
+              }
+
+              @PluginMethod
+              public void nfcPoll(PluginCall call) {
+                  JSObject r = nfcInfo;
+                  if (r == null) {
+                      JSObject e = new JSObject();
+                      e.put("none", true);
+                      call.resolve(e);
+                  } else {
+                      call.resolve(r);
+                  }
+              }
+
+              @PluginMethod
+              public void nfcTransceive(PluginCall call) {
+                  try {
+                      String h = call.getString("hex");
+                      if (nfcIso == null || h == null) {
+                          call.reject("no_iso");
+                          return;
+                      }
+                      if (!nfcIso.isConnected()) nfcIso.connect();
+                      byte[] r = nfcIso.transceive(unhex(h));
+                      JSObject o = new JSObject();
+                      o.put("hex", hex(r));
+                      call.resolve(o);
+                  } catch (Exception e) {
+                      call.reject(String.valueOf(e));
+                  }
+              }
+
+              @PluginMethod
+              public void nfcStop(final PluginCall call) {
+                  try {
+                      try {
+                          if (nfcIso != null) nfcIso.close();
+                      } catch (Exception ignored) {
+                      }
+                      nfcIso = null;
+                      final Activity act = getActivity();
+                      if (nfcAd != null) {
+                          act.runOnUiThread(new Runnable() {
+                              @Override
+                              public void run() {
+                                  try {
+                                      nfcAd.disableReaderMode(act);
+                                  } catch (Exception ignored) {
+                                  }
+                              }
+                          });
+                      }
+                      call.resolve();
+                  } catch (Exception e) {
+                      call.reject(String.valueOf(e));
                   }
               }
 
@@ -300,6 +549,12 @@ jobs:
           </adaptive-icon>
           EOF
           done
+
+      - name: Add camera and NFC permissions
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's#<application#<uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.NFC" />\n    <uses-permission android:name="android.permission.VIBRATE" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-feature android:name="android.hardware.nfc" android:required="false" />\n    <application#' "$M"
+          grep -n "uses-permission\|uses-feature" "$M"
 
       - name: Set Arabic app name
         run: |
