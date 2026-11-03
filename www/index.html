@@ -8,6 +8,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 
 <style>
 :root{
@@ -106,6 +108,12 @@ h1{margin:6px 0 0;font-size:2em;font-weight:800;background:linear-gradient(90deg
 .hd.rt{left:50%;top:-38px;background:#d9a93a;color:#3a2b05}
 .sbx::before{content:"";position:absolute;left:50%;top:-26px;height:26px;width:2px;background:var(--acc);margin-left:-1px}
 .sbx.lk::before{display:none}
+.sbx.sm .hd[data-h=t]{top:-26px}
+.sbx.sm .hd[data-h=b]{top:calc(100% + 26px)}
+.sbx.sm .hd[data-h=l]{left:-26px}
+.sbx.sm .hd[data-h=r]{left:calc(100% + 26px)}
+.sbx.sm .hd.rt{top:-70px}
+.sbx.sm::before{top:-56px;height:56px}
 .rl{position:absolute;left:50%;top:-66px;transform:translateX(-50%) rotate(calc(var(--rot,0)*-1deg));background:#0b2a1f;color:#fff;border-radius:8px;padding:1px 8px;font-size:12px;white-space:nowrap;display:none}
 .sbx.rting .rl{display:block}
 .lkb{position:absolute;right:4px;top:4px;font-size:15px;transform:rotate(calc(var(--rot,0)*-1deg))}
@@ -221,6 +229,45 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 @keyframes cin{from{opacity:0;transform:translate(0,50px) rotate(0) scale(.6)}}
 @keyframes sheen{0%,55%{left:-90px}100%{left:120%}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+[hidden]{display:none!important}
+.hd.xb{left:100%;top:-34px;background:#d64533}
+.sbx.sm .hd.xb{left:100%;top:-34px}
+.pop button.red{color:#d64533}
+.pop button.red:active{background:#d64533;color:#fff}
+.wmc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:15}
+.pages,.pg{-webkit-touch-callout:none}
+.qtypes{display:flex;gap:6px;overflow-x:auto;padding:6px 0;margin-top:8px}
+.qtypes button{flex:none;padding:7px 12px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);font-weight:600;font-size:.85em}
+.qtypes button.on{background:var(--acc);color:#fff}
+#qFields input,#qFields textarea,#nfBac input,.mb input[type=text],.mb input[type=number],.mb textarea,.mb select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--chip);margin-top:6px}
+#qFields textarea,.mb textarea{min-height:70px}
+.qlogos{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.qlogos button{width:40px;height:40px;border-radius:12px;background:var(--chip);border:1px solid var(--bd);font-size:20px}
+.qlogos button.on{background:var(--acc);outline:2px solid var(--acc)}
+.mb details{margin-top:10px;border:1px solid var(--bd);border-radius:14px;padding:8px 12px}
+.mb summary{font-weight:700;cursor:pointer}
+.cam{position:fixed;inset:0;z-index:70;background:#000;display:flex;flex-direction:column}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.cam canvas#camO{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.camTop,.camBot{position:absolute;left:0;right:0;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px;z-index:2;color:#fff}
+.camTop{top:0;background:linear-gradient(#000a,transparent)}
+.camBot{bottom:0;padding-bottom:calc(18px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#000b)}
+.camTop button,.camBot button.cb{padding:9px 13px;border-radius:14px;background:rgba(255,255,255,.18);color:#fff;font-weight:700;border:1px solid rgba(255,255,255,.3)}
+.camTop button.on,.camBot button.cb.on{background:var(--acc)}
+.camBot .shut{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.5);box-shadow:0 0 0 3px #fff3}
+.camH{position:absolute;left:0;right:0;bottom:120px;text-align:center;color:#fff;font-weight:700;z-index:2;text-shadow:0 1px 6px #000;padding:0 16px}
+.camN{position:absolute;top:64px;right:14px;z-index:2;background:var(--acc);color:#fff;border-radius:20px;padding:3px 12px;font-weight:700}
+.camFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:3;transition:opacity .25s}
+#loupe{position:fixed;top:14px;width:130px;height:130px;border-radius:50%;border:3px solid #fff;overflow:hidden;z-index:80;box-shadow:0 4px 18px #000a;background:#000;pointer-events:none}
+#loupe canvas{width:100%;height:100%}
+#nfOut,#scTxt{white-space:pre-wrap;word-break:break-all;background:var(--chip);border-radius:12px;padding:10px;font-size:.82em;max-height:260px;overflow:auto;margin-top:10px;user-select:text;-webkit-user-select:text}
+.tpl{display:flex;gap:10px;align-items:center;border:1px solid var(--bd);border-radius:16px;padding:8px;margin-top:8px}
+.tpl canvas{width:56px;height:80px;background:#fff;border-radius:6px;border:1px solid var(--bd);flex:none}
+.tpl .nf{flex:1;min-width:0}.tpl .nf small{display:block;color:var(--mut)}
+.tpl .ac{display:flex;flex-direction:column;gap:4px}
+.tpl .ac button{padding:6px 10px;border-radius:10px;background:var(--chip);border:1px solid var(--bd);font-weight:600;font-size:.8em}
+.tpl .ac button.red{color:#d64533}
+
 </style>
 </head>
 
@@ -305,6 +352,11 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <button class="sb" id="bAuto">⌖ قص تلقائي</button>
 <button class="sb" id="bRotI">↻ تدوير الصورة</button>
 </div>
+<div class="row">
+<button class="sb" id="bClean">🧼 تنظيف الصورة</button>
+<button class="sb" id="bCam">📷 التقاط</button>
+<button class="sb" id="bResize">📐 حجم / ضغط</button>
+</div>
 <div class="row" id="fltRow">
 <button class="sb" data-flt="normal">أصلي</button>
 <button class="sb" data-flt="scan">✨ مسح ضوئي</button>
@@ -335,8 +387,8 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 
 <div class="pp" id="pp-qr" hidden>
 <textarea id="qData" placeholder="النص أو الرابط داخل الباركود"></textarea>
-<button class="chip" id="qApply">تطبيق</button>
-<p class="note">الباركود لا يتسع للصورة نفسها. ضع فيه رابط الملف بعد رفعه (مثل Google Drive) ليفتح المستند عند المسح.</p>
+<div class="row"><button class="chip" id="qApply">تطبيق النص</button><button class="chip o" id="qEdit">✎ تخصيص الباركود</button></div>
+<p class="note">«تخصيص الباركود» يتيح الأنواع (رابط، واي فاي، بطاقة…) والألوان والأيقونة وصورة الخلفية.</p>
 </div>
 
 <div class="pp" id="pp-size" hidden>
@@ -401,9 +453,14 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <button data-add="one">📄 مستند بوجه واحد</button>
 <button data-add="photo">👤 صورة شخصية</button>
 <button data-add="multi">🖼 عدة صور دفعة واحدة</button>
+<button data-add="cam">📷 كاميرا (التقاط تلقائي)</button>
+<button data-add="scan">📑 مسح مستند ضوئياً</button>
+<button data-add="tpl">🗂 قوالب جاهزة</button>
 <hr>
 <button data-add="text">🔤 مربع نص</button>
-<button data-add="qr">▦ باركود</button>
+<button data-add="qr">▦ إنشاء باركود</button>
+<button data-add="qrscan">🔎 قراءة باركود</button>
+<button data-add="nfc">📡 قراءة NFC</button>
 </div>
 <div class="pop" id="pMenu" hidden>
 <button data-act="size">📐 حجم الورقة</button>
@@ -414,9 +471,13 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <hr>
 <button data-act="auto">✨ ترتيب تلقائي لكل الأوراق</button>
 <button data-act="wm">🛡 علامة مائية</button>
+<button data-act="scope">🧾 النطاق: كل المستند</button>
+<button data-act="tpl">🗂 القوالب</button>
 <button data-act="paste">📋 لصق</button>
 <hr>
 <button data-act="lib">📁 المحفوظات</button>
+<button data-act="savefile">💾 حفظ المشروع كملف</button>
+<button data-act="openfile">📂 فتح مشروع من ملف</button>
 <button data-act="new">🆕 مشروع جديد</button>
 <button data-act="theme">🌙 الوضع الليلي</button>
 <button data-act="settings">⚙ الإعدادات</button>
@@ -437,6 +498,9 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <div class="modal" id="exportM" hidden>
 <div class="mb">
 <div class="mh"><h2>تصدير</h2></div>
+<div class="lbl">النطاق</div>
+<div class="seg" id="exScope"><button data-v="all">كل المستند</button><button data-v="cur">الورقة الحالية فقط</button></div>
+<label class="lb" style="margin-top:10px">الجودة / حجم الملف<input type="range" id="exQ" min="40" max="100" step="2"><b id="vExQ"></b></label>
 <div class="fmt" id="fmtList"></div>
 <div class="row">
 <button class="chip" id="exSave" style="flex:1">⬇ حفظ</button>
@@ -466,12 +530,26 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <div class="modal" id="qrM" hidden>
 <div class="mb">
 <div class="mh"><h2>▦ باركود</h2></div>
-<textarea id="qrT" placeholder="اكتب النص أو الصق الرابط" style="margin-top:10px"></textarea>
+<div class="qtypes" id="qTypes"></div>
+<div id="qFields"></div>
+<div class="row" style="margin-top:8px"><button class="sb" id="qScan">📷 مسح باركود</button><button class="sb" id="qScanImg">🖼 قراءة من صورة</button></div>
 <div class="qrp"><canvas id="qrPrev" width="10" height="10"></canvas></div>
-<p class="note">الباركود لا يتسع للصورة نفسها (سعته بضعة كيلوبايت فقط). ارفع الملف إلى خدمة تخزين وضع رابطه هنا ليفتح المستند عند المسح.</p>
-<div class="row" style="margin-top:10px">
-<button class="chip" id="qrOk" style="flex:1">إضافة للورقة</button>
-<button class="chip o" id="qrX" style="flex:1">إلغاء</button>
+<p class="note" id="qNote"></p>
+<details>
+<summary>🎨 الشكل والألوان والأيقونة</summary>
+<div class="row" style="margin-top:8px;align-items:center"><label class="lb" style="flex:1">لون الباركود<input type="color" id="qFg"></label><label class="lb" style="flex:1">الخلفية<input type="color" id="qBg"></label></div>
+<div class="lbl">شكل النقاط</div>
+<div class="seg" id="qDots"><button data-v="sq">مربعة</button><button data-v="round">دائرية</button></div>
+<div class="lbl">الإطار</div>
+<select id="qFrame"><option value="none">بدون</option><option value="round">دائري الحواف</option><option value="thick">سميك</option><option value="corners">زوايا</option></select>
+<div class="lbl">أيقونة / ملصق في المنتصف</div>
+<div class="qlogos" id="qLogos"></div>
+<div class="row" style="margin-top:8px"><button class="sb" id="qLogoImg">🖼 شعار من صورة</button><button class="sb" id="qBgImg">🖼 صورة للخلفية</button><button class="sb" id="qBgClr">✕ إزالة الخلفية</button></div>
+<p class="note">أضف الشعار أو الأيقونة بحجم صغير حتى يبقى الباركود قابلاً للمسح، وجرّب المسح قبل الطباعة.</p>
+</details>
+<div class="row" style="margin-top:12px">
+<button class="chip" id="qrOk" style="flex:1">حفظ على الورقة</button>
+<button class="chip o" id="qX" style="flex:1">إلغاء</button>
 </div>
 </div>
 </div>
@@ -491,7 +569,7 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <!-- المحفوظات -->
 <div class="modal" id="libM" hidden>
 <div class="mb">
-<div class="mh"><h2>📁 المحفوظات</h2><button class="sb" id="libX">إغلاق ✕</button></div>
+<div class="mh"><h2>📁 المحفوظات</h2><button class="sb" id="libImp">📂 فتح ملف مشروع</button><button class="sb" id="libX">إغلاق ✕</button></div>
 <div class="seg" id="libTabs" style="margin-top:10px">
 <button data-t="p">المشاريع</button>
 <button data-t="f">الملفات المصدّرة</button>
@@ -504,9 +582,16 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <div class="modal" id="wmM" hidden>
 <div class="mb">
 <div class="mh"><h2>🛡 علامة مائية</h2></div>
-<p class="note">نص مائل شفاف فوق الورقة يمنع استخدام نسخة المستمسك في غير غرضها.</p>
-<input type="text" id="wmT" placeholder="مثال: نسخة مخصصة للتعيين فقط">
-<label class="lb" style="margin-top:10px">الشفافية<input type="range" id="wmA" min="5" max="45"><b id="vWmA"></b></label>
+<p class="note">تتكرر على كامل الورقة وتمنع استخدام النسخة في غير غرضها.</p>
+<div class="seg" id="wmTy" data-v="text"><button data-v="text">نص</button><button data-v="image">صورة / شعار</button></div>
+<div id="wmTxtBox"><input type="text" id="wmT" placeholder="مثال: نسخة مخصصة للتعيين فقط"><label class="lb" style="margin-top:8px"><input type="checkbox" id="wmB">خط غامق</label></div>
+<div id="wmImgBox" hidden><button class="sb" id="wmPick" style="margin-top:8px">🖼 اختيار صورة الشعار</button></div>
+<div class="lbl">النمط</div>
+<select id="wmMo"><option value="diag">تكرار مائل على كل الصفحة</option><option value="tile">تكرار أفقي على كل الصفحة</option><option value="center">مرة واحدة في المنتصف</option></select>
+<div class="row" style="align-items:center"><label class="lb" style="flex:1">اللون<input type="color" id="wmC"></label></div>
+<label class="lb">الحجم<input type="range" id="wmS" min="2" max="30" step="1"><b id="vWmS"></b></label>
+<label class="lb">الشفافية<input type="range" id="wmA" min="5" max="60"><b id="vWmA"></b></label>
+<div style="text-align:center;margin-top:8px"><canvas id="wmPv" width="210" height="296" style="width:105px;border:1px solid var(--bd);border-radius:8px"></canvas></div>
 <div class="row" style="margin-top:14px">
 <button class="chip" id="wmOk" style="flex:1">تطبيق</button>
 <button class="chip o" id="wmClr" style="flex:1">إزالة</button>
@@ -577,6 +662,12 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <select id="sFmt"></select>
 <label class="lb" style="margin-top:10px">جودة الصور<input type="range" id="rQ" min="60" max="100" step="2"><b id="vQ"></b></label>
 
+<h3>الكاميرا والمسح</h3>
+<label class="lb"><input type="checkbox" id="kCamAuto">الالتقاط التلقائي عند ثبات المستند</label>
+<label class="lb" style="margin-top:6px"><input type="checkbox" id="kCamCrop">قص الحواف تلقائياً بعد الالتقاط</label>
+<label class="lb" style="margin-top:6px"><input type="checkbox" id="kCamClean">تصفية الصورة (إضاءة زائدة وشوائب)</label>
+<label class="lb" style="margin-top:6px"><input type="checkbox" id="kCamStrong">تصفية قوية للمستندات الورقية</label>
+
 <button class="chip o red" id="setReset" style="width:100%;margin-top:16px">إعادة ضبط كل الإعدادات</button>
 </div>
 </div>
@@ -588,6 +679,7 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <img id="cimg" alt="">
 <div id="cr"><i data-k="tl"></i><i data-k="tr"></i><i data-k="bl"></i><i data-k="br"></i></div>
 </div>
+<div class="row" style="width:100%"><button class="chip o" id="cAuto" style="flex:1;background:#fff;color:#0b2a1f">⌖ تأطير تلقائي</button><button class="chip o" id="cFull" style="flex:1;background:#fff;color:#0b2a1f">كامل</button></div>
 <div class="row" style="width:100%">
 <button class="chip" id="cOk" style="flex:1">تطبيق القص</button>
 <button class="chip o" id="cNo" style="flex:1;background:#fff;color:#0b2a1f">إلغاء</button>
@@ -595,6 +687,96 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 </div>
 </div>
 
+<div class="pop" id="pCtx" hidden></div>
+
+<!-- كاميرا / مسح -->
+<div class="cam" id="camM" hidden>
+<video id="camV" playsinline muted autoplay></video>
+<canvas id="camO"></canvas>
+<div class="camFlash" id="camF"></div>
+<div class="camTop">
+<button id="camX">✕ إغلاق</button>
+<b id="camT"></b>
+<span style="display:flex;gap:6px"><button id="camFl">🔦 بدون</button><button id="camSw">🔄</button></span>
+</div>
+<div class="camN" id="camN" hidden>0</div>
+<div class="camH" id="camH"></div>
+<div class="camBot">
+<button class="cb" id="camG">🖼 معرض</button>
+<button class="shut" id="camSh" aria-label="التقاط"></button>
+<button class="cb on" id="camAu">⚡ تلقائي</button>
+</div>
+</div>
+<input type="file" id="fiCam" accept="image/*" hidden>
+<input type="file" id="fiQ" hidden>
+<input type="file" id="fiW" accept="image/*" hidden>
+<input type="file" id="fiP" accept=".mst,.zip,application/octet-stream" hidden>
+
+<!-- نتيجة مسح باركود -->
+<div class="modal" id="scM" hidden>
+<div class="mb">
+<div class="mh"><h2>🔎 محتوى الباركود</h2></div>
+<div id="scTxt" dir="auto"></div>
+<div class="row" style="margin-top:12px;flex-wrap:wrap">
+<button class="chip" id="scCopy">نسخ</button>
+<button class="chip" id="scOpen" hidden>فتح الرابط</button>
+<button class="chip" id="scAdd">▦ إضافة للورقة</button>
+<button class="chip o" id="scX">إغلاق</button>
+</div>
+</div>
+</div>
+
+<!-- NFC -->
+<div class="modal" id="nfM" hidden>
+<div class="mb">
+<div class="mh"><h2>📡 قراءة NFC</h2><button class="sb" id="nfX">إغلاق ✕</button></div>
+<p class="note" id="nfSt">اضغط «ابدأ» ثم قرّب البطاقة أو الهوية من ظهر الهاتف (منطقة الهوائي) وثبّتها.</p>
+<div class="row"><button class="chip" id="nfGo">▶ ابدأ القراءة</button></div>
+<div id="nfOut" dir="ltr"></div>
+<div id="nfBac" hidden>
+<p class="note">جواز السفر الإلكتروني (ICAO) محمي بمفاتيح مشتقة من بيانات الصفحة الأخيرة. أدخلها لقراءة الاسم والأرقام:</p>
+<input type="text" id="nfDoc" placeholder="رقم الجواز (كما في السطر السفلي)" dir="ltr">
+<input type="text" id="nfDob" placeholder="تاريخ الميلاد YYMMDD مثال 900131" dir="ltr" inputmode="numeric" maxlength="6">
+<input type="text" id="nfExp" placeholder="تاريخ الانتهاء YYMMDD مثال 300131" dir="ltr" inputmode="numeric" maxlength="6">
+<div class="row" style="margin-top:8px"><button class="chip" id="nfBacGo">🔓 قراءة بيانات الجواز</button></div>
+</div>
+<div class="row" id="nfAct" hidden style="margin-top:10px;flex-wrap:wrap">
+<button class="sb" id="nfTxt">🔤 إضافة كمربع نص</button>
+<button class="sb" id="nfQr">▦ إضافة كباركود</button>
+<button class="sb" id="nfCp">نسخ</button>
+</div>
+</div>
+</div>
+
+<!-- القوالب -->
+<div class="modal" id="tplM" hidden>
+<div class="mb">
+<div class="mh"><h2>🗂 قوالب المستمسكات</h2><button class="sb" id="tplX">إغلاق ✕</button></div>
+<div class="seg" id="tplTabs" style="margin-top:10px">
+<button data-t="b" class="on">جاهزة</button>
+<button data-t="u">قوالبي</button>
+</div>
+<div id="tplList"></div>
+<div class="row" style="margin-top:12px"><button class="chip" id="tplSave" style="flex:1">💾 حفظ الورقة الحالية كقالب</button></div>
+<p class="note">بعد تطبيق القالب حرّك الخانات أو كبّرها أو غيّر نوعها (من تبويب «الحجم») أو احذفها أو أضف غيرها، ثم احفظه كقالب جديد أو حدّث قالبك.</p>
+</div>
+</div>
+
+<!-- حجم / ضغط الصورة -->
+<div class="modal" id="rsM" hidden>
+<div class="mb">
+<div class="mh"><h2>📐 حجم الصورة</h2></div>
+<div class="lbl">أكبر بُعد بالبكسل</div>
+<div class="seg" id="rsSeg">
+<button data-m="800">800</button><button data-m="1280">1280</button><button data-m="1920">1920</button><button data-m="2600">2600</button><button data-m="0">الأصلي</button>
+</div>
+<label class="lb" style="margin-top:10px">الجودة<input type="range" id="rsQ" min="40" max="98" step="2"><b id="vRsQ"></b></label>
+<p class="note" id="rsInfo"></p>
+<div class="row"><button class="chip" id="rsOk" style="flex:1">تطبيق</button><button class="chip o" id="rsX" style="flex:1">إلغاء</button></div>
+</div>
+</div>
+
+<div id="loupe" hidden><canvas width="130" height="130"></canvas></div>
 <input type="file" id="fi" accept="image/*" hidden>
 <input type="file" id="fiM" accept="image/*" multiple hidden>
 <div class="toast" id="toast" hidden></div>
@@ -639,7 +821,7 @@ const FMT={
 pdf300:['pdf',300,'PDF — دقة 300 (سريع)'],
 pdf600:['pdf',600,'PDF — دقة 600'],
 pdf1200:['pdf',1200,'PDF — دقة 1200 (بطيء وكبير الحجم)'],
-docx:['docx',200,'Word — ملف docx'],
+docx:['docx',200,'Word — قابل للتعديل (docx)'],
 pngH:['png',300,'PNG — جودة عالية'],
 pngN:['png',150,'PNG — حجم عادي'],
 jpg:['jpg',300,'JPG']
@@ -653,7 +835,7 @@ const ARROW={tl:'↖',t:'↑',tr:'↗',r:'→',br:'↘',b:'↓',bl:'↙',l:'←'
 /* ================= الإعدادات والثيم ================= */
 const DEF={theme:'auto',accent:'#1f7a4d',bg:'green',bgCustom:'',panel:'',ink:'',font:100,
 page:'A4',margin:8,gap:5,mirror:false,vcenter:false,cutLines:false,autoCrop:false,snap:true,nav:'v',
-saveMode:'folder',treeUri:'',treeName:'',prefix:'mustamsakat',fmt:'pdf300',q:94,wmText:'',wmAlpha:18};
+saveMode:'folder',treeUri:'',treeName:'',prefix:'mustamsakat',fmt:'pdf300',q:94,wmText:'',wmAlpha:18,wmType:'text',wmMode:'diag',wmColor:'#000000',wmSize:6,wmBold:true,wmImg:'',camAuto:true,camCrop:true,camClean:true,camStrong:false};
 const ACCS=['#1f7a4d','#2563eb','#7c3aed','#0d9488','#e11d48','#ea580c'];
 const BGS={
 green:{l:['#f5fbf8','#c9e6d6'],d:['#04120c','#0b2a1d']},
@@ -712,7 +894,9 @@ const IM=new Map();
 let uid=0;
 const nid=()=>++uid;
 let PN=[];
-const pd=()=>{const d=PG[S.page];return S.land?[d[1],d[0]]:[d[0],d[1]]};
+const pgDims=pg=>{const k=pg&&pg.page&&PG[pg.page]?pg.page:S.page,l=pg&&pg.land!=null?pg.land:S.land,d=PG[k]||PG.A4;return l?[d[1],d[0]]:[d[0],d[1]]};
+const pdi=pi=>pgDims(S.pages[pi]);
+const pd=()=>pdi(S.cur);
 
 function findItem(id){
 if(id==null)return null;
@@ -813,11 +997,15 @@ ssT=setTimeout(saveSession,1500)
 async function exportProject(){
 const images={};
 for(const pg of S.pages)for(const it of pg.items){
-if(it.kind==='img'&&it.imgId&&!images[it.imgId]){
-const im=IM.get(it.imgId);
+for(const iid of [it.imgId,it.bgImg,it.logoImg]){
+if(!iid||images[iid])continue;
+const im=IM.get(iid);
 if(!im)continue;
-if(!im.blob)im.blob=await (await fetch(im.el.src)).blob();
-images[it.imgId]=im.blob
+if(!im.blob){
+try{im.blob=await (await fetch(im.el.src)).blob()}
+catch(_){const c=shrink(im.el,3600);im.blob=await toB(c,.92);c.width=c.height=0}
+}
+images[iid]=im.blob
 }
 }
 return{v:2,name:S.name,libId:S.libId,uid,page:S.page,land:S.land,pages:S.pages,images}
@@ -837,7 +1025,7 @@ S.land=!!p.land;
 S.name=p.name||'مشروع';
 S.libId=p.libId||null;
 let mx=p.uid||0;
-S.pages.forEach(pg=>pg.items.forEach(it=>{mx=Math.max(mx,it.id||0,it.g||0,it.imgId||0)}));
+S.pages.forEach(pg=>pg.items.forEach(it=>{mx=Math.max(mx,it.id||0,it.g||0,it.imgId||0,it.bgImg||0,it.logoImg||0)}));
 uid=mx;
 S.cur=0;S.sel=null
 }
@@ -855,20 +1043,6 @@ toast('جارٍ استرجاع عملك السابق…',0);
 await importProject(p);
 $('toast').hidden=true
 }catch(err){console.warn('restore',err);$('toast').hidden=true}
-}
-
-async function saveProject(){
-try{
-toast('جارٍ حفظ المشروع…',0);
-if(!S.libId)S.libId=Date.now().toString(36);
-const p=await exportProject();
-const c=pageCanvas(S.pages[0],.9);
-const thumb=c.toDataURL('image/jpeg',.6);
-c.width=c.height=0;
-await IDB.set('data','p:'+S.libId,p);
-await IDB.set('meta','p:'+S.libId,{t:'p',id:S.libId,name:S.name,date:Date.now(),thumb,n:S.pages.length});
-toast('تم حفظ المشروع في «المحفوظات» ✓')
-}catch(err){console.error(err);toast('تعذّر حفظ المشروع')}
 }
 
 function newProject(){
@@ -913,7 +1087,7 @@ if(r.top>innerHeight/2){p.style.top='auto';p.style.bottom=(innerHeight-r.top+8)+
 else{p.style.bottom='auto';p.style.top=below+'px'}
 p.style.left=clamp(r.left+r.width/2-w/2,8,innerWidth-w-8)+'px'
 }
-function closePops(){['pSize','pAdd','pMenu'].forEach(p=>$(p).hidden=true)}
+function closePops(){['pSize','pAdd','pMenu','pCtx'].forEach(p=>$(p).hidden=true)}
 function openPop(id,btn){
 const el=$(id),was=!el.hidden;
 closePops();
@@ -924,15 +1098,17 @@ $('bMenu').onclick=e=>{e.stopPropagation();openPop('pMenu',$('bMenu'))};
 $('nbAdd').onclick=e=>{e.stopPropagation();openPop('pAdd',$('nbAdd'))};
 
 function buildSizeMenu(){
+const pg=S.pages[S.cur]||{},cp=pg.page||S.page,cl=pg.land!=null?pg.land:S.land;
 $('pSize').innerHTML=Object.keys(PG).map(k=>
-`<button data-p="${k}"${k===S.page?' class="on"':''}>${k}</button>`
-).join('')+`<hr><button data-o="1"${S.land?' class="on"':''}>↔ ورقة أفقية</button>`
+`<button data-p="${k}"${k===cp?' class="on"':''}>${k}</button>`
+).join('')+`<hr><button data-o="1"${cl?' class="on"':''}>↔ ورقة أفقية</button><hr><button data-sc="all"${SZS==='all'?' class="on"':''}>تطبيق على كل المستند</button><button data-sc="cur"${SZS==='cur'?' class="on"':''}>تطبيق على الورقة الحالية فقط</button>`
 }
 $('pSize').onclick=e=>{
 const b=e.target.closest('button');
 if(!b)return;
-if(b.dataset.p)S.page=b.dataset.p;
-else if(b.dataset.o)S.land=!S.land;
+if(b.dataset.sc){e.stopPropagation();SZS=b.dataset.sc;buildSizeMenu();return}
+if(b.dataset.p)applySize(b.dataset.p,null);
+else if(b.dataset.o){const pg=S.pages[S.cur],cl=pg.land!=null?pg.land:S.land;applySize(null,!cl)}
 else return;
 buildSizeMenu();
 commit();
@@ -946,12 +1122,16 @@ const a=b.dataset.act;
 e.stopPropagation();
 closePops();
 if(a==='size'){setTimeout(()=>placePop($('pSize'),$('bMenu')),10)}
-else if(a==='land'){S.land=!S.land;buildSizeMenu();commit();renderAll()}
+else if(a==='land'){const pg=S.pages[S.cur],cl=pg.land!=null?pg.land:S.land;applySize(null,!cl);buildSizeMenu();commit();renderAll()}
 else if(a==='addpage')addPage();
 else if(a==='duppage')dupPage();
 else if(a==='delpage')delPage();
 else if(a==='auto')ask('إعادة ترتيب كل المستندات تلقائياً؟ سيتم تجاهل المواضع اليدوية.',autoArrange);
 else if(a==='wm')openWm();
+else if(a==='scope'){EXS=EXS==='cur'?'all':'cur';syncScope();toast(EXS==='cur'?'التصدير والطباعة للورقة الحالية فقط':'التصدير والطباعة لكل المستند')}
+else if(a==='tpl')openTpl();
+else if(a==='savefile')saveProject();
+else if(a==='openfile'){$('fiP').value='';$('fiP').click()}
 else if(a==='paste')pasteClip();
 else if(a==='lib')openLib();
 else if(a==='new')ask('بدء مشروع جديد؟ احفظ المشروع الحالي أولاً (💾) إن أردت الاحتفاظ به.',newProject);
@@ -967,7 +1147,12 @@ closePops();
 e.stopPropagation();
 if(k==='multi'){fiM.value='';fiM.click()}
 else if(k==='text')addText();
-else if(k==='qr')openQr();
+else if(k==='qr')openQr(null);
+else if(k==='cam')camOpen('doc',{});
+else if(k==='scan')camOpen('doc',{scan:true});
+else if(k==='tpl')openTpl();
+else if(k==='qrscan')camOpen('code',{cb:showScan});
+else if(k==='nfc')nfcOpen();
 else addDoc(k)
 };
 
@@ -1027,7 +1212,7 @@ return await loadImage(URL.createObjectURL(b))
 async function autoCropImg(im){
 try{
 const r=detect(im.el);
-if(r.w>.97&&r.h>.97)return{im,done:false};
+if(!r.found||(r.w>.97&&r.h>.97))return{im,done:false};
 return{im:await applyCrop(im,r),done:true}
 }catch(_){return{im,done:false}}
 }
@@ -1087,10 +1272,10 @@ function mkImgItem(g,side,two,size,mode,photo){
 return Object.assign(baseItem(),{g,kind:'img',side,two,mode,size,cu:[85,55],bw:40,bh:25,imgId:null,r:photo?1:3,shadow:'gray',flt:NOFLT(),autoFit:!photo})
 }
 function mkTextItem(){
-return Object.assign(baseItem(),{g:nid(),kind:'text',w:70,h:22,text:'نص جديد',color:'#111111',fs:18,bold:true,it:false,ul:false,al:'center'})
+return Object.assign(baseItem(),{g:nid(),kind:'text',w:90,h:26,text:'نص جديد',color:'#111111',fs:18,bold:true,it:false,ul:false,al:'center'})
 }
-function mkQrItem(data){
-return Object.assign(baseItem(),{g:nid(),kind:'qr',w:32,h:32,data})
+function mkQrItem(data,o){
+return Object.assign(baseItem(),{g:nid(),kind:'qr',w:34,h:34,data,qt:'text',qv:{text:{v:data}}},QRSTY(),o||{})
 }
 
 const typeDims=it=>it.size===CUS?it.cu.slice():[DOCS[it.size][1],DOCS[it.size][2]];
@@ -1118,7 +1303,7 @@ clampItem(it)
 }
 
 function clampItem(it){
-const[W,H]=pd();
+const f0=findItem(it.id),[W,H]=pdi(f0?f0.pi:S.cur);
 const cx=clamp(it.x+it.w/2,0,W),cy=clamp(it.y+it.h/2,0,H);
 it.x=cx-it.w/2;it.y=cy-it.h/2
 }
@@ -1352,7 +1537,8 @@ if(!gm.has(x.g))gm.set(x.g,nid());
 c.g=gm.get(x.g);
 return c
 });
-S.pages.splice(S.cur+1,0,{items:clones});
+const np={items:clones};if(src.page)np.page=src.page;if(src.land!=null)np.land=src.land;
+S.pages.splice(S.cur+1,0,np);
 S.sel=null;
 commit();
 renderAll();
@@ -1383,27 +1569,6 @@ if(b!==1||c!==1||s)return s+'brightness('+b.toFixed(2)+') contrast('+c.toFixed(2
 return 'none'
 }
 
-const QRC=new Map();
-function qrMatrix(text){
-if(QRC.has(text))return QRC.get(text);
-if(typeof qrcode==='undefined')throw new Error('qrlib');
-try{if(qrcode.stringToBytesFuncs&&qrcode.stringToBytesFuncs['UTF-8'])qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8']}catch(_){}
-const q=qrcode(0,'M');
-q.addData(text,'Byte');
-q.make();
-const n=q.getModuleCount(),m=[];
-for(let r=0;r<n;r++){const row=[];for(let c=0;c<n;c++)row.push(q.isDark(r,c));m.push(row)}
-QRC.set(text,m);
-return m
-}
-function drawQR(g,m,x,y,size){
-const n=m.length,u=size/(n+4);
-g.fillStyle='#fff';
-g.fillRect(x,y,size,size);
-g.fillStyle='#000';
-for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(m[r][c])g.fillRect(x+(c+2)*u,y+(r+2)*u,u+.6,u+.6)
-}
-
 function geoStyle(n,it,W,H){
 n.style.left=it.x/W*100+'%';
 n.style.top=it.y/H*100+'%';
@@ -1430,7 +1595,7 @@ if(CFG.cutLines)g.style.border='1px solid rgba(0,0,0,.4)';
 n.appendChild(g)
 }else{
 n.classList.add('empty');
-n.textContent='＋ '+(it.two?(it.side?'الظهر':'الوجه'):'صورة')
+n.textContent='＋ '+(it.two?(it.side?'الظهر':'الوجه'):(it.lbl||'صورة'))
 }
 }else if(it.kind==='text'){
 const t=document.createElement('div');
@@ -1441,12 +1606,12 @@ t.style.cssText=`font-size:calc(var(--u)*${(it.fs*0.3528).toFixed(3)});color:${i
 n.appendChild(t)
 }else if(it.kind==='qr'){
 try{
-const m=qrMatrix(it.data||' ');
+const m=qrMatrix(it.data||' ',qrEcOf(it));
 const c=document.createElement('canvas');
 c.className='qr';
-const s=(m.length+4)*6;
+const s=(m.length+8)*6;
 c.width=c.height=s;
-drawQR(c.getContext('2d'),m,0,0,s);
+drawQR(c.getContext('2d'),m,0,0,s,qrOpts(it));
 n.appendChild(c)
 }catch(_){n.classList.add('empty');n.textContent='باركود'}
 }
@@ -1454,8 +1619,7 @@ return n
 }
 
 function pageNode(pi,interactive){
-const[W,H]=pd();
-const pg=S.pages[pi];
+const pg=S.pages[pi],[W,H]=pgDims(pg);
 const wrap=document.createElement('div');
 wrap.className='pgw';
 wrap.dataset.pi=pi;
@@ -1463,7 +1627,7 @@ const d=document.createElement('div');
 d.className='pg';
 d.style.aspectRatio=W+'/'+H;
 wrap.appendChild(d);
-pg.items.forEach(it=>{
+zs(pg.items).forEach(it=>{
 if(!interactive&&it.kind==='img'&&!it.imgId)return;
 d.appendChild(itemNode(it,W,H,interactive))
 });
@@ -1473,23 +1637,21 @@ h.className='hint';
 h.innerHTML='ورقة بيضاء جاهزة<br>اضغط على «إضافة» بالأسفل للبدء';
 d.appendChild(h)
 }
-if(CFG.wmText.trim()){
-const w=document.createElement('div');
-w.className='wm';
-w.style.opacity=CFG.wmAlpha/100;
-for(let k=0;k<12;k++){const sp=document.createElement('span');sp.textContent=CFG.wmText;w.appendChild(sp)}
-d.appendChild(w)
+if(wmActive()){
+const cv=document.createElement('canvas');cv.className='wmc';
+const k=3;cv.width=Math.round(W*k);cv.height=Math.round(H*k);
+drawWm(cv.getContext('2d'),W,H,k);d.appendChild(cv)
 }
 const l=document.createElement('div');
 l.className='pgl';
 const split=S.pages.some(p=>p.items.some(x=>x.two&&x.mode==='split'));
-l.textContent=`ورقة ${pi+1} من ${S.pages.length} — ${S.page}${S.land?' أفقي':''}`;
+l.textContent=`ورقة ${pi+1} من ${S.pages.length} — ${pg.page||S.page}${(pg.land!=null?pg.land:S.land)?' أفقي':''}`;
 wrap.appendChild(l);
 return wrap
 }
 
 function setU(w){
-const[W]=pd();
+const[W]=pdi(+w.dataset.pi);
 const d=w.querySelector('.pg');
 d.style.setProperty('--u',(d.clientWidth/W)+'px')
 }
@@ -1531,20 +1693,21 @@ function drawSel(){
 document.querySelectorAll('.sbx').forEach(n=>n.remove());
 const f=findItem(S.sel);
 if(!f||!PN[f.pi])return;
-const[W,H]=pd(),it=f.it;
+const[W,H]=pdi(f.pi),it=f.it;
 const d=PN[f.pi].querySelector('.pg');
 const o=document.createElement('div');
-o.className='sbx'+(it.lock?' lk':'');
+const upm=d.clientWidth/W;
+o.className='sbx'+(it.lock?' lk':'')+((it.w*upm<90||it.h*upm<90)?' sm':'');
 o.dataset.id=it.id;
 o.style.setProperty('--rot',it.rot);
 geoStyle(o,it,W,H);
-o.innerHTML=it.lock?'<span class="lkb">🔒</span>':
-HANDLES.map(h=>`<i class="hd" data-h="${h}">${ARROW[h]}</i>`).join('')+'<i class="hd rt" data-h="rot">↻</i><span class="rl"></span>';
+o.innerHTML=(it.lock?'<span class="lkb">🔒</span>':
+HANDLES.map(h=>`<i class="hd" data-h="${h}">${ARROW[h]}</i>`).join('')+'<i class="hd rt" data-h="rot">↻</i><span class="rl"></span>')+'<i class="hd xb" data-h="x">✕</i>';
 d.appendChild(o)
 }
 
 function applyGeo(it,pi){
-const[W,H]=pd();
+const[W,H]=pdi(pi);
 PN[pi].querySelectorAll('[data-id="'+it.id+'"]').forEach(n=>{geoStyle(n,it,W,H);n.style.setProperty('--rot',it.rot)})
 }
 
@@ -1552,12 +1715,13 @@ let OP=null,SUP=0;
 
 $('pages').addEventListener('pointerdown',ev=>{
 const hd=ev.target.closest('.hd'),bx=ev.target.closest('.sbx');
+if(hd&&hd.dataset.h==='x'){ev.preventDefault();ev.stopPropagation();SUP=performance.now();NOCLK=true;delGroup();return}
 if(hd)startOp(ev,hd.dataset.h==='rot'?'rot':'rs',hd.dataset.h);
 else if(bx)startOp(ev,'mv')
 },{passive:false});
 
 $('pages').addEventListener('click',ev=>{
-if(performance.now()-SUP<350)return;
+if(performance.now()-SUP<350||NOCLK){NOCLK=false;return}
 const bx=ev.target.closest('.sbx');
 if(bx){
 const f=findItem(+bx.dataset.id);
@@ -1585,7 +1749,7 @@ if(!f)return;
 if(f.it.lock){toast('المستند مقفل — افتح القفل من «ترتيب»');return}
 ev.preventDefault();
 const d=PN[f.pi].querySelector('.pg');
-const r=d.getBoundingClientRect(),[W]=pd();
+const r=d.getBoundingClientRect(),[W]=pdi(f.pi);
 const it=f.it;
 OP={type,hd,it,pi:f.pi,k:W/r.width,r,sx:ev.clientX,sy:ev.clientY,moved:false,
 o:{x:it.x,y:it.y,w:it.w,h:it.h,rot:it.rot}};
@@ -1595,7 +1759,7 @@ window.addEventListener('pointercancel',onUp)
 }
 
 function snapTargets(axis,pi,skipId){
-const[W,H]=pd(),M=CFG.margin,G=CFG.gap;
+const[W,H]=pdi(pi),M=CFG.margin,G=CFG.gap;
 const out=axis==='x'?[[0],[W/2],[W],[M],[W-M]]:[[0],[H/2],[H],[M],[H-M]];
 const al=[],adj=[];
 out.forEach(t=>al.push(t[0]));
@@ -1627,7 +1791,7 @@ return best
 
 function showGuides(pi,gx,gy){
 clearGuides();
-const[W,H]=pd(),d=PN[pi].querySelector('.pg');
+const[W,H]=pdi(pi),d=PN[pi].querySelector('.pg');
 if(gx!=null){const g=document.createElement('div');g.className='gl v';g.style.left=(gx/W*100)+'%';d.appendChild(g)}
 if(gy!=null){const g=document.createElement('div');g.className='gl h';g.style.top=(gy/H*100)+'%';d.appendChild(g)}
 }
@@ -1743,6 +1907,7 @@ $('nNext').disabled=S.cur>=S.pages.length-1
 }
 
 function updateUI(){
+buildSizeMenu();
 $('pname').textContent=S.name;
 updUndo();
 const it=cs();
@@ -1976,7 +2141,7 @@ $('qApply').onclick=()=>{
 const v=$('qData').value;
 if(!v.trim()){toast('اكتب النص أو الرابط');return}
 try{qrMatrix(v)}catch(e){toast(e.message==='qrlib'?'مكتبة الباركود غير متوفرة':'النص أطول من سعة الباركود');return}
-mut(it=>{it.data=v})
+mut(it=>{it.data=v;it.qt='text';it.qv={text:{v}}})
 };
 
 /* الحجم */
@@ -2089,7 +2254,7 @@ $('shS').onchange=e=>mut(it=>{it.shadow=e.target.value});
 
 /* الترتيب */
 const alignTo=(fn)=>mut((it,pi)=>{
-const[W,H]=pd(),a=aabb(it);
+const[W,H]=pdi(pi),a=aabb(it);
 const d=fn(a,W,H);
 it.x+=d[0];it.y+=d[1];it.auto=false;
 clampItem(it);
@@ -2131,66 +2296,14 @@ goPage(to)
 $('mvPrev').onclick=()=>movePage(-1);
 $('mvNext').onclick=()=>movePage(1);
 
-/* ================= الباركود (إضافة) ================= */
-function drawQrPrev(){
-const v=$('qrT').value;
-const c=$('qrPrev'),g=c.getContext('2d');
-if(!v.trim()){c.width=c.height=10;g.fillStyle='#fff';g.fillRect(0,0,10,10);return true}
-try{
-const m=qrMatrix(v);
-const s=(m.length+4)*6;
-c.width=c.height=s;
-drawQR(g,m,0,0,s);
-return true
-}catch(e){
-c.width=c.height=10;g.fillStyle='#fff';g.fillRect(0,0,10,10);
-return e.message==='qrlib'?'lib':'long'
-}
-}
-function openQr(){$('qrT').value='';drawQrPrev();$('qrM').hidden=false}
-$('qrT').oninput=drawQrPrev;
-$('qrX').onclick=()=>$('qrM').hidden=true;
-$('qrOk').onclick=()=>{
-const v=$('qrT').value.trim();
-if(!v){toast('اكتب النص أو الرابط أولاً');return}
-const r=drawQrPrev();
-if(r==='lib'){toast('مكتبة الباركود غير متوفرة');return}
-if(r==='long'){toast('النص أطول من سعة الباركود');return}
-const it=mkQrItem(v);
-const sp=placeGroup([it],S.cur);
-S.sel=it.id;S.cur=sp.p;S.ptab='qr';
-$('qrM').hidden=true;
-commit();
-renderAll();
-goPage(sp.p,false)
-};
-
-/* ================= العلامة المائية ================= */
-function openWm(){
-$('wmT').value=CFG.wmText;
-$('wmA').value=CFG.wmAlpha;
-$('vWmA').textContent=CFG.wmAlpha+'%';
-$('wmM').hidden=false
-}
-$('wmA').oninput=e=>{$('vWmA').textContent=e.target.value+'%'};
-$('wmOk').onclick=()=>{
-CFG.wmText=$('wmT').value.trim();
-CFG.wmAlpha=+$('wmA').value;
-saveCfg();
-$('wmM').hidden=true;
-renderAll();
-toast(CFG.wmText?'تم تطبيق الحماية':'تمت إزالة العلامة')
-};
-$('wmClr').onclick=()=>{CFG.wmText='';saveCfg();$('wmM').hidden=true;renderAll();toast('تمت إزالة العلامة')};
-$('wmX').onclick=()=>$('wmM').hidden=true;
-
 /* ================= القص ================= */
 let C=null;
 
 function detect(img){
-const s=Math.min(1,320/Math.max(img.naturalWidth,img.naturalHeight));
-const w=Math.max(8,Math.round(img.naturalWidth*s));
-const h=Math.max(8,Math.round(img.naturalHeight*s));
+const nw=img.naturalWidth||img.videoWidth||img.width,nh=img.naturalHeight||img.videoHeight||img.height;
+const s=Math.min(1,320/Math.max(nw,nh));
+const w=Math.max(8,Math.round(nw*s));
+const h=Math.max(8,Math.round(nh*s));
 const c=document.createElement('canvas');
 c.width=w;c.height=h;
 const g=c.getContext('2d',{willReadFrequently:true});
@@ -2214,11 +2327,11 @@ return[s,e+1]
 };
 const[y0,y1]=f(rows,w);
 const[x0,x1]=f(cols,h);
-if(x1-x0<w*.2||y1-y0<h*.2)return{x:.06,y:.06,w:.88,h:.88};
+if(x1-x0<w*.2||y1-y0<h*.2)return{x:.06,y:.06,w:.88,h:.88,found:false};
 const p=.012;
 const x=Math.max(0,x0/w-p),y=Math.max(0,y0/h-p);
 const X=Math.min(1,x1/w+p),Y=Math.min(1,y1/h+p);
-return{x,y,w:X-x,h:Y-y}
+return{x,y,w:X-x,h:Y-y,found:true}
 }
 
 function drawC(){
@@ -2230,7 +2343,7 @@ function openCrop(){
 const it=cs();
 if(!it||!it.imgId){toast('أضف صورة أولاً');return}
 const im=IM.get(it.imgId);
-C={it,im,r:{x:.06,y:.06,w:.88,h:.88}};
+C={it,im,r:detect(im.el)};
 const ci=$('cimg');
 ci.onload=drawC;
 ci.src=im.src;
@@ -2244,6 +2357,7 @@ const cr=$('cr');
 cr.addEventListener('pointerdown',ev=>{
 ev.preventDefault();
 dr={k:ev.target.dataset.k||'m',x:ev.clientX,y:ev.clientY,r:{...C.r}};
+window._cpx=ev.clientX;loupe(dr.k,true);
 cr.setPointerCapture(ev.pointerId)
 });
 cr.addEventListener('pointermove',ev=>{
@@ -2262,10 +2376,11 @@ if(k.includes('b'))Y=clamp(Y+dy,y+.06,1);
 w=X-x;h=Y-y
 }
 C.r={x,y,w,h};
-drawC()
+drawC();
+window._cpx=ev.clientX;loupe(k,true)
 });
-cr.addEventListener('pointerup',()=>dr=null);
-cr.addEventListener('pointercancel',()=>dr=null);
+cr.addEventListener('pointerup',()=>{dr=null;loupe('',false)});
+cr.addEventListener('pointercancel',()=>{dr=null;loupe('',false)});
 
 $('cOk').onclick=async()=>{
 const{im,r,it}=C;
@@ -2364,7 +2479,7 @@ g.restore()
 }
 }else if(it.kind==='text')drawText(g,it,px);
 else if(it.kind==='qr'){
-try{drawQR(g,qrMatrix(it.data||' '),-w/2,-h/2,w)}catch(_){}
+try{drawQR(g,qrMatrix(it.data||' ',qrEcOf(it)),-w/2,-h/2,w,qrOpts(it))}catch(_){}
 }
 g.restore()
 }
@@ -2384,13 +2499,13 @@ g.restore()
 }
 
 function drawContent(g,pg,px){
-const[W,H]=pd();
-for(const it of pg.items)drawItem(g,it,px);
-if(CFG.wmText.trim())drawWm(g,W,H,px)
+const[W,H]=pgDims(pg);
+for(const it of zs(pg.items))drawItem(g,it,px);
+if(wmActive())drawWm(g,W,H,px)
 }
 
 function pageCanvas(pg,px){
-const[W,H]=pd();
+const[W,H]=pgDims(pg);
 const c=document.createElement('canvas');
 c.width=Math.max(1,Math.round(W*px));
 c.height=Math.max(1,Math.round(H*px));
@@ -2556,37 +2671,12 @@ await IDB.set('meta','f:'+id,{t:'f',id,name:f.name,date:Date.now(),size:f.blob.s
 }
 
 /* ================= التصدير ================= */
-async function buildDocx(pgs,W,H){
-if(typeof JSZip==='undefined')throw new Error('zip');
-const z=new JSZip();
-const E=36000,tw=56.6929;
-const cx=Math.round(W*E),cy=Math.round(H*E),pw=Math.round(W*tw),ph=Math.round(H*tw);
-const land=W>H;
-const hdr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-const sect=`<w:sectPr><w:pgSz w:w="${pw}" w:h="${ph}"${land?' w:orient="landscape"':''}/><w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>`;
-let rels='',body='';
-for(let i=0;i<pgs.length;i++){
-const c=pageCanvas(pgs[i],200/25.4);
-const b=await blobOf(c,'image/jpeg',CFG.q/100);
-c.width=c.height=0;
-z.file('word/media/p'+(i+1)+'.jpeg',await b.arrayBuffer());
-rels+=`<Relationship Id="rId${i+10}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/p${i+1}.jpeg"/>`;
-const drawing=`<w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="${251658240+i}" behindDoc="1" locked="0" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionV><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/><wp:docPr id="${i+1}" name="Page ${i+1}"/><wp:cNvGraphicFramePr/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${i+1}" name="p${i+1}.jpeg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${i+10}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing>`;
-body+=`<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>${i<pgs.length-1?sect:''}</w:pPr><w:r>${drawing}</w:r></w:p>`
-}
-z.file('[Content_Types].xml',hdr+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
-z.file('_rels/.rels',hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
-z.file('word/_rels/document.xml.rels',hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels+'</Relationships>');
-z.file('word/document.xml',hdr+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>'+body+sect+'</w:body></w:document>');
-return await z.generateAsync({type:'blob',mimeType:MIME.docx,compression:'DEFLATE'})
-}
-
 let busy=false;
 
 async function exportAs(k,how){
 if(busy)return;
 const[t,dpi]=FMT[k];
-const pgs=S.pages.filter(hasContent);
+const pgs=pagesToExport();
 if(!pgs.length){toast('أضف مستنداً أو نصاً أولاً');return}
 if(t==='pdf'&&!(window.jspdf&&window.jspdf.jsPDF)){toast('مكتبة PDF غير متوفرة');return}
 
@@ -2595,21 +2685,18 @@ toast('جارٍ تجهيز الملف…',0);
 await tick();
 
 try{
-const[W,H]=pd();
 const files=[],base=baseName(),q=CFG.q/100;
 let low=1;
-
 if(t==='pdf'){
-const ori=W>H?'l':'p';
-const pdf=new window.jspdf.jsPDF({unit:'mm',format:[W,H],orientation:ori,compress:true});
-let px=dpi/25.4;
-const maxSide=15000;
-px=Math.min(px,maxSide/Math.max(W,H));
-low=px/(dpi/25.4);
+const d0=pgDims(pgs[0]);
+const pdf=new window.jspdf.jsPDF({unit:'mm',format:d0,orientation:d0[0]>d0[1]?'l':'p',compress:true});
+for(let n=0;n<pgs.length;n++){
+const[W,H]=pgDims(pgs[n]),ori=W>H?'l':'p';
+if(n)pdf.addPage([W,H],ori);
+const px=Math.min(dpi/25.4,15000/Math.max(W,H));
+low=Math.min(low,px/(dpi/25.4));
 const wpx=Math.round(W*px),hpx=Math.round(H*px);
 const rows=Math.max(64,Math.floor(16e6/wpx));
-for(let n=0;n<pgs.length;n++){
-if(n)pdf.addPage([W,H],ori);
 for(let y0=0;y0<hpx;y0+=rows){
 const sh=Math.min(rows+2,hpx-y0);
 const c=document.createElement('canvas');
@@ -2626,13 +2713,14 @@ await tick()
 files.push({name:base+'.pdf',blob:pdf.output('blob')})
 }
 else if(t==='docx'){
-files.push({name:base+'.docx',blob:await buildDocx(pgs,W,H)})
+files.push({name:base+'.docx',blob:await buildDocx(pgs)})
 }
 else{
-const px=Math.min(dpi/25.4,Math.sqrt(50e6/(W*H)),15000/Math.max(W,H));
-low=px/(dpi/25.4);
 const isJ=t==='jpg';
 for(let n=0;n<pgs.length;n++){
+const[W,H]=pgDims(pgs[n]);
+const px=Math.min(dpi/25.4,Math.sqrt(50e6/(W*H)),15000/Math.max(W,H));
+low=Math.min(low,px/(dpi/25.4));
 const c=pageCanvas(pgs[n],px);
 const b=await blobOf(c,isJ?'image/jpeg':'image/png',q);
 files.push({name:`${base}-${n+1}.${isJ?'jpg':'png'}`,blob:b});
@@ -2662,7 +2750,7 @@ $('fmtList').innerHTML=Object.keys(FMT).map(k=>
 `<button data-f="${k}" class="${k===pickFmt?'on':''}">${FMT[k][2]}</button>`
 ).join('')
 }
-$('nbSave').onclick=()=>{pickFmt=CFG.fmt;buildFmt();$('exportM').hidden=false};
+$('nbSave').onclick=()=>{pickFmt=CFG.fmt;buildFmt();syncScope();$('exQ').value=CFG.q;$('vExQ').textContent=CFG.q+'%';$('exportM').hidden=false};
 $('fmtList').onclick=e=>{const f=e.target.dataset.f;if(f){pickFmt=f;buildFmt()}};
 $('exX').onclick=()=>$('exportM').hidden=true;
 $('exSave').onclick=()=>{$('exportM').hidden=true;exportAs(pickFmt,'save')};
@@ -2670,7 +2758,7 @@ $('exShare').onclick=()=>{$('exportM').hidden=true;exportAs(pickFmt,'share')};
 
 /* المعاينة */
 $('nbPrev').onclick=()=>{
-const pgs=S.pages.map((p,i)=>i).filter(i=>hasContent(S.pages[i]));
+const pgs=S.pages.map((p,i)=>i).filter(i=>hasContent(S.pages[i])&&(EXS!=='cur'||i===S.cur));
 if(!pgs.length){toast('أضف مستنداً أو نصاً أولاً');return}
 const box=$('pvPages');
 box.innerHTML='';
@@ -2792,7 +2880,8 @@ $('sSave').value=CFG.saveMode;
 $('folderName').textContent=CFG.treeUri?('المجلد: '+(CFG.treeName||'مختار')):'لم يُختر مجلد بعد';
 $('tPrefix').value=CFG.prefix;
 $('sFmt').value=CFG.fmt;
-$('rQ').value=CFG.q;$('vQ').textContent=CFG.q+'%'
+$('rQ').value=CFG.q;$('vQ').textContent=CFG.q+'%';
+$('kCamAuto').checked=CFG.camAuto;$('kCamCrop').checked=CFG.camCrop;$('kCamClean').checked=CFG.camClean;$('kCamStrong').checked=CFG.camStrong
 }
 function openSettings(){syncSettings();$('settings').hidden=false}
 const upd=()=>{saveCfg();applyTheme();syncSettings()};
@@ -2815,6 +2904,10 @@ $('rPanel').onclick=()=>{CFG.panel='';upd()};
 $('rInk').onclick=()=>{CFG.ink='';upd()};
 $('rFont').oninput=e=>{CFG.font=+e.target.value;$('vFont').textContent=CFG.font+'%';saveCfg();applyTheme()};
 
+$('kCamAuto').onchange=e=>{CFG.camAuto=e.target.checked;saveCfg()};
+$('kCamCrop').onchange=e=>{CFG.camCrop=e.target.checked;saveCfg()};
+$('kCamClean').onchange=e=>{CFG.camClean=e.target.checked;saveCfg()};
+$('kCamStrong').onchange=e=>{CFG.camStrong=e.target.checked;saveCfg()};
 $('sPage').onchange=e=>{CFG.page=e.target.value;S.page=CFG.page;saveCfg();buildSizeMenu();commit();renderAll()};
 $('nMargin').oninput=e=>{CFG.margin=clamp(+e.target.value||0,0,25);saveCfg()};
 $('nGap').oninput=e=>{CFG.gap=clamp(+e.target.value||0,0,20);saveCfg()};
@@ -2837,8 +2930,10 @@ saveCfg();applyTheme();syncSettings();buildSizeMenu();renderAll()
 /* ================= زر الرجوع (أندرويد) ================= */
 function handleBack(){
 const hide=id=>{if(!$(id).hidden){$(id).hidden=true;return true}return false};
-if(['confirmM','dupM','qrM','rnM','libM','exportM','wmM','preview','settings','crop'].some(hide))return true;
-if(['pSize','pAdd','pMenu'].some(id=>!$(id).hidden)){closePops();return true}
+if(!$('camM').hidden){camClose();return true}
+if(!$('nfM').hidden){nfcStopReading();$('nfM').hidden=true;return true}
+if(['scM','tplM','rsM','confirmM','dupM','qrM','rnM','libM','exportM','wmM','preview','settings','crop'].some(hide))return true;
+if(['pSize','pAdd','pMenu','pCtx'].some(id=>!$(id).hidden)){closePops();return true}
 if(S.props){closePropsUI();updateUI();return true}
 if(S.sel!=null){S.sel=null;drawSel();updateUI();return true}
 if($('ed').classList.contains('on')){showHome();return true}
@@ -2851,6 +2946,1200 @@ if(!App||!App.addListener)return;
 App.addListener('backButton',()=>{if(!handleBack())App.exitApp()})
 })();
 
+/* ================================================================
+   الإضافات الجديدة — الجزء A: الطبقات، القائمة المطوّلة، العلامة المائية،
+   النطاق، Word، حفظ الملف، حجم الصورة، التنظيف
+   ================================================================ */
+const zs=a=>a.some(i=>i.layer==='behind')?[...a.filter(i=>i.layer==='behind'),...a.filter(i=>i.layer!=='behind')]:a;
+let NOCLK=false,LP=null;
+const escX=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- القائمة عند الضغط المطوّل ---------- */
+function showCtx(x,y){
+const it=cs();if(!it)return;
+const p=$('pCtx'),B=it.layer==='behind',b=[];
+b.push(['front','🔼 أمام النص'+(!B?' ✓':'')],['behind','🔽 خلف النص'+(B?' ✓':'')]);
+b.push(['wrap',(it.wrap==='square'?'▣':'▢')+' التفاف النص (مربع)']);
+if(it.kind==='img'&&it.imgId)b.push(['clean','🧼 تصفية وتنظيف الصورة'],['crop','✂ قص'],['resize','📐 حجم / ضغط الصورة']);
+if(it.kind==='qr')b.push(['qredit','✎ تخصيص الباركود']);
+if(it.kind==='text')b.push(['txedit','✎ تعديل النص']);
+b.push(['dup','⧉ تكرار…'],['copy','⎘ نسخ'],['del','🗑 حذف']);
+p.innerHTML=b.map(([k,t])=>`<button data-k="${k}"${k==='del'?' class="red"':''}>${t}</button>`).join('');
+p.hidden=false;
+const w=p.offsetWidth,h=p.offsetHeight;
+p.style.left=clamp(x-w/2,8,innerWidth-w-8)+'px';
+p.style.bottom='auto';
+p.style.top=clamp(y-h-14,8,innerHeight-h-8)+'px'
+}
+$('pCtx').onclick=e=>{
+const b=e.target.closest('button');if(!b)return;
+e.stopPropagation();closePops();
+const k=b.dataset.k;
+if(k==='front')mut(it=>{it.layer='front'});
+else if(k==='behind')mut(it=>{it.layer='behind'});
+else if(k==='wrap'){mut(it=>{it.wrap=it.wrap==='square'?'none':'square'});toast('التفاف النص يظهر عند فتح الملف في Word')}
+else if(k==='clean')cleanSel();
+else if(k==='crop')openCrop();
+else if(k==='resize')openRs();
+else if(k==='qredit')openQr(cs());
+else if(k==='txedit')openProps('text');
+else if(k==='dup')$('tbDup').onclick();
+else if(k==='copy')copyClip();
+else if(k==='del')delGroup()
+};
+$('pages').addEventListener('contextmenu',e=>e.preventDefault());
+$('pages').addEventListener('pointerdown',ev=>{
+NOCLK=false;
+if(LP){clearTimeout(LP.t);LP=null}
+if(ev.target.closest('.hd'))return;
+const t=ev.target.closest('.sbx,.it');
+if(!t||!t.dataset.id)return;
+const id=+t.dataset.id,sx=ev.clientX,sy=ev.clientY;
+LP={sx,sy,t:setTimeout(()=>{
+if(!LP)return;LP=null;
+if(OP){window.removeEventListener('pointermove',onMove);window.removeEventListener('pointerup',onUp);window.removeEventListener('pointercancel',onUp);OP=null;clearGuides()}
+NOCLK=true;
+if(S.sel!==id){S.sel=id;drawSel();updateUI()}
+try{navigator.vibrate&&navigator.vibrate(25)}catch(_){}
+showCtx(sx,sy)
+},520)}
+});
+window.addEventListener('pointermove',ev=>{if(LP&&Math.hypot(ev.clientX-LP.sx,ev.clientY-LP.sy)>10){clearTimeout(LP.t);LP=null}});
+['pointerup','pointercancel'].forEach(n=>window.addEventListener(n,()=>{if(LP){clearTimeout(LP.t);LP=null}}));
+
+/* ---------- العلامة المائية ---------- */
+let WMI=null;
+const wmActive=(c=CFG)=>c.wmType==='image'?!!c.wmImg:!!String(c.wmText||'').trim();
+function wmImgEl(src){
+if(!src)return null;
+if(WMI&&WMI.s===src)return WMI.el.complete&&WMI.el.naturalWidth?WMI.el:null;
+const el=new Image();
+WMI={s:src,el};
+el.onload=()=>{if($('ed').classList.contains('on'))renderAll()};
+el.src=src;
+return el.complete&&el.naturalWidth?el:null
+}
+function drawWm(g,W,H,px,c){
+c=c||CFG;
+if(!wmActive(c))return;
+let el=null;
+if(c.wmType==='image'){el=wmImgEl(c.wmImg);if(!el)return}
+const k=c.wmMode==='center'?2.4:1,size=Math.max(1,c.wmSize*px*k);
+g.save();
+g.globalAlpha=clamp(c.wmAlpha,3,90)/100;
+let iw,ih;
+if(el){ih=size*1.6;iw=ih*el.naturalWidth/el.naturalHeight}
+else{
+g.font=`${c.wmBold?800:400} ${size}px Cairo, Tahoma, sans-serif`;
+g.textAlign='center';g.textBaseline='middle';g.fillStyle=c.wmColor||'#000';
+g.direction=/[֐-ࣿ]/.test(c.wmText)?'rtl':'ltr';
+iw=g.measureText(c.wmText).width;ih=size
+}
+const draw=()=>{if(el)g.drawImage(el,-iw/2,-ih/2,iw,ih);else g.fillText(c.wmText,0,0)};
+g.translate(W*px/2,H*px/2);
+g.rotate(c.wmMode==='tile'?0:-28*Math.PI/180);
+if(c.wmMode==='center')draw();
+else{
+const sx=iw+size*1.4,sy=ih+size*2.2,D=Math.hypot(W,H)*px;
+let r=0;
+for(let y=-D/2;y<=D/2;y+=sy,r++){
+const off=r%2?sx/2:0;
+for(let x=-D/2-sx+off;x<=D/2+sx;x+=sx){g.save();g.translate(x,y);draw();g.restore()}
+}
+}
+g.restore()
+}
+function readWm(){
+return{wmType:$('wmTy').dataset.v||'text',wmText:$('wmT').value.trim(),wmImg:CFG.wmImg,wmMode:$('wmMo').value,
+wmColor:$('wmC').value,wmSize:+$('wmS').value,wmAlpha:+$('wmA').value,wmBold:$('wmB').checked}
+}
+function wmPrev(){
+const c=$('wmPv'),g=c.getContext('2d'),W=105,H=148,px=c.width/W;
+c.height=Math.round(H*px);
+g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
+g.fillStyle='#e8e8e8';g.fillRect(12*px,20*px,81*px,30*px);g.fillRect(12*px,60*px,81*px,60*px);
+drawWm(g,W,H,px,readWm());
+$('vWmA').textContent=$('wmA').value+'%';$('vWmS').textContent=$('wmS').value
+}
+function wmType(v){
+$('wmTy').dataset.v=v;
+[...$('wmTy').children].forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+$('wmTxtBox').hidden=v!=='text';$('wmImgBox').hidden=v!=='image';
+wmPrev()
+}
+function openWm(){
+$('wmT').value=CFG.wmText;$('wmA').value=CFG.wmAlpha;$('wmMo').value=CFG.wmMode;
+$('wmC').value=CFG.wmColor;$('wmS').value=CFG.wmSize;$('wmB').checked=!!CFG.wmBold;
+wmType(CFG.wmType);
+$('wmM').hidden=false
+}
+$('wmTy').onclick=e=>{const v=e.target.dataset.v;if(v)wmType(v)};
+['wmT','wmMo','wmC','wmS','wmA','wmB'].forEach(i=>{$(i).oninput=wmPrev;$(i).onchange=wmPrev});
+$('wmPick').onclick=()=>{$('fiW').value='';$('fiW').click()};
+$('fiW').onchange=async()=>{
+const f=$('fiW').files[0];if(!f)return;
+try{
+const el=await mkImgEl(URL.createObjectURL(f));
+const s=Math.min(1,500/Math.max(el.naturalWidth,el.naturalHeight));
+const c=document.createElement('canvas');
+c.width=Math.round(el.naturalWidth*s);c.height=Math.round(el.naturalHeight*s);
+c.getContext('2d').drawImage(el,0,0,c.width,c.height);
+CFG.wmImg=c.toDataURL('image/png');
+wmType('image')
+}catch(_){toast('تعذّر فتح الصورة')}
+};
+$('wmOk').onclick=()=>{
+const r=readWm();
+if(!wmActive(r)){toast(r.wmType==='image'?'اختر صورة للعلامة':'اكتب نص العلامة');return}
+Object.assign(CFG,r);saveCfg();
+$('wmM').hidden=true;renderAll();toast('تم تطبيق العلامة المائية')
+};
+$('wmClr').onclick=()=>{CFG.wmText='';CFG.wmImg='';saveCfg();$('wmM').hidden=true;renderAll();toast('تمت إزالة العلامة')};
+$('wmX').onclick=()=>$('wmM').hidden=true;
+
+/* ---------- نطاق التصدير ---------- */
+let EXS='all';
+const pagesToExport=()=>EXS==='cur'?[S.pages[S.cur]].filter(p=>p&&hasContent(p)):S.pages.filter(hasContent);
+function syncScope(){
+[...$('exScope').children].forEach(b=>b.classList.toggle('on',b.dataset.v===EXS));
+const b=document.querySelector('#pMenu [data-act=scope]');
+if(b)b.textContent=EXS==='cur'?'🧾 النطاق: الورقة الحالية فقط':'🧾 النطاق: كل المستند'
+}
+$('exScope').onclick=e=>{const v=e.target.dataset.v;if(v){EXS=v;syncScope()}};
+$('exQ').oninput=e=>{CFG.q=+e.target.value;$('vExQ').textContent=CFG.q+'%';saveCfg()};
+
+/* ---------- حجم الصفحة لكل ورقة أو للمستند كله ---------- */
+let SZS='all';
+function applySize(k,land){
+if(SZS==='all'){
+if(k)S.page=k;
+if(land!=null)S.land=land;
+S.pages.forEach(p=>{delete p.page;delete p.land})
+}else{
+const pg=S.pages[S.cur];
+if(k)pg.page=k;
+if(land!=null)pg.land=land
+}
+}
+
+/* ---------- تنظيف وتصفية الصورة ---------- */
+function enhanceCanvas(c,strong){
+const w=c.width,h=c.height,g=c.getContext('2d',{willReadFrequently:true});
+const id=g.getImageData(0,0,w,h),d=id.data,n=w*h;
+const hist=new Uint32Array(256);
+for(let i=0;i<d.length;i+=4)hist[(d[i]*54+d[i+1]*183+d[i+2]*19)>>8]++;
+let acc=0,lo=0,hi=255;
+for(let v=0;v<256;v++){acc+=hist[v];if(acc>=n*.006){lo=v;break}}
+acc=0;
+for(let v=0;v<256;v++){acc+=hist[v];if(acc>=n*.994){hi=v;break}}
+if(hi-lo<70){lo=Math.max(0,lo-12);hi=Math.min(255,hi+12)}
+const gw=24,gh=Math.max(6,Math.round(24*h/w));
+const t=document.createElement('canvas');t.width=gw;t.height=gh;
+const tg=t.getContext('2d');tg.imageSmoothingQuality='high';tg.drawImage(c,0,0,gw,gh);
+const bc=document.createElement('canvas');bc.width=w;bc.height=h;
+const bg=bc.getContext('2d',{willReadFrequently:true});
+bg.imageSmoothingEnabled=true;bg.imageSmoothingQuality='high';bg.drawImage(t,0,0,w,h);
+const bd=bg.getImageData(0,0,w,h).data;
+let mean=0;
+for(let i=0;i<bd.length;i+=4)mean+=(bd[i]*54+bd[i+1]*183+bd[i+2]*19)>>8;
+mean/=n;
+const k=strong?.9:.6,sc=255/Math.max(1,hi-lo);
+const lut=new Uint8ClampedArray(256);
+for(let v=0;v<256;v++){let x=(v-lo)*sc;if(x>235)x=235+(x-235)*.45;lut[v]=x}
+for(let i=0;i<d.length;i+=4){
+const bl=((bd[i]*54+bd[i+1]*183+bd[i+2]*19)>>8)||1;
+let gain=1+k*(mean/bl-1);
+gain=gain<.7?.7:gain>1.45?1.45:gain;
+let r=d[i]*gain,gg=d[i+1]*gain,b=d[i+2]*gain;
+d[i]=lut[r>255?255:r|0];d[i+1]=lut[gg>255?255:gg|0];d[i+2]=lut[b>255?255:b|0]
+}
+g.putImageData(id,0,0);
+bc.width=bc.height=0;t.width=t.height=0
+}
+async function cleanSel(){
+const it=cs();if(!it||!it.imgId){toast('أضف صورة أولاً');return}
+toast('جارٍ تصفية الصورة…',0);await tick();
+try{
+const c=shrink(IM.get(it.imgId).el,2600);
+enhanceCanvas(c,CFG.camStrong);
+const b=await toB(c,.93);c.width=c.height=0;
+const n=await loadImage(URL.createObjectURL(b));
+$('toast').hidden=true;
+mut(x=>setImg(x,n));
+toast('تمت تصفية الصورة وإزالة الإضاءة الزائدة ✓')
+}catch(e){console.error(e);toast('تعذّرت التصفية')}
+}
+$('bClean').onclick=cleanSel;
+
+/* ---------- حجم / ضغط الصورة ---------- */
+let RS=null,RST=0;
+function openRs(){
+const it=cs();if(!it||!it.imgId){toast('أضف صورة أولاً');return}
+RS={it,im:IM.get(it.imgId),m:1920,q:85,blob:null};
+rsUI();rsCalc();
+$('rsM').hidden=false
+}
+function rsUI(){
+[...$('rsSeg').children].forEach(b=>b.classList.toggle('on',+b.dataset.m===RS.m));
+$('rsQ').value=RS.q;$('vRsQ').textContent=RS.q+'%'
+}
+async function rsCalc(){
+clearTimeout(RST);
+RST=setTimeout(async()=>{
+if(!RS)return;
+const el=RS.im.el,s=RS.m?Math.min(1,RS.m/Math.max(el.naturalWidth,el.naturalHeight)):1;
+const c=document.createElement('canvas');
+c.width=Math.round(el.naturalWidth*s);c.height=Math.round(el.naturalHeight*s);
+c.getContext('2d').drawImage(el,0,0,c.width,c.height);
+RS.blob=await toB(c,RS.q/100);
+$('rsInfo').textContent=`الأصلية ${el.naturalWidth}×${el.naturalHeight} ← الجديدة ${c.width}×${c.height} px — الحجم التقريبي ${fmtSize(RS.blob.size)}`;
+c.width=c.height=0
+},120)
+}
+$('rsSeg').onclick=e=>{const m=e.target.dataset.m;if(m!=null){RS.m=+m;rsUI();rsCalc()}};
+$('rsQ').oninput=e=>{RS.q=+e.target.value;rsUI();rsCalc()};
+$('rsX').onclick=()=>{RS=null;$('rsM').hidden=true};
+$('rsOk').onclick=async()=>{
+if(!RS||!RS.blob)return;
+const it=RS.it;
+const n=await loadImage(URL.createObjectURL(RS.blob));
+RS=null;$('rsM').hidden=true;
+const keep=S.sel;
+const f=findItem(it.id);
+if(f){setImg(f.it,n);S.sel=keep;commit();renderAll();toast('تم تغيير حجم الصورة')}
+};
+$('bResize').onclick=openRs;
+
+/* ---------- حفظ المشروع كملف على الجهاز ---------- */
+async function buildProjectFile(){
+if(typeof JSZip==='undefined')throw new Error('zip');
+const p=await exportProject();
+const z=new JSZip(),ids=Object.keys(p.images);
+z.file('project.json',JSON.stringify(Object.assign({},p,{images:ids})));
+for(const id of ids)z.file('images/'+id+'.img',p.images[id]);
+return await z.generateAsync({type:'blob',mimeType:'application/octet-stream',compression:'DEFLATE'})
+}
+async function openProjectFile(file){
+toast('جارٍ فتح ملف المشروع…',0);
+try{
+const z=await JSZip.loadAsync(file);
+const pj=JSON.parse(await z.file('project.json').async('string'));
+const images={};
+for(const id of pj.images||[]){
+const f=z.file('images/'+id+'.img');
+if(f)images[id]=new Blob([await f.async('arraybuffer')],{type:'image/jpeg'})
+}
+pj.images=images;
+await importProject(pj);
+HI.st=[];HI.i=-1;closePropsUI();commit();
+$('libM').hidden=true;$('toast').hidden=true;
+showEditor();toast('تم فتح المشروع')
+}catch(e){console.error(e);$('toast').hidden=true;toast('الملف ليس مشروعاً صالحاً')}
+}
+$('fiP').onchange=()=>{const f=$('fiP').files[0];if(f)openProjectFile(f)};
+async function saveProject(){
+let okDb=false,err1=null;
+toast('جارٍ حفظ المشروع…',0);
+await tick();
+try{
+if(!S.libId)S.libId=Date.now().toString(36);
+const p=await exportProject();
+let thumb='';
+try{const c=pageCanvas(S.pages[0],.9);thumb=c.toDataURL('image/jpeg',.6);c.width=c.height=0}catch(_){}
+await IDB.set('data','p:'+S.libId,p);
+await IDB.set('meta','p:'+S.libId,{t:'p',id:S.libId,name:S.name,date:Date.now(),thumb,n:S.pages.length});
+okDb=true
+}catch(e){err1=e;console.error(e)}
+let okFile=false;
+try{
+const blob=await buildProjectFile();
+const nm=(S.name||'project').replace(/[\\/:*?"<>|]/g,'_');
+okFile=await deliver([{name:nm+'-'+baseName().split('-').slice(-2).join('-')+'.mst',blob}],'save')
+}catch(e){console.error(e)}
+$('toast').hidden=true;
+if(okDb&&okFile)toast('تم حفظ المشروع في الجهاز وفي «المحفوظات» ✓',3500);
+else if(okDb)toast('حُفظ في «المحفوظات» داخل التطبيق ✓ (ملف الجهاز لم يُحفظ)',3800);
+else if(okFile)toast('حُفظ ملف المشروع في الجهاز ✓',3500);
+else toast('تعذّر حفظ المشروع'+(err1&&err1.message?': '+err1.message:''),4200)
+}
+
+/* ---------- Word قابل للتعديل: صور حرة + نصوص حقيقية ---------- */
+function itemCanvas(it,px){
+const c=document.createElement('canvas');
+c.width=Math.max(2,Math.round(it.w*px));c.height=Math.max(2,Math.round(it.h*px));
+const g=c.getContext('2d');
+g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
+drawItem(g,Object.assign({},it,{x:0,y:0,rot:0,shadow:'none'}),px);
+return c
+}
+async function buildDocx(pgs){
+if(typeof JSZip==='undefined')throw new Error('zip');
+const z=new JSZip(),E=36000,tw=56.6929,emu=v=>Math.round(v*E);
+const hdr='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+let rels='',body='',m=0,did=0,zi=251658240,lastSect='';
+const media=async(c,png)=>{
+const n=++m,ext=png?'png':'jpeg';
+const b=await blobOf(c,png?'image/png':'image/jpeg',CFG.q/100);
+z.file(`word/media/m${n}.${ext}`,await b.arrayBuffer());
+rels+=`<Relationship Id="rId${100+n}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/m${n}.${ext}"/>`;
+c.width=c.height=0;
+return 100+n
+};
+const rot=d=>Math.round((((d%360)+360)%360)*60000);
+const anchor=(name,x,y,w,h,behind,wrap,inner)=>{
+did++;zi++;
+return `<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="${zi}" behindDoc="${behind?1:0}" locked="0" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="page"><wp:posOffset>${emu(x)}</wp:posOffset></wp:positionH><wp:positionV relativeFrom="page"><wp:posOffset>${emu(y)}</wp:posOffset></wp:positionV><wp:extent cx="${emu(w)}" cy="${emu(h)}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>${wrap==='square'?'<wp:wrapSquare wrapText="bothSides"/>':'<wp:wrapNone/>'}<wp:docPr id="${did}" name="${escX(name)} ${did}"/><wp:cNvGraphicFramePr/>${inner}</wp:anchor></w:drawing></w:r>`
+};
+const picG=(rid,w,h,rd)=>`<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="img"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm rot="${rot(rd)}"><a:off x="0" y="0"/><a:ext cx="${emu(w)}" cy="${emu(h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>`;
+const txtG=it=>{
+const rtl=/[֐-ࣿ]/.test(it.text);
+let jc=it.al==='center'?'center':(it.al==='right'?'right':'left');
+if(rtl&&jc!=='center')jc=jc==='right'?'left':'right';
+const col=String(it.color||'#000000').replace('#','').toUpperCase().padStart(6,'0');
+const paras=String(it.text).split('\n').map(ln=>`<w:p><w:pPr>${rtl?'<w:bidi/>':''}<w:spacing w:before="0" w:after="0"/><w:jc w:val="${jc}"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Tahoma"/>${it.bold?'<w:b/><w:bCs/>':''}${it.it?'<w:i/><w:iCs/>':''}<w:color w:val="${col}"/><w:sz w:val="${Math.round(it.fs*2)}"/><w:szCs w:val="${Math.round(it.fs*2)}"/>${it.ul?'<w:u w:val="single"/>':''}${rtl?'<w:rtl/>':''}</w:rPr><w:t xml:space="preserve">${escX(ln)}</w:t></w:r></w:p>`).join('');
+return `<a:graphic><a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"><wps:wsp><wps:cNvSpPr txBox="1"/><wps:spPr><a:xfrm rot="${rot(it.rot)}"><a:off x="0" y="0"/><a:ext cx="${emu(it.w)}" cy="${emu(it.h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></wps:spPr><wps:txbx><w:txbxContent>${paras}</w:txbxContent></wps:txbx><wps:bodyPr rot="0" vert="horz" wrap="square" lIns="43200" tIns="43200" rIns="43200" bIns="43200" anchor="t" anchorCtr="0"><a:noAutofit/></wps:bodyPr></wps:wsp></a:graphicData></a:graphic>`
+};
+for(let i=0;i<pgs.length;i++){
+const pg=pgs[i],[W,H]=pgDims(pg);
+let runs='';
+if(wmActive()){
+const px=120/25.4,c=document.createElement('canvas');
+c.width=Math.round(W*px);c.height=Math.round(H*px);
+drawWm(c.getContext('2d'),W,H,px);
+runs+=anchor('watermark',0,0,W,H,true,'none',picG(await media(c,true),W,H,0))
+}
+for(const it of zs(pg.items)){
+if(it.kind==='img'&&!it.imgId)continue;
+const beh=it.layer==='behind';
+if(it.kind==='text')runs+=anchor('text',it.x,it.y,it.w,it.h,beh,it.wrap,txtG(it));
+else{
+const c=itemCanvas(it,200/25.4),rid=await media(c,it.kind==='qr');
+runs+=anchor(it.kind==='qr'?'qr':'doc',it.x,it.y,it.w,it.h,beh,it.wrap,picG(rid,it.w,it.h,it.rot))
+}
+}
+const sect=`<w:sectPr><w:pgSz w:w="${Math.round(W*tw)}" w:h="${Math.round(H*tw)}"${W>H?' w:orient="landscape"':''}/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="360" w:footer="360" w:gutter="0"/></w:sectPr>`;
+if(i<pgs.length-1)body+=`<w:p><w:pPr>${sect}</w:pPr>${runs}</w:p>`;
+else{body+=`<w:p>${runs}</w:p>`;lastSect=sect}
+}
+z.file('[Content_Types].xml',hdr+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+z.file('_rels/.rels',hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+z.file('word/_rels/document.xml.rels',hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels+'</Relationships>');
+z.file('word/document.xml',hdr+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"><w:body>'+body+lastSect+'</w:body></w:document>');
+return await z.generateAsync({type:'blob',mimeType:MIME.docx,compression:'DEFLATE'})
+}
+
+/* ================================================================
+   الجزء B: الباركود المتقدم، القص بعدسة، القوالب
+   ================================================================ */
+const rnOkOrig=$('rnOk').onclick;let RNH=null;
+$('rnOk').onclick=e=>{if(RNH){const h=RNH;RNH=null;h()}else rnOkOrig(e)};
+$('rnX').addEventListener('click',()=>{RNH=null});
+const QRSTY=()=>({fg:'#000000',bg:'#ffffff',dots:'sq',frame:'none',logo:'',logoImg:null,bgImg:null,ec:'M'});
+const wesc=s=>String(s).replace(/([\\;,":])/g,'\\$1');
+const enc=encodeURIComponent;
+const QT={
+text:{l:'نص / أي شيء',f:[['v','اكتب أي نص أو معلومة',1]],mk:v=>v.v||''},
+url:{l:'رابط',f:[['v','https://example.com',0,'ltr']],mk:v=>{const s=(v.v||'').trim();return!s?'':/^[a-z][a-z0-9+.-]*:/i.test(s)?s:'https://'+s}},
+tel:{l:'اتصال',f:[['v','رقم الهاتف',0,'ltr']],mk:v=>v.v?'tel:'+v.v.replace(/\s+/g,''):''},
+sms:{l:'رسالة',f:[['v','رقم الهاتف',0,'ltr'],['b','نص الرسالة',1]],mk:v=>v.v?'SMSTO:'+v.v+':'+(v.b||''):''},
+mail:{l:'بريد',f:[['v','البريد الإلكتروني',0,'ltr'],['s','الموضوع'],['b','الرسالة',1]],mk:v=>v.v?`mailto:${v.v}?subject=${enc(v.s||'')}&body=${enc(v.b||'')}`:''},
+wifi:{l:'واي فاي',f:[['s','اسم الشبكة',0,'ltr'],['p','كلمة المرور',0,'ltr']],mk:v=>v.s?`WIFI:T:WPA;S:${wesc(v.s)};P:${wesc(v.p||'')};;`:''},
+geo:{l:'موقع',f:[['a','خط العرض مثال 33.3152',0,'ltr'],['o','خط الطول مثال 44.3661',0,'ltr']],mk:v=>v.a&&v.o?`geo:${v.a},${v.o}`:''},
+card:{l:'بطاقة اتصال',f:[['n','الاسم'],['t','الهاتف',0,'ltr'],['e','البريد',0,'ltr'],['c','الجهة'],['j','المسمى الوظيفي'],['u','الموقع',0,'ltr']],
+mk:v=>v.n?['BEGIN:VCARD','VERSION:3.0','FN:'+v.n,v.c&&'ORG:'+v.c,v.j&&'TITLE:'+v.j,v.t&&'TEL:'+v.t,v.e&&'EMAIL:'+v.e,v.u&&'URL:'+v.u,'END:VCARD'].filter(Boolean).join('\n'):''},
+file:{l:'ملف نصي',custom:'file',mk:v=>v.v||''},
+img:{l:'صورة مصغّرة',custom:'img',mk:v=>v.v||''}
+};
+const LOGOS=['🪪','📄','✔️','⭐','❤️','📞','📍','🌐','📧','🛡️','🏛️','🎓','🏠','💼','🚗','⚕️'];
+let QM={it:null,type:'text',vals:{},sty:QRSTY()};
+const qrEcOf=o=>(o.logo||o.logoImg)?'H':(o.ec||'M');
+
+const QRC=new Map();
+function qrMatrix(text,ec){
+ec=ec||'M';
+const key=ec+'|'+text;
+if(QRC.has(key))return QRC.get(key);
+if(typeof qrcode==='undefined')throw new Error('qrlib');
+try{if(qrcode.stringToBytesFuncs&&qrcode.stringToBytesFuncs['UTF-8'])qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8']}catch(_){}
+const q=qrcode(0,ec);
+q.addData(text,'Byte');
+q.make();
+const n=q.getModuleCount(),m=[];
+for(let r=0;r<n;r++){const row=[];for(let c=0;c<n;c++)row.push(q.isDark(r,c));m.push(row)}
+if(QRC.size>40)QRC.clear();
+QRC.set(key,m);
+return m
+}
+function qrOpts(it){
+const e=id=>id&&IM.get(id)?IM.get(id).el:null;
+return{fg:it.fg,bg:it.bg,dots:it.dots,frame:it.frame,logo:it.logo,logoEl:e(it.logoImg),bgEl:e(it.bgImg)}
+}
+function drawQR(g,m,x,y,size,o){
+o=o||{};
+const fg=o.fg||'#000000',bg=o.bg||'#ffffff',n=m.length;
+const fr=o.frame&&o.frame!=='none'?o.frame:'none',pad=fr==='none'?2:4,u=size/(n+2*pad);
+g.save();
+g.fillStyle=bg;g.fillRect(x,y,size,size);
+if(o.bgEl){
+const iw=o.bgEl.naturalWidth,ih=o.bgEl.naturalHeight,sc=Math.max(size/iw,size/ih),sw=size/sc,sh=size/sc;
+g.drawImage(o.bgEl,(iw-sw)/2,(ih-sh)/2,sw,sh,x,y,size,size);
+g.fillStyle='rgba(255,255,255,.38)';
+g.fillRect(x+u*(pad-.6),y+u*(pad-.6),u*(n+1.2),u*(n+1.2))
+}
+g.fillStyle=fg;
+const hasLogo=!!(o.logo||o.logoEl),clear=hasLogo?Math.round(n*.24):0,c0=Math.floor((n-clear)/2),c1=c0+clear;
+const fnd=(r,c)=>(r<7&&c<7)||(r<7&&c>=n-7)||(r>=n-7&&c<7);
+for(let r=0;r<n;r++)for(let c=0;c<n;c++){
+if(!m[r][c])continue;
+if(hasLogo&&r>=c0&&r<c1&&c>=c0&&c<c1)continue;
+const px=x+(c+pad)*u,py=y+(r+pad)*u;
+if(o.dots==='round'&&!fnd(r,c)){g.beginPath();g.arc(px+u/2,py+u/2,u*.47,0,6.2832);g.fill()}
+else g.fillRect(px,py,u+.4,u+.4)
+}
+if(hasLogo){
+const cs2=u*clear,cx=x+size/2-cs2/2,cy=y+size/2-cs2/2;
+g.fillStyle=bg;
+g.beginPath();
+if(g.roundRect)g.roundRect(cx,cy,cs2,cs2,cs2*.2);else g.rect(cx,cy,cs2,cs2);
+g.fill();
+if(o.logoEl){
+const iw=o.logoEl.naturalWidth,ih=o.logoEl.naturalHeight,s=Math.min(cs2*.84/iw,cs2*.84/ih);
+g.drawImage(o.logoEl,x+size/2-iw*s/2,y+size/2-ih*s/2,iw*s,ih*s)
+}else{
+g.font=`${cs2*.66}px "Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+g.textAlign='center';g.textBaseline='middle';g.fillStyle='#000';
+g.fillText(o.logo,x+size/2,y+size/2+cs2*.04)
+}
+}
+if(fr!=='none'){
+g.strokeStyle=fg;g.lineCap='round';
+if(fr==='round'){g.lineWidth=u*.6;g.beginPath();if(g.roundRect)g.roundRect(x+u*.9,y+u*.9,size-u*1.8,size-u*1.8,u*3);else g.rect(x+u*.9,y+u*.9,size-u*1.8,size-u*1.8);g.stroke()}
+else if(fr==='thick'){g.lineWidth=u*1.1;g.strokeRect(x+u*.7,y+u*.7,size-u*1.4,size-u*1.4)}
+else if(fr==='corners'){
+g.lineWidth=u*.8;const L=u*5,a=u*.9,b=size-u*.9;
+[[a,a,1,1],[b,a,-1,1],[a,b,1,-1],[b,b,-1,-1]].forEach(([px,py,sx,sy])=>{g.beginPath();g.moveTo(px+sx*L,py);g.lineTo(px,py);g.lineTo(px,py+sy*L);g.stroke()})
+}
+}
+g.restore()
+}
+function qrEnsure(){QM.vals[QM.type]=QM.vals[QM.type]||{}}
+function qrBuildForm(){
+$('qTypes').innerHTML=Object.keys(QT).map(k=>`<button data-t="${k}" class="${k===QM.type?'on':''}">${QT[k].l}</button>`).join('');
+qrEnsure();
+const T=QT[QM.type],v=QM.vals[QM.type];
+let h='';
+if(T.custom==='file')h=`<button class="sb" id="qPickF" style="margin-top:8px">📄 اختيار ملف نصي (txt / csv / json / vcf)</button><div class="note">${v.name?escX(v.name)+' — '+(v.v||'').length+' حرف':'يُخزَّن محتوى الملف النصي داخل الباركود (حتى نحو 2000 حرف)'}</div>`;
+else if(T.custom==='img')h=`<button class="sb" id="qPickI" style="margin-top:8px">🖼 اختيار صورة (تُصغَّر جداً لتناسب الباركود)</button><div class="note">${v.v?'صورة مصغّرة '+v.v.length+' بايت':'سعة الباركود صغيرة، لذلك تُحفظ صورة مصغّرة جداً. للصور الكاملة استخدم «رابط».'}</div>`;
+else h=T.f.map(([k,p,ml,dir])=>ml?`<textarea data-k="${k}" placeholder="${p}"${dir?` dir="${dir}"`:''}>${escX(v[k]||'')}</textarea>`:`<input type="text" data-k="${k}" placeholder="${p}"${dir?` dir="${dir}"`:''} value="${escX(v[k]||'')}">`).join('');
+$('qFields').innerHTML=h
+}
+function qrStyUI(){
+const s=QM.sty;
+$('qFg').value=s.fg;$('qBg').value=s.bg;
+[...$('qDots').children].forEach(b=>b.classList.toggle('on',b.dataset.v===s.dots));
+$('qFrame').value=s.frame;
+$('qLogos').innerHTML=`<button data-l="" class="${!s.logo&&!s.logoImg?'on':''}">∅</button>`+LOGOS.map(l=>`<button data-l="${l}" class="${s.logo===l&&!s.logoImg?'on':''}">${l}</button>`).join('');
+$('qLogoImg').textContent=s.logoImg?'🖼 شعار مرفوع ✓':'🖼 شعار من صورة';
+$('qBgImg').textContent=s.bgImg?'🖼 خلفية مرفوعة ✓':'🖼 صورة للخلفية'
+}
+function qrPayload(){return QT[QM.type].mk(QM.vals[QM.type]||{})}
+function qrEcNow(){const s=QM.sty;return(s.logo||s.logoImg)?'H':(QM.type==='img'||QM.type==='file'?'L':'M')}
+function qrPrev(){
+const c=$('qrPrev'),g=c.getContext('2d'),p=qrPayload();
+if(!p.trim()){c.width=c.height=10;g.fillStyle='#fff';g.fillRect(0,0,10,10);$('qNote').textContent='';return true}
+try{
+const m=qrMatrix(p,qrEcNow()),s=(m.length+8)*6;
+c.width=c.height=s;
+drawQR(g,m,0,0,s,qrOpts(Object.assign({},QM.sty)));
+$('qNote').textContent=`حجم المحتوى ${new TextEncoder().encode(p).length} بايت`;
+return true
+}catch(e){
+c.width=c.height=10;g.fillStyle='#fff';g.fillRect(0,0,10,10);
+$('qNote').textContent=e.message==='qrlib'?'مكتبة الباركود غير متوفرة':'المحتوى أطول من سعة الباركود';
+return e.message==='qrlib'?'lib':'long'
+}
+}
+function openQr(it){
+if(it&&it.kind==='qr'){
+QM={it,type:it.qt||'text',vals:JSON.parse(JSON.stringify(it.qv||{text:{v:it.data}})),sty:Object.assign(QRSTY(),{fg:it.fg,bg:it.bg,dots:it.dots,frame:it.frame,logo:it.logo,logoImg:it.logoImg,bgImg:it.bgImg,ec:it.ec})};
+if(!QT[QM.type])QM.type='text'
+}else QM={it:null,type:'text',vals:{},sty:QRSTY()};
+qrBuildForm();qrStyUI();qrPrev();
+$('qrM').hidden=false
+}
+$('qTypes').onclick=e=>{const t=e.target.dataset.t;if(t){QM.type=t;qrBuildForm();qrPrev()}};
+$('qFields').oninput=e=>{const k=e.target.dataset.k;if(k){qrEnsure();QM.vals[QM.type][k]=e.target.value;qrPrev()}};
+$('qFields').onclick=e=>{
+if(e.target.id==='qPickF'){$('fiQ').accept='.txt,.csv,.json,.vcf,.md,text/*';$('fiQ').dataset.k='f';$('fiQ').value='';$('fiQ').click()}
+if(e.target.id==='qPickI'){$('fiQ').accept='image/*';$('fiQ').dataset.k='i';$('fiQ').value='';$('fiQ').click()}
+};
+$('fiQ').onchange=async()=>{
+const f=$('fiQ').files[0];if(!f)return;
+const kk=$('fiQ').dataset.k;
+if(kk==='slogoImg'||kk==='sbgImg'){
+try{
+const im=await loadImage(URL.createObjectURL(f));
+im.id=nid();IM.set(im.id,im);
+const key=kk.slice(1);
+QM.sty[key]=im.id;if(key==='logoImg')QM.sty.logo='';
+qrStyUI();qrPrev()
+}catch(_){toast('تعذّر فتح الصورة')}
+return
+}
+qrEnsure();const v=QM.vals[QM.type];
+try{
+if($('fiQ').dataset.k==='f'){
+let t=await f.text();
+if(t.length>2000){t=t.slice(0,2000);toast('قُصّ الملف إلى 2000 حرف ليناسب الباركود')}
+v.v=t;v.name=f.name
+}else{
+const el=await mkImgEl(URL.createObjectURL(f));
+let out='';
+for(const [sz,q] of [[72,.5],[56,.45],[48,.4],[40,.35],[32,.3]]){
+const s=Math.min(1,sz/Math.max(el.naturalWidth,el.naturalHeight)),c=document.createElement('canvas');
+c.width=Math.max(1,Math.round(el.naturalWidth*s));c.height=Math.max(1,Math.round(el.naturalHeight*s));
+c.getContext('2d').drawImage(el,0,0,c.width,c.height);
+out=c.toDataURL('image/jpeg',q);
+if(out.length<=2100)break
+}
+v.v=out;v.name=f.name
+}
+}catch(_){toast('تعذّرت قراءة الملف')}
+qrBuildForm();qrPrev()
+};
+$('qFg').oninput=e=>{QM.sty.fg=e.target.value;qrPrev()};
+$('qBg').oninput=e=>{QM.sty.bg=e.target.value;qrPrev()};
+$('qDots').onclick=e=>{const v=e.target.dataset.v;if(v){QM.sty.dots=v;qrStyUI();qrPrev()}};
+$('qFrame').onchange=e=>{QM.sty.frame=e.target.value;qrPrev()};
+$('qLogos').onclick=e=>{const b=e.target.closest('button');if(!b)return;QM.sty.logo=b.dataset.l;QM.sty.logoImg=null;qrStyUI();qrPrev()};
+function qrPickImg(key){$('fiQ').accept='image/*';$('fiQ').dataset.k='s'+key;$('fiQ').value='';$('fiQ').click()}
+$('qLogoImg').onclick=()=>qrPickImg('logoImg');
+$('qBgImg').onclick=()=>qrPickImg('bgImg');
+$('qBgClr').onclick=()=>{QM.sty.bgImg=null;qrStyUI();qrPrev()};
+$('qX').onclick=()=>$('qrM').hidden=true;
+$('qrOk').onclick=()=>{
+const p=qrPayload();
+if(!p.trim()){toast('أدخل المحتوى أولاً');return}
+const r=qrPrev();
+if(r==='lib'){toast('مكتبة الباركود غير متوفرة');return}
+if(r==='long'){toast('المحتوى أطول من سعة الباركود');return}
+const cur=QM.vals[QM.type]||{};
+const fields=Object.assign({data:p,qt:QM.type,qv:{[QM.type]:cur}},QM.sty,{ec:qrEcNow()});
+if(QM.it){
+const f=findItem(QM.it.id);
+if(f)Object.assign(f.it,fields);
+S.sel=QM.it.id;S.ptab='qr';
+commit();renderAll();toast('تم تحديث الباركود')
+}else{
+const it=mkQrItem(p,fields);
+const sp=placeGroup([it],S.cur);
+S.sel=it.id;S.cur=sp.p;S.ptab='qr';
+commit();renderAll();goPage(sp.p,false)
+}
+$('qrM').hidden=true
+};
+$('qEdit').onclick=()=>{const it=cs();if(it&&it.kind==='qr')openQr(it)};
+
+/* ================= القص بعدسة مكبّرة وتأطير تلقائي ================= */
+function loupe(k,show){
+const L=$('loupe');
+if(!show||!C){L.hidden=true;return}
+const cim=$('cimg'),b=cim.getBoundingClientRect(),r=C.r;
+const px=k.includes('l')?r.x:k.includes('r')?r.x+r.w:r.x+r.w/2;
+const py=k.includes('t')?r.y:k.includes('b')?r.y+r.h:r.y+r.h/2;
+const nw=cim.naturalWidth,nh=cim.naturalHeight,span=44*(nw/b.width);
+const cv=L.firstElementChild,g=cv.getContext('2d');
+g.fillStyle='#000';g.fillRect(0,0,cv.width,cv.height);
+g.drawImage(cim,px*nw-span/2,py*nh-span/2,span,span,0,0,cv.width,cv.height);
+g.strokeStyle='#ff3b30';g.lineWidth=2;
+g.beginPath();g.moveTo(cv.width/2,0);g.lineTo(cv.width/2,cv.height);g.moveTo(0,cv.height/2);g.lineTo(cv.width,cv.height/2);g.stroke();
+L.hidden=false;
+const mx=window._cpx||0;
+L.style.left=mx>innerWidth/2?'14px':'auto';
+L.style.right=mx>innerWidth/2?'auto':'14px'
+}
+$('cAuto').onclick=()=>{if(!C)return;C.r=detect($('cimg'));drawC();toast('تم التأطير تلقائياً — عدّل الحواف يدوياً إن شئت')};
+$('cFull').onclick=()=>{if(!C)return;C.r={x:0,y:0,w:1,h:1};drawC()};
+
+/* ================= القوالب ================= */
+const TPL_B=[
+{n:'هوية وطنية — وجه وظهر',s:[[0,62.2,40],[0,62.2,104]]},
+{n:'هويتان: وجه وظهر (4 خانات)',s:[[0,14.4,25],[0,110,25],[0,14.4,89],[0,110,89]]},
+{n:'جواز سفر + 4 صور شخصية',s:[[7,15,20],[12,115,20],[12,155,20],[12,115,72],[12,155,72]]},
+{n:'ملف توظيف',s:[[0,14.4,15],[0,110,15],[4,14.4,79],[4,110,79],[5,14.4,150],[12,110,150],[12,150,150]]},
+{n:'شهادة جنسية + بطاقة سكن',s:[[2,22.5,20],[4,60,230]]},
+{n:'8 صور شخصية 3.5×4.5',s:[0,1].flatMap(r=>[0,1,2,3].map(c=>[12,17+c*47,30+r*55]))},
+{n:'مستند A4 كامل',s:[[11,0,0]]},
+{n:'عقد زواج / شهادة ولادة A4',s:[[9,0,0]]}
+];
+let TPT='b';
+function tplApplySpec(list,W,H,fromFrac){
+const g0=[];
+const pg=S.pages[S.cur];
+const base=hasContent(pg)||pg.items.length?(()=>{S.pages.push({items:[]});return S.pages.length-1})():S.cur;
+S.cur=base;
+const P=S.pages[base];
+const[PW,PH]=pgDims(P);
+list.forEach(sp=>{
+const gid=nid();
+let it;
+if(sp.kind==='text'){it=mkTextItem();Object.assign(it,sp.props||{})}
+else if(sp.kind==='qr'){it=mkQrItem(sp.props.data,sp.props)}
+else{
+const size=sp.size,photo=DOCS[size][3]==='صور شخصية';
+it=mkImgItem(gid,0,false,size,'side',photo);
+if(sp.cu)it.cu=sp.cu;
+it.lbl=DOCS[size][0];
+Object.assign(it,sp.props||{})
+}
+it.g=gid;
+if(fromFrac){it.x=sp.fx*PW;it.y=sp.fy*PH;it.w=sp.fw*PW;it.h=sp.fh*PH;it.rot=sp.rot||0}
+else{
+const sc=Math.min(1,PW/210);
+it.x=sp.x*sc+(PW-210*sc)/2;it.y=sp.y*sc;
+if(sp.kind!=='text'&&sp.kind!=='qr'){const d=sp.size===CUS?sp.cu:[DOCS[sp.size][1],DOCS[sp.size][2]];it.w=d[0]*sc;it.h=d[1]*sc}
+}
+if(it.kind==='img'){it.bw=it.w;it.bh=it.h;it.autoFit=false}
+it.auto=false;
+P.items.push(it)
+});
+S.sel=null;
+commit();renderAll();goPage(base,false)
+}
+function tplFromBuiltin(t){
+tplApplySpec(t.s.map(([s,x,y])=>({size:s,x,y})),210,297,false)
+}
+async function tplMeta(){try{return(await IDB.all('meta')).filter(x=>x.t==='t').sort((a,b)=>b.date-a.date)}catch(_){return[]}}
+function miniPrev(cv,items){
+const g=cv.getContext('2d');cv.width=112;cv.height=160;
+g.fillStyle='#fff';g.fillRect(0,0,112,160);
+items.forEach(i=>{g.fillStyle=i.t==='text'?'#fde6a8':i.t==='qr'?'#cfd8ff':'#bfe3cf';g.strokeStyle='#1f7a4d';g.fillRect(i.x*112,i.y*160,i.w*112,i.h*160);g.strokeRect(i.x*112,i.y*160,i.w*112,i.h*160)})
+}
+async function tplRender(){
+[...$('tplTabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===TPT));
+const box=$('tplList');box.innerHTML='';
+if(TPT==='b'){
+TPL_B.forEach((t,i)=>{
+const d=document.createElement('div');d.className='tpl';
+d.innerHTML=`<canvas></canvas><div class="nf"><b>${t.n}</b><small>${t.s.length} خانة</small></div><div class="ac"><button data-a="use" data-i="${i}">استخدام</button></div>`;
+miniPrev(d.querySelector('canvas'),t.s.map(([s,x,y])=>({x:x/210,y:y/297,w:DOCS[s][1]/210,h:DOCS[s][2]/297})));
+box.appendChild(d)
+});
+return
+}
+const list=await tplMeta();
+if(!list.length){box.innerHTML='<div class="emp">لا توجد قوالب محفوظة بعد. رتّب ورقة ثم اضغط «حفظ الورقة الحالية كقالب».</div>';return}
+list.forEach(m=>{
+const d=document.createElement('div');d.className='tpl';
+d.innerHTML=`<canvas></canvas><div class="nf"><b>${escX(m.name)}</b><small>${m.n} عنصر</small></div><div class="ac"><button data-a="use" data-id="${m.id}">استخدام</button><button data-a="upd" data-id="${m.id}">تحديث من الورقة</button><button data-a="ren" data-id="${m.id}">اسم</button><button class="red" data-a="del" data-id="${m.id}">حذف</button></div>`;
+miniPrev(d.querySelector('canvas'),m.prev||[]);
+box.appendChild(d)
+})
+}
+function openTpl(){$('tplM').hidden=false;tplRender()}
+$('tplX').onclick=()=>$('tplM').hidden=true;
+$('tplTabs').onclick=e=>{const t=e.target.dataset.t;if(t){TPT=t;tplRender()}};
+function snapTemplate(){
+const pg=S.pages[S.cur],[W,H]=pgDims(pg);
+const items=pg.items.map(it=>({fx:it.x/W,fy:it.y/H,fw:it.w/W,fh:it.h/H,rot:it.rot,kind:it.kind,size:it.kind==='img'?it.size:undefined,cu:it.kind==='img'&&it.size===CUS?it.cu:undefined,
+props:it.kind==='text'?{text:it.text,color:it.color,fs:it.fs,bold:it.bold,it:it.it,ul:it.ul,al:it.al}:it.kind==='qr'?{data:it.data,fg:it.fg,bg:it.bg,dots:it.dots,frame:it.frame,logo:it.logo,ec:it.ec,qt:it.qt,qv:it.qv}:{r:it.r,shadow:it.shadow,layer:it.layer}}));
+const prev=pg.items.map(it=>({x:it.x/W,y:it.y/H,w:it.w/W,h:it.h/H,t:it.kind}));
+return{items,prev}
+}
+$('tplSave').onclick=()=>{
+if(!S.pages[S.cur].items.length){toast('رتّب بعض الخانات في الورقة أولاً');return}
+$('rnT').value='قالب '+new Date().toLocaleDateString('ar-IQ');
+$('rnM').hidden=false;
+RNH=async()=>{
+const name=$('rnT').value.trim()||'قالب';
+$('rnM').hidden=true;
+const id=Date.now().toString(36),s=snapTemplate();
+await IDB.set('data','t:'+id,s);
+await IDB.set('meta','t:'+id,{t:'t',id,name,date:Date.now(),n:s.items.length,prev:s.prev});
+TPT='u';tplRender();toast('تم حفظ القالب ✓')
+}
+};
+$('tplList').onclick=async e=>{
+const b=e.target.closest('button');if(!b)return;
+const a=b.dataset.a;
+if(TPT==='b'){tplFromBuiltin(TPL_B[+b.dataset.i]);$('tplM').hidden=true;toast('تم تطبيق القالب — اضغط على أي خانة لإضافة الصورة');return}
+const id=b.dataset.id,key='t:'+id;
+if(a==='use'){const d=await IDB.get('data',key);if(!d)return;tplApplySpec(d.items,0,0,true);$('tplM').hidden=true;toast('تم تطبيق القالب')}
+else if(a==='upd'){
+if(!S.pages[S.cur].items.length){toast('الورقة الحالية فارغة');return}
+ask('استبدال محتوى هذا القالب بترتيب الورقة الحالية؟',async()=>{const s=snapTemplate(),m=(await tplMeta()).find(x=>x.id===id);await IDB.set('data',key,s);await IDB.set('meta',key,Object.assign({},m,{n:s.items.length,prev:s.prev,date:Date.now()}));tplRender();toast('تم تحديث القالب')})
+}else if(a==='ren'){
+const m=(await tplMeta()).find(x=>x.id===id);
+$('rnT').value=m.name;$('rnM').hidden=false;
+RNH=async()=>{const name=$('rnT').value.trim()||m.name;$('rnM').hidden=true;await IDB.set('meta',key,Object.assign({},m,{name}));tplRender()}
+}else if(a==='del')ask('حذف هذا القالب؟',async()=>{await IDB.del('data',key);await IDB.del('meta',key);tplRender()})
+};
+
+/* ================================================================
+   الجزء C: الكاميرا، مسح المستندات، قراءة الباركود، NFC
+   ================================================================ */
+const CAM={s:null,tr:null,mode:'doc',opts:{},auto:true,fm:0,face:'environment',cnt:0,st:0,last:null,shotR:null,tm:0,busy:false,ticking:false,need:false,tOn:false,tmpC:null,tmpC2:null,bright:128};
+const iou=(a,b)=>{
+const x0=Math.max(a.x,b.x),y0=Math.max(a.y,b.y),x1=Math.min(a.x+a.w,b.x+b.w),y1=Math.min(a.y+a.h,b.y+b.h);
+const i=Math.max(0,x1-x0)*Math.max(0,y1-y0);
+return i/(a.w*a.h+b.w*b.h-i||1)
+};
+let BD=null;
+async function detectCode(src,w,h){
+try{
+if(window.BarcodeDetector){
+BD=BD||new BarcodeDetector();
+const r=await BD.detect(src);
+if(r&&r.length&&r[0].rawValue)return r[0].rawValue
+}
+}catch(_){}
+if(typeof jsQR!=='undefined'){
+const c=CAM.tmpC2||(CAM.tmpC2=document.createElement('canvas'));
+const s=Math.min(1,720/Math.max(w,h));
+c.width=Math.round(w*s);c.height=Math.round(h*s);
+const g=c.getContext('2d',{willReadFrequently:true});
+g.drawImage(src,0,0,c.width,c.height);
+const id=g.getImageData(0,0,c.width,c.height);
+const q=jsQR(id.data,id.width,id.height,{inversionAttempts:'attemptBoth'});
+if(q&&q.data)return q.data
+}
+return null
+}
+async function camOpen(mode,opts){
+CAM.mode=mode;CAM.opts=opts||{};CAM.cnt=0;CAM.st=0;CAM.last=null;CAM.need=false;
+CAM.auto=mode==='code'?true:!!CFG.camAuto;
+$('camT').textContent=mode==='code'?'مسح باركود':CAM.opts.scan?'مسح مستند':'كاميرا المستمسكات';
+$('camAu').hidden=mode==='code';$('camSh').hidden=mode==='code';$('camN').hidden=true;
+$('camAu').classList.toggle('on',CAM.auto);
+$('camFl').textContent=['🔦 بدون','🔦 مفعّل','🔦 تلقائي'][CAM.fm];
+$('camH').textContent='';
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+toast('الكاميرا المباشرة غير متاحة، اختر صورة من الجهاز');
+galPick(mode,opts);return
+}
+$('camM').hidden=false;
+await camStart()
+}
+async function camStart(){
+camStop();
+try{
+CAM.s=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:CAM.face},width:{ideal:1920},height:{ideal:1080}}});
+}catch(e){
+console.warn(e);camClose();
+toast('تعذّر فتح الكاميرا — اسمح للتطبيق بالوصول للكاميرا من إعدادات الهاتف');
+return
+}
+const v=$('camV');
+v.srcObject=CAM.s;
+try{await v.play()}catch(_){}
+CAM.tr=CAM.s.getVideoTracks()[0];
+try{await CAM.tr.applyConstraints({advanced:[{focusMode:'continuous'}]})}catch(_){}
+CAM.tOn=false;
+if(CAM.fm===1)camTorch(true);
+clearInterval(CAM.tm);
+CAM.tm=setInterval(camTick,CAM.mode==='code'?220:170)
+}
+function camStop(){
+clearInterval(CAM.tm);
+if(CAM.s){CAM.s.getTracks().forEach(t=>t.stop());CAM.s=null}
+CAM.tr=null;CAM.tOn=false
+}
+function camClose(){
+camStop();
+$('camM').hidden=true;
+const o=$('camO');o.getContext('2d').clearRect(0,0,o.width,o.height);
+if(CAM.mode!=='code'&&CAM.cnt)toast(`تمت إضافة ${CAM.cnt} مستند`)
+}
+async function camTorch(on){
+if(!CAM.tr||CAM.tOn===on)return;
+CAM.tOn=on;
+try{await CAM.tr.applyConstraints({advanced:[{torch:on}]})}
+catch(e){CAM.tOn=!on;if(CAM.fm===1)toast('الفلاش غير مدعوم في هذا الجهاز')}
+}
+function camFlash(){const f=$('camF');f.style.opacity=.85;setTimeout(()=>f.style.opacity=0,120)}
+async function camTick(){
+if(CAM.busy||CAM.ticking||$('camM').hidden)return;
+CAM.ticking=true;
+try{
+const v=$('camV');
+if(!v.videoWidth)return;
+const vw=v.videoWidth,vh=v.videoHeight;
+if(CAM.mode==='code'){
+const t=await detectCode(v,vw,vh);
+if(t){
+try{navigator.vibrate&&navigator.vibrate(60)}catch(_){}
+const cb=CAM.opts.cb;camClose();cb&&cb(t)
+}
+return
+}
+const sw=220,sh=Math.max(8,Math.round(sw*vh/vw));
+const c=CAM.tmpC||(CAM.tmpC=document.createElement('canvas'));
+c.width=sw;c.height=sh;
+const g=c.getContext('2d',{willReadFrequently:true});
+g.drawImage(v,0,0,sw,sh);
+const d=g.getImageData(0,0,sw,sh).data;
+let s=0,n=0;
+for(let i=0;i<d.length;i+=16){s+=d[i]*.3+d[i+1]*.59+d[i+2]*.11;n++}
+CAM.bright=s/n;
+if(CAM.fm===2)camTorch(CAM.bright<70);
+const r=detect(c);
+const area=r.w*r.h;
+const ok=r.found&&area>.18&&!(r.w>.97&&r.h>.97);
+if(CAM.need&&(!ok||(CAM.shotR&&iou(CAM.shotR,r)<.6)))CAM.need=false;
+if(ok&&CAM.last&&iou(CAM.last,r)>.9)CAM.st++;else CAM.st=ok?1:0;
+CAM.last=ok?r:null;
+const o=$('camO'),cw=o.clientWidth,ch=o.clientHeight;
+if(o.width!==cw)o.width=cw;if(o.height!==ch)o.height=ch;
+const og=o.getContext('2d');og.clearRect(0,0,cw,ch);
+const k=Math.min(cw/vw,ch/vh),dw=vw*k,dh=vh*k,ox=(cw-dw)/2,oy=(ch-dh)/2;
+if(ok){
+const x=ox+r.x*dw,y=oy+r.y*dh,w=r.w*dw,h=r.h*dh,pr=Math.min(1,CAM.st/7);
+og.lineWidth=4;og.strokeStyle=pr>=1?'#34c759':'#ffd60a';
+og.fillStyle=pr>=1?'rgba(52,199,89,.14)':'rgba(255,214,10,.1)';
+og.beginPath();if(og.roundRect)og.roundRect(x,y,w,h,14);else og.rect(x,y,w,h);og.fill();og.stroke();
+og.fillStyle=og.strokeStyle;og.fillRect(x,y+h+6,w*pr,5)
+}
+$('camH').textContent=!ok?'ضع المستند كاملاً داخل الكاميرا فوق سطح مختلف اللون'
+:CAM.need?'أبعد المستند أو بدّله للالتقاط التالي':CAM.auto?(CAM.st<7?'ثبّت الهاتف…':'جارٍ الالتقاط'):'اضغط زر الالتقاط';
+if(ok&&CAM.auto&&!CAM.need&&CAM.st>=7)camShot()
+}catch(e){console.warn(e)}
+finally{CAM.ticking=false}
+}
+function shrinkCanvas(c,max){
+const s=Math.min(1,max/Math.max(c.width,c.height));
+if(s>=1)return c;
+const o=document.createElement('canvas');o.width=Math.round(c.width*s);o.height=Math.round(c.height*s);
+o.getContext('2d').drawImage(c,0,0,o.width,o.height);
+c.width=c.height=0;return o
+}
+async function shotBlob(c){
+const o=CAM.opts,doCrop=o.scan?true:CFG.camCrop,doClean=o.scan?true:CFG.camClean,strong=o.scan?true:CFG.camStrong;
+let src=c;
+if(doCrop){
+const r=detect(c);
+if(r.found&&!(r.w>.97&&r.h>.97)){
+const x=Math.round(r.x*c.width),y=Math.round(r.y*c.height),w=Math.round(r.w*c.width),h=Math.round(r.h*c.height);
+const cut=document.createElement('canvas');cut.width=w;cut.height=h;
+cut.getContext('2d').drawImage(c,x,y,w,h,0,0,w,h);
+c.width=c.height=0;src=cut
+}
+}
+src=shrinkCanvas(src,2800);
+if(doClean)enhanceCanvas(src,strong);
+const b=await blobOf(src,'image/jpeg',.92);
+src.width=src.height=0;
+return b
+}
+function addScanned(im){
+const ar=im.el.naturalWidth/im.el.naturalHeight;
+const near=i=>Math.abs(Math.log(ar/(DOCS[i][1]/DOCS[i][2])));
+let size=S.lastSize!=null&&DOCS[S.lastSize][3]!=='صور شخصية'&&S.lastSize!==CUS?S.lastSize:null;
+if(size==null||near(size)>.2){
+let best=0;
+DOCS.forEach((d,i)=>{if(d[3]!=='صور شخصية'&&i!==CUS&&near(i)<near(best))best=i});
+size=best
+}
+const g=nid(),it=mkImgItem(g,0,false,size,'side',false);
+sizeGroup([it]);setImg(it,im);
+const sp=placeGroup([it],S.cur);
+S.sel=null;S.cur=sp.p;
+commit();renderAll();goPage(sp.p,false)
+}
+async function shotDone(blob){
+const o=CAM.opts,im=await loadImage(URL.createObjectURL(blob));
+if(o.target){
+const f=findItem(o.target);
+if(f){const keep=S.sel;setImg(f.it,im);S.sel=keep;commit();renderAll()}
+CAM.cnt=0;camClose();toast('تم التقاط الصورة وتنظيفها ✓');return
+}
+addScanned(im)
+}
+async function camShot(){
+if(CAM.busy)return;
+CAM.busy=true;
+try{
+const v=$('camV'),c=document.createElement('canvas');
+c.width=v.videoWidth;c.height=v.videoHeight;
+c.getContext('2d').drawImage(v,0,0);
+camFlash();
+const shotR=CAM.last;
+const blob=await shotBlob(c);
+CAM.cnt++;$('camN').hidden=false;$('camN').textContent='✓ '+CAM.cnt;
+CAM.need=true;CAM.shotR=shotR;CAM.st=0;
+try{navigator.vibrate&&navigator.vibrate(40)}catch(_){}
+await shotDone(blob)
+}catch(e){console.error(e);toast('تعذّر الالتقاط')}
+CAM.busy=false
+}
+function galPick(mode,opts){CAM.mode=mode;CAM.opts=opts||{};$('fiCam').value='';$('fiCam').click()}
+$('fiCam').onchange=async()=>{
+const f=$('fiCam').files[0];if(!f)return;
+toast('جارٍ المعالجة…',0);await tick();
+try{
+const el=await mkImgEl(URL.createObjectURL(f));
+if(CAM.mode==='code'){
+const t=await detectCode(el,el.naturalWidth,el.naturalHeight);
+$('toast').hidden=true;
+if(t){const cb=CAM.opts.cb;cb&&cb(t)}else toast('لم يُعثر على باركود في الصورة')
+}else{
+const c=document.createElement('canvas');c.width=el.naturalWidth;c.height=el.naturalHeight;
+c.getContext('2d').drawImage(el,0,0);
+const blob=await shotBlob(c);
+CAM.cnt=0;await shotDone(blob);$('toast').hidden=true
+}
+}catch(e){console.error(e);$('toast').hidden=true;toast('تعذّرت المعالجة')}
+};
+$('camX').onclick=camClose;
+$('camSh').onclick=camShot;
+$('camAu').onclick=()=>{CAM.auto=!CAM.auto;$('camAu').classList.toggle('on',CAM.auto)};
+$('camG').onclick=()=>{const m=CAM.mode,o=CAM.opts;camClose();galPick(m,o)};
+$('camSw').onclick=()=>{CAM.face=CAM.face==='environment'?'user':'environment';camStart()};
+$('camFl').onclick=()=>{
+CAM.fm=(CAM.fm+1)%3;
+$('camFl').textContent=['🔦 بدون','🔦 مفعّل','🔦 تلقائي'][CAM.fm];
+$('camFl').classList.toggle('on',CAM.fm>0);
+if(CAM.fm===1)camTorch(true);else if(CAM.fm===0)camTorch(false)
+};
+
+/* ---------- نتيجة مسح الباركود ---------- */
+let SCT='';
+function showScan(t){
+SCT=t;$('scTxt').textContent=t;
+$('scOpen').hidden=!/^https?:\/\//i.test(t);
+$('scM').hidden=false
+}
+$('scX').onclick=()=>$('scM').hidden=true;
+$('scCopy').onclick=async()=>{try{await navigator.clipboard.writeText(SCT);toast('تم النسخ')}catch(_){toast('تعذّر النسخ، حدّد النص يدوياً')}};
+$('scOpen').onclick=()=>{
+try{if(isNative()&&window.Capacitor.Plugins.Share){window.Capacitor.Plugins.Share.share({url:SCT});return}}catch(_){}
+window.open(SCT,'_blank')
+};
+$('scAdd').onclick=()=>{
+$('scM').hidden=true;openQr(null);
+QM.type=/^https?:\/\//i.test(SCT)?'url':'text';
+QM.vals[QM.type]={v:SCT};
+qrBuildForm();qrPrev()
+};
+function qrFromScan(t){
+QM.type=/^https?:\/\//i.test(t)?'url':'text';
+QM.vals[QM.type]={v:t};
+qrBuildForm();qrPrev();toast('تمت قراءة الباركود')
+}
+$('qScan').onclick=()=>camOpen('code',{cb:qrFromScan});
+$('qScanImg').onclick=()=>galPick('code',{cb:qrFromScan});
+
+/* ---------- بطاقات NFC ---------- */
+const NFC={on:false,poll:0,seq:0,text:'',busy:false};
+const hexB=h=>{const a=new Uint8Array(h.length/2);for(let i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a};
+const bHex=b=>[...b].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();
+const XH={
+p:h=>CryptoJS.enc.Hex.parse(h),
+s:w=>CryptoJS.enc.Hex.stringify(w).toUpperCase(),
+xor:(a,b)=>{let o='';for(let i=0;i<a.length;i+=2)o+=(parseInt(a.substr(i,2),16)^parseInt(b.substr(i,2),16)).toString(16).padStart(2,'0');return o.toUpperCase()},
+pad:h=>{h+='80';while(h.length%16)h+='0';return h.toUpperCase()},
+des3:(key,data,dec)=>{
+const k=XH.p(key),o={iv:XH.p('0000000000000000'),mode:CryptoJS.mode.CBC,padding:CryptoJS.pad.NoPadding};
+return dec?XH.s(CryptoJS.TripleDES.decrypt({ciphertext:XH.p(data)},k,o)):XH.s(CryptoJS.TripleDES.encrypt(XH.p(data),k,o).ciphertext)
+},
+des:(key,data,dec)=>{
+const k=XH.p(key),o={mode:CryptoJS.mode.ECB,padding:CryptoJS.pad.NoPadding};
+return dec?XH.s(CryptoJS.DES.decrypt({ciphertext:XH.p(data)},k,o)):XH.s(CryptoJS.DES.encrypt(XH.p(data),k,o).ciphertext)
+},
+mac:(key,data)=>{
+const ka=key.slice(0,16),kb=key.slice(16,32),d=XH.pad(data);
+let h='0000000000000000';
+for(let i=0;i<d.length;i+=16)h=XH.des(ka,XH.xor(h,d.substr(i,16)));
+h=XH.des(kb,h,true);
+return XH.des(ka,h)
+},
+kdf:(seed,c)=>{const h=XH.s(CryptoJS.SHA1(XH.p(seed+'0000000'+c)));return h.slice(0,16)+h.slice(16,32)},
+rnd:n=>bHex(crypto.getRandomValues(new Uint8Array(n)))
+};
+const bacCd=s=>{const w=[7,3,1];let t=0;for(let i=0;i<s.length;i++){const c=s[i],v=c==='<'?0:/[0-9]/.test(c)?+c:c.charCodeAt(0)-55;t+=v*w[i%3]}return t%10};
+function bacKeys(docNo,dob,exp){
+docNo=String(docNo).toUpperCase().replace(/[^A-Z0-9<]/g,'').padEnd(9,'<');
+const mrz=docNo+bacCd(docNo)+dob+bacCd(dob)+exp+bacCd(exp);
+const seed=XH.s(CryptoJS.SHA1(XH.p(bHex(new TextEncoder().encode(mrz))))).slice(0,32);
+return{kEnc:XH.kdf(seed,1),kMac:XH.kdf(seed,2)}
+}
+const incHex=h=>{let b=hexB(h);for(let i=b.length-1;i>=0;i--){b[i]=(b[i]+1)&255;if(b[i])break}return bHex(b)};
+const tlvL=n=>n<128?n.toString(16).padStart(2,'0'):n<256?'81'+n.toString(16).padStart(2,'0'):'82'+n.toString(16).padStart(4,'0').toUpperCase();
+const rdL=h=>{const b=parseInt(h.substr(0,2),16);if(b<128)return[b,2];if(b===0x81)return[parseInt(h.substr(2,2),16),4];return[parseInt(h.substr(2,4),16),6]};
+async function bacRead(docNo,dob,exp,tx,rndFn){
+rndFn=rndFn||XH.rnd;
+const{kEnc,kMac}=bacKeys(docNo,dob,exp);
+let r=await tx('0084000008');
+if(!r.endsWith('9000'))throw new Error('challenge:'+r.slice(-4));
+const rndIc=r.slice(0,16),rndIfd=rndFn(8),kIfd=rndFn(16);
+const eIfd=XH.des3(kEnc,rndIfd+rndIc+kIfd),mIfd=XH.mac(kMac,eIfd);
+r=await tx('0082000028'+eIfd+mIfd+'28');
+if(!r.endsWith('9000'))throw new Error('auth:'+r.slice(-4));
+const eIc=r.slice(0,64),mIc=r.slice(64,80);
+if(XH.mac(kMac,eIc)!==mIc)throw new Error('mac');
+const dec=XH.des3(kEnc,eIc,true);
+if(dec.slice(0,16)!==rndIc||dec.slice(16,32)!==rndIfd)throw new Error('rnd');
+const seed2=XH.xor(kIfd,dec.slice(32,64));
+const ksE=XH.kdf(seed2,1),ksM=XH.kdf(seed2,2);
+let ssc=rndIc.slice(8)+rndIfd.slice(8);
+const sm=async(ins,p1,p2,data,le)=>{
+ssc=incHex(ssc);
+const hd='0C'+ins+p1+p2;
+let d87='',d97='';
+if(data){const e=XH.des3(ksE,XH.pad(data));d87='87'+tlvL(e.length/2+1)+'01'+e}
+if(le)d97='9701'+le;
+const cc=XH.mac(ksM,ssc+hd+'80000000'+d87+d97);
+const body=d87+d97+'8E08'+cc;
+const rsp=await tx(hd+(body.length/2).toString(16).padStart(2,'0').toUpperCase()+body+'00');
+if(rsp.length<4)throw new Error('short');
+const sw=rsp.slice(-4);
+if(sw!=='9000')throw new Error('sw:'+sw);
+let p=rsp.slice(0,-4),e87='',e99='';
+ssc=incHex(ssc);
+let rest=p;
+if(rest.startsWith('87')){const[L,o]=rdL(rest.slice(2));const tot=2+o+L*2;e87=rest.slice(0,tot);rest=rest.slice(tot)}
+if(rest.startsWith('99')){e99=rest.slice(0,8);rest=rest.slice(8)}
+if(!rest.startsWith('8E08'))throw new Error('rmac');
+if(XH.mac(ksM,ssc+e87+e99)!==rest.slice(4,20))throw new Error('rmacbad');
+if(!e87)return'';
+const[L,o]=rdL(e87.slice(2)),cip=e87.slice(2+o+2,2+o+L*2);
+let pl=XH.des3(ksE,cip,true);
+const i=pl.lastIndexOf('80');
+return i>=0&&/^(00)*$/.test(pl.slice(i+2))?pl.slice(0,i):pl
+};
+await sm('A4','02','0C','0101');
+const head=await sm('B0','00','00',null,'04');
+const hb=hexB(head.slice(0,8));
+let hl=2,len;
+if(hb[1]<128)len=hb[1];else if(hb[1]===0x81){hl=3;len=hb[2]}else{hl=4;len=(hb[2]<<8)|hb[3]}
+const total=hl+len;
+let out=head;
+while(out.length/2<total){
+const off=out.length/2,n=Math.min(0xC0,total-off);
+const chunk=await sm('B0',(off>>8).toString(16).padStart(2,'0'),(off&255).toString(16).padStart(2,'0'),null,n.toString(16).padStart(2,'0'));
+if(!chunk)break;out+=chunk
+}
+return out
+}
+function parseMrz(s){
+s=s.replace(/\s/g,'');
+const nm=x=>{const p=x.split('<<');return{sur:p[0].replace(/</g,' ').trim(),giv:(p[1]||'').replace(/</g,' ').trim()}};
+const dt=x=>x.length===6?`${x.slice(4,6)}/${x.slice(2,4)}/${(+x.slice(0,2)>40?'19':'20')+x.slice(0,2)}`:x;
+if(s.length>=88&&s.length<90){
+const a=s.slice(0,44),b=s.slice(44,88),n=nm(a.slice(5));
+return{type:a.slice(0,2).replace(/</g,''),country:a.slice(2,5),sur:n.sur,giv:n.giv,doc:b.slice(0,9).replace(/</g,''),nat:b.slice(10,13),dob:dt(b.slice(13,19)),sex:b[20],exp:dt(b.slice(21,27)),pid:b.slice(28,42).replace(/</g,'')}
+}
+if(s.length>=90){
+const a=s.slice(0,30),b=s.slice(30,60),c=s.slice(60,90),n=nm(c);
+return{type:a.slice(0,2).replace(/</g,''),country:a.slice(2,5),sur:n.sur,giv:n.giv,doc:a.slice(5,14).replace(/</g,''),nat:b.slice(15,18),dob:dt(b.slice(0,6)),sex:b[7],exp:dt(b.slice(8,14))}
+}
+return null
+}
+const NFA={
+mrtd:['A0000002471001','جواز / وثيقة سفر إلكترونية (ICAO 9303)'],
+mdl:['A0000002480400','رخصة قيادة إلكترونية (ISO 18013)'],
+piv:['A000000308000010000100','بطاقة PIV حكومية'],
+pgp:['D27600012401','OpenPGP'],
+ppse:['325041592E5359532E4444463031','بطاقة دفع (EMV) — لن تُقرأ أرقامها']
+};
+async function nfcTx(hex){
+const r=await NT().nfcTransceive({hex});
+return String(r.hex||'').toUpperCase()
+}
+async function nfcSelect(aid){
+const r=await nfcTx('00A40400'+(aid.length/2).toString(16).padStart(2,'0')+aid+'00');
+return r.endsWith('9000')||/61[0-9A-F]{2}$/.test(r)
+}
+function nfcShow(t,act){
+NFC.text=t;$('nfOut').textContent=t;$('nfAct').hidden=!act
+}
+function nfcMsg(m){$('nfSt').textContent=m}
+function nfcOpen(){
+$('nfM').hidden=false;$('nfBac').hidden=true;nfcShow('',false);
+if(!isNative()||!NT()||!NT().nfcStart)nfcMsg('قراءة NFC متاحة في تطبيق الأندرويد فقط (ليس داخل المتصفح).')
+else nfcMsg('اضغط «ابدأ» ثم قرّب البطاقة أو الهوية من ظهر الهاتف وثبّتها.')
+}
+async function nfcStartReading(){
+const nt=NT();
+if(!isNative()||!nt||!nt.nfcStart){nfcMsg('قراءة NFC متاحة في تطبيق الأندرويد فقط.');return}
+try{await nt.nfcStart()}
+catch(e){
+const m=String(e&&e.message||e);
+nfcMsg(/no_nfc/.test(m)?'هذا الجهاز لا يدعم NFC.':/nfc_off/.test(m)?'NFC مطفأ — فعّله من إعدادات الهاتف ثم أعد المحاولة.':'تعذّر تشغيل NFC: '+m);
+return
+}
+NFC.on=true;NFC.seq=0;
+nfcMsg('📡 جارٍ الانتظار… قرّب البطاقة من ظهر الهاتف');
+clearInterval(NFC.poll);
+NFC.poll=setInterval(async()=>{
+if(NFC.busy||!NFC.on)return;
+try{
+const r=await nt.nfcPoll();
+if(r&&r.uid&&r.seq!==NFC.seq){NFC.seq=r.seq;NFC.busy=true;try{await nfcHandle(r)}finally{NFC.busy=false}}
+}catch(_){}
+},450)
+}
+function nfcStopReading(){
+NFC.on=false;clearInterval(NFC.poll);
+try{NT().nfcStop()}catch(_){}
+}
+async function nfcHandle(r){
+try{navigator.vibrate&&navigator.vibrate(60)}catch(_){}
+const L=[];
+L.push('UID: '+r.uid.replace(/(..)(?!$)/g,'$1:'));
+L.push('التقنيات: '+(r.techs||[]).join(', '));
+if(r.atqa)L.push('ATQA: '+r.atqa+'   SAK: '+r.sak);
+if(r.hist)L.push('Historical bytes: '+r.hist);
+if(r.hi)L.push('Hi-layer: '+r.hi);
+(r.ndef||[]).forEach((n,i)=>L.push(`NDEF #${i+1}: ${n.type}${n.text?' → '+n.text:''}`+(n.text?'':'  hex:'+n.hex)));
+$('nfBac').hidden=true;
+let known=false;
+if(r.iso){
+L.push('');L.push('فحص التطبيقات داخل الشريحة…');
+nfcShow(L.join('\n'),true);
+for(const k of Object.keys(NFA)){
+try{if(await nfcSelect(NFA[k][0])){L.push('✔ '+NFA[k][1]);known=true;if(k==='mrtd')$('nfBac').hidden=false}}catch(_){}
+}
+if(!known)L.push('— لم يُتعرَّف على تطبيق قياسي. بيانات هذه البطاقة (ومنها الهوية الوطنية العراقية) محمية بمفاتيح خاصة بالجهة المصدِّرة ولا يمكن قراءتها من تطبيق عام؛ المعروض أعلاه هو كل ما تكشفه الشريحة علناً.')
+}else if(!(r.ndef||[]).length)L.push('\nالبطاقة لا تعرض بيانات عامة (قد تكون محمية أو مجرد معرّف UID).');
+nfcShow(L.join('\n'),true)
+}
+$('nfGo').onclick=nfcStartReading;
+$('nfX').onclick=()=>{nfcStopReading();$('nfM').hidden=true};
+$('nfCp').onclick=async()=>{try{await navigator.clipboard.writeText(NFC.text);toast('تم النسخ')}catch(_){toast('تعذّر النسخ')}};
+$('nfTxt').onclick=()=>{
+if(!NFC.text)return;
+const it=mkTextItem();it.text=NFC.text;it.al='left';it.fs=10;it.bold=false;it.w=100;it.h=Math.min(120,12+NFC.text.split('\n').length*5);
+const sp=placeGroup([it],S.cur);S.sel=it.id;S.cur=sp.p;S.ptab='text';
+nfcStopReading();$('nfM').hidden=true;commit();renderAll();goPage(sp.p,false);toast('أُضيفت المعلومات كمربع نص')
+};
+$('nfQr').onclick=()=>{
+if(!NFC.text)return;
+nfcStopReading();$('nfM').hidden=true;openQr(null);
+QM.type='text';QM.vals.text={v:NFC.text.slice(0,1500)};qrBuildForm();qrPrev()
+};
+$('nfBacGo').onclick=async()=>{
+const doc=$('nfDoc').value.trim(),dob=$('nfDob').value.trim(),exp=$('nfExp').value.trim();
+if(!doc||!/^\d{6}$/.test(dob)||!/^\d{6}$/.test(exp)){toast('أدخل رقم الجواز والتاريخين بصيغة YYMMDD');return}
+if(typeof CryptoJS==='undefined'){toast('مكتبة التشفير غير متوفرة');return}
+nfcMsg('🔓 جارٍ القراءة — أبقِ الجواز ملاصقاً للهاتف…');
+try{
+await nfcSelect(NFA.mrtd[0]);
+const dg1=await bacRead(doc,dob,exp,nfcTx);
+const i=dg1.indexOf('5F1F');
+if(i<0)throw new Error('dg1');
+const[L,o]=rdL(dg1.slice(i+4));
+const mrz=new TextDecoder().decode(hexB(dg1.slice(i+4+o,i+4+o+L*2)));
+const p=parseMrz(mrz);
+const t=p?[`الاسم: ${p.giv} ${p.sur}`,`رقم الوثيقة: ${p.doc}`,`الجنسية: ${p.nat}`,`الدولة المصدرة: ${p.country}`,`تاريخ الميلاد: ${p.dob}`,`الجنس: ${p.sex}`,`تاريخ الانتهاء: ${p.exp}`,'','MRZ:',mrz].join('\n'):mrz;
+nfcMsg('✔ تمت قراءة بيانات الجواز');nfcShow(t,true)
+}catch(e){
+const m=String(e&&e.message||e);
+nfcMsg(/auth|sw:6300|sw:6982|mac/.test(m)?'فشلت المصادقة — تأكد من رقم الجواز والتواريخ (من السطر السفلي للصفحة).':'تعذّرت القراءة ('+m+') — ثبّت الجواز وأعد المحاولة.')
+}
+};
+
+$('bCam').onclick=()=>{const it=cs();if(it)camOpen('doc',{target:it.id})};
+$('libImp').onclick=()=>{$('fiP').value='';$('fiP').click()};
 /* ================= بدء التشغيل ================= */
 (async function init(){
 applyTheme();
