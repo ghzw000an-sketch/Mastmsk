@@ -64,6 +64,17 @@ jobs:
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/filesystem@6 @capacitor/share@6 @capacitor/app@6
 
+      - name: Add offline Arabic OCR (card data reader)
+        run: |
+          mkdir -p www/tesseract/lang
+          npm install tesseract.js@5.1.1 tesseract.js-core@5.1.1 --no-audit --no-fund || echo "WARNING: tesseract not installed"
+          cp node_modules/tesseract.js/dist/tesseract.min.js www/tesseract/ || echo "WARNING: tesseract.min.js missing"
+          cp node_modules/tesseract.js/dist/worker.min.js www/tesseract/ || echo "WARNING: worker.min.js missing"
+          cp node_modules/tesseract.js-core/*lstm* www/tesseract/ || echo "WARNING: tesseract core missing"
+          curl -fL https://github.com/tesseract-ocr/tessdata_fast/raw/main/ara.traineddata -o www/tesseract/lang/ara.traineddata || echo "WARNING: ara data missing"
+          curl -fL https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata -o www/tesseract/lang/eng.traineddata || echo "WARNING: eng data missing"
+          ls -la www/tesseract www/tesseract/lang
+
       - name: Create Android project
         run: |
           npx cap init "Mustamsakat" com.mustamsakat.app --web-dir www
