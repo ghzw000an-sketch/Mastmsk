@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<script src="tesseract/tesseract.min.js"></script>
 
 <style>
 :root{
@@ -267,6 +268,19 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 .tpl .ac{display:flex;flex-direction:column;gap:4px}
 .tpl .ac button{padding:6px 10px;border-radius:10px;background:var(--chip);border:1px solid var(--bd);font-weight:600;font-size:.8em}
 .tpl .ac button.red{color:#d64533}
+.scFrame{position:absolute;z-index:2;pointer-events:none;transition:all .35s cubic-bezier(.4,0,.2,1);left:8%;top:10%;width:84%;height:80%}
+.scFrame .cn{position:absolute;width:36px;height:36px;border:0 solid #14b8a6;filter:drop-shadow(0 0 6px rgba(16,185,129,.6));transition:border-color .3s}
+.scFrame .cn.tl{top:0;left:0;border-top-width:4px;border-left-width:4px;border-top-left-radius:12px}
+.scFrame .cn.tr{top:0;right:0;border-top-width:4px;border-right-width:4px;border-top-right-radius:12px}
+.scFrame .cn.bl{bottom:0;left:0;border-bottom-width:4px;border-left-width:4px;border-bottom-left-radius:12px}
+.scFrame .cn.br{bottom:0;right:0;border-bottom-width:4px;border-right-width:4px;border-bottom-right-radius:12px}
+.cam.locked .scFrame .cn{border-color:#10b981;filter:drop-shadow(0 0 12px #10b981)}
+.scFrame .laser{position:absolute;left:10px;right:10px;height:3px;top:8%;opacity:0;background:linear-gradient(90deg,transparent,#10b981,#34d399,#10b981,transparent);box-shadow:0 0 15px 3px rgba(16,185,129,.6)}
+.cam.scanning .scFrame .laser{opacity:1;animation:scanLaser 2s infinite ease-in-out}
+@keyframes scanLaser{0%{top:6%}50%{top:92%}100%{top:6%}}
+.scStat{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:3;text-align:center;color:#0f172a;background:rgba(255,255,255,.82);backdrop-filter:blur(8px);padding:6px 18px;border-radius:20px;font-weight:700;font-size:.9rem;box-shadow:0 4px 15px rgba(0,0,0,.2);white-space:nowrap}
+.scStat small{display:block;font-size:.75rem;color:#0f766e;font-weight:600}
+.idimg{width:100%;max-height:200px;object-fit:contain;border-radius:12px;background:var(--chip);margin-top:8px}
 
 </style>
 </head>
@@ -461,6 +475,7 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <button data-add="qr">▦ إنشاء باركود</button>
 <button data-add="qrscan">🔎 قراءة باركود</button>
 <button data-add="nfc">📡 قراءة NFC</button>
+<button data-add="idocr">🪪 بيانات بطاقة من صورتها</button>
 </div>
 <div class="pop" id="pMenu" hidden>
 <button data-act="size">📐 حجم الورقة</button>
@@ -692,7 +707,8 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <!-- كاميرا / مسح -->
 <div class="cam" id="camM" hidden>
 <video id="camV" playsinline muted autoplay></video>
-<canvas id="camO"></canvas>
+<div class="scFrame" id="scF"><i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i><div class="laser"></div></div>
+<div class="scStat" id="scS"><span id="scS1">📷 تأطير الكاميرا...</span><small id="scS2"></small></div>
 <div class="camFlash" id="camF"></div>
 <div class="camTop">
 <button id="camX">✕ إغلاق</button>
@@ -700,7 +716,6 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <span style="display:flex;gap:6px"><button id="camFl">🔦 بدون</button><button id="camSw">🔄</button></span>
 </div>
 <div class="camN" id="camN" hidden>0</div>
-<div class="camH" id="camH"></div>
 <div class="camBot">
 <button class="cb" id="camG">🖼 معرض</button>
 <button class="shut" id="camSh" aria-label="التقاط"></button>
@@ -711,6 +726,25 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <input type="file" id="fiQ" hidden>
 <input type="file" id="fiW" accept="image/*" hidden>
 <input type="file" id="fiP" accept=".mst,.zip,application/octet-stream" hidden>
+
+<!-- قراءة بيانات البطاقة من الصورة -->
+<div class="modal" id="idM" hidden>
+<div class="mb">
+<div class="mh"><h2>🪪 بيانات البطاقة</h2><button class="sb" id="idX">إغلاق ✕</button></div>
+<p class="note" id="idSt">صوّر البطاقة (الوجه الذي فيه الاسم والمواليد) ثم تُستخرج البيانات وتُضاف في ورقة. راجع الحقول وصحّحها قبل الإضافة.</p>
+<div class="row"><button class="chip" id="idCam" style="flex:1">📷 تصوير البطاقة</button><button class="chip o" id="idGal" style="flex:1">🖼 من المعرض</button></div>
+<img class="idimg" id="idImg" alt="" hidden>
+<input type="text" id="idName" placeholder="الاسم الكامل">
+<input type="text" id="idMother" placeholder="اسم الأم">
+<input type="text" id="idBirth" placeholder="تاريخ الولادة">
+<textarea id="idRaw" placeholder="النص المقروء كاملاً (يمكنك التعديل)"></textarea>
+<label class="lb" style="margin-top:8px"><input type="checkbox" id="idKeep" checked>إضافة صورة البطاقة أيضاً للورقة</label>
+<div class="row" style="margin-top:10px;flex-wrap:wrap">
+<button class="chip" id="idAdd" style="flex:1">➕ إضافة المعلومات للورقة</button>
+<button class="chip o" id="idPhoto" style="flex:1">👤 قص الصورة الشخصية</button>
+</div>
+</div>
+</div>
 
 <!-- نتيجة مسح باركود -->
 <div class="modal" id="scM" hidden>
@@ -744,6 +778,7 @@ input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--bd);bo
 <button class="sb" id="nfTxt">🔤 إضافة كمربع نص</button>
 <button class="sb" id="nfQr">▦ إضافة كباركود</button>
 <button class="sb" id="nfCp">نسخ</button>
+<button class="sb" id="nfId">🪪 قراءة من صورة البطاقة</button>
 </div>
 </div>
 </div>
@@ -1153,6 +1188,7 @@ else if(k==='scan')camOpen('doc',{scan:true});
 else if(k==='tpl')openTpl();
 else if(k==='qrscan')camOpen('code',{cb:showScan});
 else if(k==='nfc')nfcOpen();
+else if(k==='idocr')idOpen();
 else addDoc(k)
 };
 
@@ -2932,7 +2968,7 @@ function handleBack(){
 const hide=id=>{if(!$(id).hidden){$(id).hidden=true;return true}return false};
 if(!$('camM').hidden){camClose();return true}
 if(!$('nfM').hidden){nfcStopReading();$('nfM').hidden=true;return true}
-if(['scM','tplM','rsM','confirmM','dupM','qrM','rnM','libM','exportM','wmM','preview','settings','crop'].some(hide))return true;
+if(['idM','scM','tplM','rsM','confirmM','dupM','qrM','rnM','libM','exportM','wmM','preview','settings','crop'].some(hide))return true;
 if(['pSize','pAdd','pMenu','pCtx'].some(id=>!$(id).hidden)){closePops();return true}
 if(S.props){closePropsUI();updateUI();return true}
 if(S.sel!=null){S.sel=null;drawSel();updateUI();return true}
@@ -3712,7 +3748,8 @@ $('camT').textContent=mode==='code'?'مسح باركود':CAM.opts.scan?'مسح 
 $('camAu').hidden=mode==='code';$('camSh').hidden=mode==='code';$('camN').hidden=true;
 $('camAu').classList.toggle('on',CAM.auto);
 $('camFl').textContent=['🔦 بدون','🔦 مفعّل','🔦 تلقائي'][CAM.fm];
-$('camH').textContent='';
+setStat('📷 تأطير الكاميرا...',mode==='code'?'وجّه الكاميرا نحو الباركود':'ضع المستند داخل الإطار');
+$('scF').hidden=mode==='code';$('camM').classList.remove('locked');$('camM').classList.add('scanning');CAM.pg=null;CAM.rect=null;
 if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
 toast('الكاميرا المباشرة غير متاحة، اختر صورة من الجهاز');
 galPick(mode,opts);return
@@ -3747,7 +3784,7 @@ CAM.tr=null;CAM.tOn=false
 function camClose(){
 camStop();
 $('camM').hidden=true;
-const o=$('camO');o.getContext('2d').clearRect(0,0,o.width,o.height);
+$('camM').classList.remove('locked','scanning');
 if(CAM.mode!=='code'&&CAM.cnt)toast(`تمت إضافة ${CAM.cnt} مستند`)
 }
 async function camTorch(on){
@@ -3757,6 +3794,14 @@ try{await CAM.tr.applyConstraints({advanced:[{torch:on}]})}
 catch(e){CAM.tOn=!on;if(CAM.fm===1)toast('الفلاش غير مدعوم في هذا الجهاز')}
 }
 function camFlash(){const f=$('camF');f.style.opacity=.85;setTimeout(()=>f.style.opacity=0,120)}
+const GUIDE={x:.08,y:.1,w:.84,h:.8};
+function setStat(a,b){$('scS1').textContent=a;$('scS2').textContent=b||''}
+function placeFrame(r){
+const v=$('camV'),cm=$('camM'),cw=cm.clientWidth,ch=cm.clientHeight,vw=v.videoWidth,vh=v.videoHeight;
+if(!vw)return;
+const k=Math.min(cw/vw,ch/vh),dw=vw*k,dh=vh*k,ox=(cw-dw)/2,oy=(ch-dh)/2,f=$('scF').style;
+f.left=(ox+r.x*dw)+'px';f.top=(oy+r.y*dh)+'px';f.width=(r.w*dw)+'px';f.height=(r.h*dh)+'px'
+}
 async function camTick(){
 if(CAM.busy||CAM.ticking||$('camM').hidden)return;
 CAM.ticking=true;
@@ -3772,36 +3817,33 @@ const cb=CAM.opts.cb;camClose();cb&&cb(t)
 }
 return
 }
-const sw=220,sh=Math.max(8,Math.round(sw*vh/vw));
+const sw=160,sh=Math.max(8,Math.round(sw*vh/vw));
 const c=CAM.tmpC||(CAM.tmpC=document.createElement('canvas'));
 c.width=sw;c.height=sh;
 const g=c.getContext('2d',{willReadFrequently:true});
 g.drawImage(v,0,0,sw,sh);
-const d=g.getImageData(0,0,sw,sh).data;
-let s=0,n=0;
-for(let i=0;i<d.length;i+=16){s+=d[i]*.3+d[i+1]*.59+d[i+2]*.11;n++}
-CAM.bright=s/n;
+const d=g.getImageData(0,0,sw,sh).data,n=sw*sh,gr=new Uint8Array(n);
+let sum=0;
+for(let i=0,j=0;i<d.length;i+=4,j++){const y=(d[i]*54+d[i+1]*183+d[i+2]*19)>>8;gr[j]=y;sum+=y}
+CAM.bright=sum/n;
+let mot=99;
+if(CAM.pg&&CAM.pg.length===n){let t=0;for(let j=0;j<n;j+=3)t+=Math.abs(gr[j]-CAM.pg[j]);mot=t/(n/3)}
+CAM.pg=gr;
 if(CAM.fm===2)camTorch(CAM.bright<70);
-const r=detect(c);
-const area=r.w*r.h;
-const ok=r.found&&area>.18&&!(r.w>.97&&r.h>.97);
-if(CAM.need&&(!ok||(CAM.shotR&&iou(CAM.shotR,r)<.6)))CAM.need=false;
-if(ok&&CAM.last&&iou(CAM.last,r)>.9)CAM.st++;else CAM.st=ok?1:0;
-CAM.last=ok?r:null;
-const o=$('camO'),cw=o.clientWidth,ch=o.clientHeight;
-if(o.width!==cw)o.width=cw;if(o.height!==ch)o.height=ch;
-const og=o.getContext('2d');og.clearRect(0,0,cw,ch);
-const k=Math.min(cw/vw,ch/vh),dw=vw*k,dh=vh*k,ox=(cw-dw)/2,oy=(ch-dh)/2;
-if(ok){
-const x=ox+r.x*dw,y=oy+r.y*dh,w=r.w*dw,h=r.h*dh,pr=Math.min(1,CAM.st/7);
-og.lineWidth=4;og.strokeStyle=pr>=1?'#34c759':'#ffd60a';
-og.fillStyle=pr>=1?'rgba(52,199,89,.14)':'rgba(255,214,10,.1)';
-og.beginPath();if(og.roundRect)og.roundRect(x,y,w,h,14);else og.rect(x,y,w,h);og.fill();og.stroke();
-og.fillStyle=og.strokeStyle;og.fillRect(x,y+h+6,w*pr,5)
-}
-$('camH').textContent=!ok?'ضع المستند كاملاً داخل الكاميرا فوق سطح مختلف اللون'
-:CAM.need?'أبعد المستند أو بدّله للالتقاط التالي':CAM.auto?(CAM.st<7?'ثبّت الهاتف…':'جارٍ الالتقاط'):'اضغط زر الالتقاط';
-if(ok&&CAM.auto&&!CAM.need&&CAM.st>=7)camShot()
+const r=detect(c),ok=!!(r.found&&r.w*r.h>.12);
+const tg=ok?r:GUIDE;
+const pr=CAM.rect;
+CAM.rect=pr?{x:pr.x+(tg.x-pr.x)*.5,y:pr.y+(tg.y-pr.y)*.5,w:pr.w+(tg.w-pr.w)*.5,h:pr.h+(tg.h-pr.h)*.5}:tg;
+CAM.found=ok;
+placeFrame(CAM.rect);
+if(mot>12)CAM.need=false;
+if(mot<7)CAM.st++;else CAM.st=0;
+const locked=CAM.st>=4&&!CAM.need;
+$('camM').classList.toggle('locked',locked);
+if(CAM.need)setStat('✨ تم الالتقاط التلقائي بنجاح','حرّك الهاتف أو بدّل المستند للالتقاط التالي');
+else if(locked)setStat('✅ تم تثبيت الحواف',CAM.auto?'التقاط تلقائي الآن...':'اضغط زر الالتقاط');
+else setStat('📷 تأطير الكاميرا...',ok?'ثبّت الهاتف لحظة':'ضع المستند داخل الإطار وثبّت الهاتف');
+if(CAM.auto&&!CAM.need&&CAM.st>=8)camShot()
 }catch(e){console.warn(e)}
 finally{CAM.ticking=false}
 }
@@ -3812,12 +3854,12 @@ const o=document.createElement('canvas');o.width=Math.round(c.width*s);o.height=
 o.getContext('2d').drawImage(c,0,0,o.width,o.height);
 c.width=c.height=0;return o
 }
-async function shotBlob(c){
+async function shotBlob(c,live){
 const o=CAM.opts,doCrop=o.scan?true:CFG.camCrop,doClean=o.scan?true:CFG.camClean,strong=o.scan?true:CFG.camStrong;
 let src=c;
 if(doCrop){
-const r=detect(c);
-if(r.found&&!(r.w>.97&&r.h>.97)){
+const d0=detect(c),r=(d0.found&&d0.w*d0.h>.12)?d0:(live?GUIDE:null);
+if(r&&!(r.w>.97&&r.h>.97)){
 const x=Math.round(r.x*c.width),y=Math.round(r.y*c.height),w=Math.round(r.w*c.width),h=Math.round(r.h*c.height);
 const cut=document.createElement('canvas');cut.width=w;cut.height=h;
 cut.getContext('2d').drawImage(c,x,y,w,h,0,0,w,h);
@@ -3846,7 +3888,9 @@ S.sel=null;S.cur=sp.p;
 commit();renderAll();goPage(sp.p,false)
 }
 async function shotDone(blob){
-const o=CAM.opts,im=await loadImage(URL.createObjectURL(blob));
+const o=CAM.opts;
+if(o.blobCb){CAM.cnt=0;camClose();await o.blobCb(blob);return}
+const im=await loadImage(URL.createObjectURL(blob));
 if(o.target){
 const f=findItem(o.target);
 if(f){const keep=S.sel;setImg(f.it,im);S.sel=keep;commit();renderAll()}
@@ -3862,10 +3906,9 @@ const v=$('camV'),c=document.createElement('canvas');
 c.width=v.videoWidth;c.height=v.videoHeight;
 c.getContext('2d').drawImage(v,0,0);
 camFlash();
-const shotR=CAM.last;
-const blob=await shotBlob(c);
+const blob=await shotBlob(c,true);
 CAM.cnt++;$('camN').hidden=false;$('camN').textContent='✓ '+CAM.cnt;
-CAM.need=true;CAM.shotR=shotR;CAM.st=0;
+CAM.need=true;CAM.st=0;
 try{navigator.vibrate&&navigator.vibrate(40)}catch(_){}
 await shotDone(blob)
 }catch(e){console.error(e);toast('تعذّر الالتقاط')}
@@ -4137,6 +4180,91 @@ const m=String(e&&e.message||e);
 nfcMsg(/auth|sw:6300|sw:6982|mac/.test(m)?'فشلت المصادقة — تأكد من رقم الجواز والتواريخ (من السطر السفلي للصفحة).':'تعذّرت القراءة ('+m+') — ثبّت الجواز وأعد المحاولة.')
 }
 };
+
+/* ---------- قراءة بيانات البطاقة من الصورة (OCR عربي) ---------- */
+let OCRW=null,IDB_BLOB=null;
+const arDig=t=>t.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+const arNorm=t=>t.replace(/[إأآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[\u064B-\u0652\u0640]/g,'');
+function parseIdText(txt){
+const lines=arDig(txt).split('\n').map(l=>l.replace(/[|_\[\]{}()<>«»]/g,' ').replace(/\s+/g,' ').trim()).filter(l=>l.length>1);
+const after=(i,re)=>{
+const l=lines[i],n=arNorm(l),m=n.search(re);
+let v=m>=0?l.slice(m).replace(/^[^:：]*[:：]/,''):'';
+if(!v||v.length<3||v===l.slice(m))v=(lines[i+1]||'');
+return v.replace(/^[\s:：\-]+/,'').trim()
+};
+const get=re=>{for(let i=0;i<lines.length;i++)if(re.test(arNorm(lines[i])))return after(i,re);return''};
+const dateRe=/(\d{1,4}\s*[\/\-.]\s*\d{1,2}\s*[\/\-.]\s*\d{1,4})/;
+let birth='';
+for(let i=0;i<lines.length;i++){
+if(/(الولاده|المواليد|تولد)/.test(arNorm(lines[i]))){
+const m=(lines[i]+' '+(lines[i+1]||'')).match(dateRe);
+if(m){birth=m[1].replace(/\s+/g,'');break}
+}
+}
+if(!birth){const m=lines.join(' ').match(dateRe);if(m)birth=m[1].replace(/\s+/g,'')}
+const first=get(/(^|\s)الاسم/),father=get(/اسم الاب/),grand=get(/اسم الجد/),mother=get(/(اسم )?الام(?!\w)/);
+const nameParts=[first];
+if(father&&!first.includes(father))nameParts.push(father);
+if(grand&&!(first+' '+father).includes(grand))nameParts.push(grand);
+return{name:nameParts.filter(Boolean).join(' '),mother,birth,raw:lines.join('\n')}
+}
+async function ocrWorker(){
+if(OCRW)return OCRW;
+if(typeof Tesseract==='undefined')throw new Error('noocr');
+OCRW=await Tesseract.createWorker('ara+eng',1,{workerPath:'tesseract/worker.min.js',corePath:'tesseract/',langPath:'tesseract/lang/',gzip:false,workerBlobURL:false,
+logger:m=>{if(m&&m.status){const p=m.progress?Math.round(m.progress*100)+'%':'';$('idSt').textContent='⏳ '+m.status+' '+p}}});
+return OCRW
+}
+function idOpen(){
+$('idM').hidden=false
+}
+async function idHandle(blob){
+IDB_BLOB=blob;
+$('idM').hidden=false;
+$('idImg').src=URL.createObjectURL(blob);$('idImg').hidden=false;
+$('idSt').textContent='⏳ جارٍ قراءة النص من الصورة… (قد تستغرق عدة ثوانٍ)';
+await tick();
+try{
+const el=await mkImgEl(URL.createObjectURL(blob));
+const c=shrink(el,1800);
+enhanceCanvas(c,true);
+const w=await ocrWorker();
+const r=await w.recognize(c);
+c.width=c.height=0;
+const p=parseIdText(r.data.text||'');
+$('idName').value=p.name;$('idMother').value=p.mother;$('idBirth').value=p.birth;$('idRaw').value=p.raw;
+$('idSt').textContent=p.name||p.mother||p.birth?'✔ تمت القراءة — راجع الحقول وصحّحها ثم أضفها للورقة.':'قُرئ النص لكن لم تُحدَّد الحقول — انسخ ما تحتاجه من «النص المقروء» أو أعد التصوير بإضاءة أفضل.'
+}catch(e){
+console.error(e);
+$('idSt').textContent=String(e&&e.message)==='noocr'?'محرّك القراءة غير موجود في هذا الإصدار (تعذّر تحميله أثناء البناء). يمكنك كتابة البيانات يدوياً في الحقول.':'تعذّرت القراءة: '+(e&&e.message||e)+' — اكتب البيانات يدوياً.'
+}
+}
+$('idCam').onclick=()=>camOpen('doc',{scan:true,blobCb:idHandle});
+$('idGal').onclick=()=>galPick('doc',{scan:false,blobCb:idHandle});
+$('idX').onclick=()=>$('idM').hidden=true;
+$('idAdd').onclick=async()=>{
+const L=[];
+if($('idName').value.trim())L.push('الاسم: '+$('idName').value.trim());
+if($('idMother').value.trim())L.push('اسم الأم: '+$('idMother').value.trim());
+if($('idBirth').value.trim())L.push('تاريخ الولادة: '+$('idBirth').value.trim());
+if(!L.length){toast('لا توجد معلومات للإضافة');return}
+if($('idKeep').checked&&IDB_BLOB){addScanned(await loadImage(URL.createObjectURL(IDB_BLOB)))}
+const it=mkTextItem();it.text=L.join('\n');it.al='right';it.fs=13;it.bold=true;it.w=110;it.h=L.length*8+8;
+const sp=placeGroup([it],S.cur);S.sel=it.id;S.cur=sp.p;S.ptab='text';
+$('idM').hidden=true;commit();renderAll();goPage(sp.p,false);toast('أُضيفت المعلومات للورقة ✓')
+};
+$('idPhoto').onclick=async()=>{
+if(!IDB_BLOB){toast('صوّر البطاقة أولاً');return}
+const g=nid(),it=mkImgItem(g,0,false,PHOTO,'side',true);
+sizeGroup([it]);
+setImg(it,await loadImage(URL.createObjectURL(IDB_BLOB)));
+it.autoFit=false;
+const sp=placeGroup([it],S.cur);S.sel=it.id;S.cur=sp.p;
+$('idM').hidden=true;commit();renderAll();goPage(sp.p,false);
+openCrop();toast('قصّ وجه الشخص من صورة البطاقة ثم اضغط «تطبيق القص»',3500)
+};
+$('nfId').onclick=()=>{nfcStopReading();$('nfM').hidden=true;idOpen()};
 
 $('bCam').onclick=()=>{const it=cs();if(it)camOpen('doc',{target:it.id})};
 $('libImp').onclick=()=>{$('fiP').value='';$('fiP').click()};
